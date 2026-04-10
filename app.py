@@ -1,7 +1,7 @@
 import streamlit as st
 
-from services.db import init_db
-from services.data_loader import load_ttd
+from db import init_db
+from data_loader import load_ttd
 
 st.set_page_config(page_title="SRI Arquivístico UDESC - CCT", page_icon="📚", layout="wide")
 
