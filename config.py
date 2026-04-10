@@ -14,7 +14,7 @@ EXPORTS_DIR = BASE_DIR / "exports"
 DB_PATH = RUNTIME_DIR / "sri_udesc.sqlite3"
 
 # Arquivos de referência
-TTD_PATH = CDOC_REFERENCE_DIR / "TTD_UDESC_SEA_filtravel.xlsx"
+TTD_PATH = DATA_DIR / "ttd.xlsx"
 OFFICIAL_INVENTORY_TEMPLATE_PATH = CDOC_REFERENCE_DIR / "Anexo_IV_IN_008_2024_Inventario_AtvFim.xlsx"
 OFFICIAL_BOX_LABEL_TEMPLATE_PATH = CDOC_REFERENCE_DIR / "Anexo_I_IN_008_2024_Etiqueta_da_Caixa.docx"
 ATIVIDADE_FIM_TEMPLATE_PATH = CDOC_REFERENCE_DIR / "AnexoII_IN0082023_Tabela_de_Classificacao_AtvFim.xlsx"
