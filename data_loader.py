@@ -1,13 +1,14 @@
-
 from __future__ import annotations
 
-from functools import lru_cache
+import pandas as pd
 from pathlib import Path
+from functools import lru_cache
 import re
 import unicodedata
 
-import pandas as pd
+TTD_PATH = Path(__file__).resolve().parent / "data" / "ttd.xlsx"
 
+import pandas as pd
 from config import TTD_PATH
 
 COL_MAP = {
