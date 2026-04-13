@@ -102,7 +102,7 @@ COL_MAP = {
 @lru_cache(maxsize=1)
 def load_ttd(path=None):
     base_dir = Path(__file__).resolve().parent.parent
-    excel_path = Path(path) if path else base_dir / "data" / "TTD.xlsx"
+    excel_path = BASE_DIR / "data" / "reference" / "TTD.xlsx"
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
