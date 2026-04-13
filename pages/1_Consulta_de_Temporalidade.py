@@ -1,7 +1,5 @@
 import streamlit as st
-
-from services.data_loader import load_ttd, get_filter_options
-from services.search import search_records
+from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
 
 st.title("Consulta de temporalidade")
@@ -18,7 +16,7 @@ filters = {}
 cols = st.columns(3)
 filters["natureza_documental"] = cols[0].selectbox(
     "Natureza",
-    [""] + sorted([x for x in df["natureza_documental"].unique().tolist() if x]),
+    [""] + get_filter_options(df, "natureza_documental"),
     index=0
 )
 filters["grupo"] = cols[1].selectbox(
