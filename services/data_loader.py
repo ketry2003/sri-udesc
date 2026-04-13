@@ -98,11 +98,10 @@ COL_MAP = {
     "marcado_guarda_permanente": "marcado_guarda_permanente",
 }
 
-
 @lru_cache(maxsize=1)
 def load_ttd(path=None):
     base_dir = Path(__file__).resolve().parent.parent
-    excel_path = Path(path) if path else base_dir / "data" / "TTD.xlsx"
+    excel_path = Path(path) if path else base_dir / "data" / "reference" / "TTD.xlsx"
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
@@ -116,51 +115,6 @@ def load_ttd(path=None):
 
     if df is None or df.empty:
         raise ValueError("A planilha 'Todos' está vazia")
-
-    df = df.dropna(how="all").copy()
-
-    rename = {}
-    for col in df.columns:
-        rename[col] = COL_MAP.get(normalize(col), normalize(col))
-
-    df = df.rename(columns=rename)
-
-    for col in df.columns:
-        df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    for col in REQUIRED_COLUMNS:
-        if col not in df.columns:
-            df[col] = ""
-
-    for col in REQUIRED_COLUMNS:
-        df[col] = df[col].fillna("").astype(str).str.strip()
-
-    if df["item_documental_descricao"].eq("").all():
-        df["item_documental_descricao"] = df["item_documental"]
-
-    if df["dossie_processo_descricao"].eq("").all():
-        df["dossie_processo_descricao"] = df["dossie_processo"]
-
-    if df["subserie_descricao"].eq("").all():
-        df["subserie_descricao"] = df["subserie"]
-
-    if df["serie_descricao"].eq("").all():
-        df["serie_descricao"] = df["serie"]
-
-    if df["source_priority"].eq("").all():
-        df["source_priority"] = "1"
-
-    vazia = df["destinacao_final"].eq("")
-
-    if "guarda_permanente" in df.columns:
-        gp = df["guarda_permanente"].fillna("").astype(str).str.strip()
-        df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
-
-    vazia = df["destinacao_final"].eq("")
-
-    if "eliminacao" in df.columns:
-        el = df["eliminacao"].fillna("").astype(str).str.strip()
-        df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
 
     return df
 
