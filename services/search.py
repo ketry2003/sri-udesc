@@ -220,3 +220,54 @@ def get_filter_options(df, column=None, filters=None):
             options[col] = []
 
     return options
+
+def search_records(df, query="", filters=None, limit=30):
+    filtered_df = apply_filters(df, filters)
+
+    if query and str(query).strip():
+        q = normalize_text(query)
+        search_cols = [
+            "item_documental",
+            "item_documental_descricao",
+            "dossie_processo",
+            "dossie_processo_descricao",
+            "subserie",
+            "subserie_descricao",
+            "serie",
+            "serie_descricao",
+            "subgrupo",
+            "subgrupo_descricao",
+            "grupo",
+            "grupo_descricao",
+            "codigo_classificacao",
+            "grupo_codigo",
+            "subgrupo_codigo",
+            "serie_codigo",
+            "subserie_codigo",
+            "dossie_processo_codigo",
+            "item_documental_codigo",
+            "observacao",
+        ]
+
+        mask = False
+        for col in search_cols:
+            if col in filtered_df.columns:
+                col_text = filtered_df[col].fillna("").astype(str).map(normalize_text)
+                col_mask = col_text.str.contains(q, na=False, regex=False)
+                mask = col_mask if isinstance(mask, bool) else (mask | col_mask)
+
+        if not isinstance(mask, bool):
+            filtered_df = filtered_df[mask]
+
+    if "source_priority" in filtered_df.columns:
+        filtered_df = filtered_df.sort_values(
+            by=["source_priority", "codigo_classificacao", "item_documental"],
+            ascending=[True, True, True],
+        )
+    else:
+        filtered_df = filtered_df.sort_values(
+            by=["codigo_classificacao", "item_documental"],
+            ascending=[True, True],
+        )
+
+    return filtered_df.head(limit).copy()
