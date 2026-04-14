@@ -1,14 +1,12 @@
-
 from __future__ import annotations
 
 from copy import copy
 from io import BytesIO
-from pathlib import Path
 
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.comments import Comment
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Font
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from config import OFFICIAL_INVENTORY_TEMPLATE_PATH
@@ -31,12 +29,19 @@ PROVENIENCIAS_PADRAO = [
 
 LOOKUP_SHEET_NAME = "_lookup"
 HELP_SHEET_NAME = "Ajuda de preenchimento"
-MAIN_SHEET_NAME = "ANEXO II - Atividades Fim"
 
-def _copy_row_style(ws, template_row: int, target_row: int, start_col: int = 2, end_col: int = 13) -> None:
+
+def _copy_row_style(
+    ws,
+    template_row: int,
+    target_row: int,
+    start_col: int = 2,
+    end_col: int = 13,
+) -> None:
     for col in range(start_col, end_col + 1):
         source = ws.cell(template_row, col)
         target = ws.cell(target_row, col)
+
         if source.has_style:
             target._style = copy(source._style)
         if source.number_format:
@@ -52,25 +57,43 @@ def _copy_row_style(ws, template_row: int, target_row: int, start_col: int = 2, 
         if source.protection:
             target.protection = copy(source.protection)
 
+
 def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> bytes:
+    if not OFFICIAL_INVENTORY_TEMPLATE_PATH.exists():
+        raise FileNotFoundError(
+            f"Modelo oficial do inventário não encontrado: {OFFICIAL_INVENTORY_TEMPLATE_PATH}"
+        )
+
     wb = load_workbook(OFFICIAL_INVENTORY_TEMPLATE_PATH)
     ws = wb[wb.sheetnames[0]]
 
-    # Replicate official blank row style through desired range
+    # Replica o estilo da linha-base do modelo
     for row_idx in range(11, 11 + max_rows):
         if row_idx > 11:
             _copy_row_style(ws, 11, row_idx)
 
-    # Hidden lookup sheet
+    # Aba oculta de lookup
     if LOOKUP_SHEET_NAME in wb.sheetnames:
         del wb[LOOKUP_SHEET_NAME]
     lookup = wb.create_sheet(LOOKUP_SHEET_NAME)
 
     lookup_headers = [
-        "codigo_classificacao", "item_documental", "natureza_documental", "grupo", "subgrupo",
-        "serie", "subserie", "dossie_processo", "prazo_corrente", "prazo_corrente_anos",
-        "prazo_intermediario", "prazo_intermediario_anos", "total_prazo_anos",
-        "destinacao_final", "guarda_permanente"
+        "codigo_classificacao",
+        "item_documental",
+        "assunto",
+        "natureza_documental",
+        "grupo",
+        "subgrupo",
+        "serie",
+        "subserie",
+        "dossie_processo",
+        "prazo_corrente",
+        "prazo_corrente_anos",
+        "prazo_intermediario",
+        "prazo_intermediario_anos",
+        "total_prazo_anos",
+        "destinacao_final",
+        "guarda_permanente",
     ]
     lookup.append(lookup_headers)
 
@@ -79,6 +102,15 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
         .drop_duplicates(subset=["codigo_classificacao"], keep="first")
         .copy()
     )
+
+    # Campos auxiliares para cálculo
+    if "prazo_corrente_anos" not in cleaned.columns:
+        cleaned["prazo_corrente_anos"] = 0
+    if "prazo_intermediario_anos" not in cleaned.columns:
+        cleaned["prazo_intermediario_anos"] = 0
+    if "total_prazo_anos" not in cleaned.columns:
+        cleaned["total_prazo_anos"] = 0
+
     cleaned["guarda_permanente"] = cleaned["destinacao_final"].apply(
         lambda x: "Guarda permanente" if "permanente" in str(x).lower() else "-"
     )
@@ -87,6 +119,7 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
         lookup.append([
             row.get("codigo_classificacao", ""),
             row.get("item_documental", ""),
+            row.get("assunto", ""),
             row.get("natureza_documental", ""),
             row.get("grupo", ""),
             row.get("subgrupo", ""),
@@ -104,12 +137,13 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
 
     lookup.sheet_state = "hidden"
 
-    # Help sheet
+    # Aba de ajuda
     if HELP_SHEET_NAME in wb.sheetnames:
         del wb[HELP_SHEET_NAME]
     help_ws = wb.create_sheet(HELP_SHEET_NAME)
     help_ws["A1"] = "Como preencher o inventário"
     help_ws["A1"].font = Font(bold=True, size=14)
+
     help_lines = [
         "1. Selecione o código na coluna 'Código Segundo o Plano de Classificação'.",
         "2. Preencha a proveniência, o ano de emissão, a referência, o assunto e o nº da caixa.",
@@ -121,7 +155,7 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
         help_ws[f"A{i}"] = line
     help_ws.column_dimensions["A"].width = 120
 
-    # Data validations
+    # Validações
     code_dv = DataValidation(
         type="list",
         formula1=f"='{LOOKUP_SHEET_NAME}'!$A$2:$A${lookup.max_row}",
@@ -134,7 +168,13 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
         allow_blank=True,
         showDropDown=True,
     )
-    year_dv = DataValidation(type="whole", operator="between", formula1="1900", formula2="2100", allow_blank=True)
+    year_dv = DataValidation(
+        type="whole",
+        operator="between",
+        formula1="1900",
+        formula2="2100",
+        allow_blank=True,
+    )
 
     ws.add_data_validation(code_dv)
     ws.add_data_validation(prov_dv)
@@ -149,26 +189,49 @@ def build_quick_fill_workbook(df_ttd: pd.DataFrame, max_rows: int = 300) -> byte
         prov_dv.add(ws[prov_cell])
         year_dv.add(ws[year_cell])
 
-        ws[f"G{row_idx}"] = f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$B:$B,""),"")'
-        ws[f"H{row_idx}"] = f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$J:$J,""),"")'
-        ws[f"I{row_idx}"] = f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$L:$L,""),"")'
-        ws[f"J{row_idx}"] = f'=IF($B{row_idx}="","",IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$M:$M,""),""))'
+        # G = classe/item documental
+        ws[f"G{row_idx}"] = (
+            f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$B:$B,""),"")'
+        )
+        # H = prazo corrente anos
+        ws[f"H{row_idx}"] = (
+            f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$K:$K,""),"")'
+        )
+        # I = prazo intermediário anos
+        ws[f"I{row_idx}"] = (
+            f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$M:$M,""),"")'
+        )
+        # J = total
+        ws[f"J{row_idx}"] = (
+            f'=IF($B{row_idx}="","",IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$N:$N,""),""))'
+        )
+        # K = ano de eliminação
         ws[f"K{row_idx}"] = (
             f'=IF(OR($B{row_idx}="",$D{row_idx}=""),"",'
-            f'IF(IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$O:$O,""),"-")="Guarda permanente","-",'
-            f'VALUE($D{row_idx})+IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$M:$M,0),0)))'
+            f'IF(IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$P:$P,""),"-")="Guarda permanente","-",'
+            f'VALUE($D{row_idx})+IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$N:$N,0),0)))'
         )
-        ws[f"L{row_idx}"] = f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$O:$O,""),"")'
+        # L = guarda permanente
+        ws[f"L{row_idx}"] = (
+            f'=IFERROR(XLOOKUP($B{row_idx},{LOOKUP_SHEET_NAME}!$A:$A,{LOOKUP_SHEET_NAME}!$P:$P,""),"")'
+        )
 
     ws["B11"].comment = Comment("Escolha o código oficial de classificação.", "ChatGPT")
     ws["C11"].comment = Comment("Selecione a proveniência do documento.", "ChatGPT")
-    ws["D11"].comment = Comment("Informe o ano de emissão. O ano de eliminação será calculado automaticamente quando houver eliminação.", "ChatGPT")
-    ws["G11"].comment = Comment("Classe segundo a TTD preenchida automaticamente a partir do código.", "ChatGPT")
+    ws["D11"].comment = Comment(
+        "Informe o ano de emissão. O ano de eliminação será calculado automaticamente quando houver eliminação.",
+        "ChatGPT",
+    )
+    ws["G11"].comment = Comment(
+        "Classe segundo a TTD preenchida automaticamente a partir do código.",
+        "ChatGPT",
+    )
     ws.freeze_panes = "B11"
 
     output = BytesIO()
     wb.save(output)
     return output.getvalue()
+
 
 def parse_inventory_workbook(uploaded_file, df_ttd: pd.DataFrame) -> pd.DataFrame:
     wb = load_workbook(uploaded_file, data_only=True)
@@ -193,6 +256,7 @@ def parse_inventory_workbook(uploaded_file, df_ttd: pd.DataFrame) -> pd.DataFram
             continue
 
         row = lookup.loc[codigo] if codigo in lookup.index else None
+
         texto_obs = []
         if referencia:
             texto_obs.append(f"Referência: {referencia}")
@@ -209,6 +273,7 @@ def parse_inventory_workbook(uploaded_file, df_ttd: pd.DataFrame) -> pd.DataFram
             "subserie": row["subserie"] if row is not None else "",
             "dossie_processo": row["dossie_processo"] if row is not None else "",
             "item_documental": row["item_documental"] if row is not None else assunto,
+            "codigo_classificacao": codigo,
             "prazo_corrente": row["prazo_corrente"] if row is not None else "",
             "prazo_intermediario": row["prazo_intermediario"] if row is not None else "",
             "destinacao_final": row["destinacao_final"] if row is not None else "",
