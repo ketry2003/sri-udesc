@@ -98,71 +98,130 @@ COL_MAP = {
     "marcado_guarda_permanente": "marcado_guarda_permanente",
 }
 
-
-@lru_cache(maxsize=1)
-def load_ttd(path=None):
+@lru_cache(maxsize=3)
+def load_ttd(tipo="todos", path=None):
     base_dir = Path(__file__).resolve().parent.parent
-    excel_path = Path(path) if path else base_dir / "data" / "reference" / "TTD.xlsx"
+    excel_path = Path(path) if path else base_dir / "data" / "reference" / "ttd.xlsx"
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
 
-    df = pd.read_excel(
+    mapa_abas = {
+        "meio": "ativ_meio",
+        "fim": "ativ_fim",
+    }
+
+    if tipo not in ["meio", "fim", "todos"]:
+        raise ValueError("Tipo deve ser 'meio', 'fim' ou 'todos'")
+
+    def preparar_df(df, natureza_padrao, prioridade):
+        if df is None or df.empty:
+            return pd.DataFrame()
+
+        df = df.dropna(how="all").copy()
+
+        rename = {}
+        for col in df.columns:
+            rename[col] = COL_MAP.get(normalize(col), normalize(col))
+
+        df = df.rename(columns=rename)
+
+        for col in df.columns:
+            df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
+
+        for col in REQUIRED_COLUMNS:
+            if col not in df.columns:
+                df[col] = ""
+
+        for col in REQUIRED_COLUMNS:
+            df[col] = df[col].fillna("").astype(str).str.strip()
+
+        if "natureza_documental" not in df.columns:
+            df["natureza_documental"] = natureza_padrao
+        else:
+            df["natureza_documental"] = df["natureza_documental"].fillna("").astype(str).str.strip()
+            df.loc[df["natureza_documental"] == "", "natureza_documental"] = natureza_padrao
+
+        if df["item_documental_descricao"].eq("").all():
+            df["item_documental_descricao"] = df["item_documental"]
+
+        if df["dossie_processo_descricao"].eq("").all():
+            df["dossie_processo_descricao"] = df["dossie_processo"]
+
+        if df["subserie_descricao"].eq("").all():
+            df["subserie_descricao"] = df["subserie"]
+
+        if df["serie_descricao"].eq("").all():
+            df["serie_descricao"] = df["serie"]
+
+        if "source_priority" not in df.columns:
+            df["source_priority"] = str(prioridade)
+        else:
+            df["source_priority"] = df["source_priority"].fillna("").astype(str).str.strip()
+            df.loc[df["source_priority"] == "", "source_priority"] = str(prioridade)
+
+        vazia = df["destinacao_final"].eq("")
+
+        if "guarda_permanente" in df.columns:
+            gp = df["guarda_permanente"].fillna("").astype(str).str.strip()
+            df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
+
+        vazia = df["destinacao_final"].eq("")
+
+        if "eliminacao" in df.columns:
+            el = df["eliminacao"].fillna("").astype(str).str.strip()
+            df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
+
+        return df
+
+    if tipo == "meio":
+        df_meio = pd.read_excel(
+            excel_path,
+            sheet_name=mapa_abas["meio"],
+            engine="openpyxl",
+            dtype=str,
+        )
+        df_meio = preparar_df(df_meio, "Atividade-meio", 2)
+
+        if df_meio.empty:
+            raise ValueError("A aba 'ativ_meio' está vazia")
+
+        return df_meio
+
+    if tipo == "fim":
+        df_fim = pd.read_excel(
+            excel_path,
+            sheet_name=mapa_abas["fim"],
+            engine="openpyxl",
+            dtype=str,
+        )
+        df_fim = preparar_df(df_fim, "Atividade-fim", 1)
+
+        if df_fim.empty:
+            raise ValueError("A aba 'ativ_fim' está vazia")
+
+        return df_fim
+
+    df_meio = pd.read_excel(
         excel_path,
-        sheet_name="Todos",
+        sheet_name=mapa_abas["meio"],
+        engine="openpyxl",
+        dtype=str,
+    )
+    df_fim = pd.read_excel(
+        excel_path,
+        sheet_name=mapa_abas["fim"],
         engine="openpyxl",
         dtype=str,
     )
 
-    if df is None or df.empty:
-        raise ValueError("A planilha 'Todos' está vazia")
+    df_meio = preparar_df(df_meio, "Atividade-meio", 2)
+    df_fim = preparar_df(df_fim, "Atividade-fim", 1)
 
-    df = df.dropna(how="all").copy()
+    if df_meio.empty and df_fim.empty:
+        raise ValueError("As abas 'ativ_meio' e 'ativ_fim' estão vazias")
 
-    rename = {}
-    for col in df.columns:
-        rename[col] = COL_MAP.get(normalize(col), normalize(col))
-
-    df = df.rename(columns=rename)
-
-    for col in df.columns:
-        df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    for col in REQUIRED_COLUMNS:
-        if col not in df.columns:
-            df[col] = ""
-
-    for col in REQUIRED_COLUMNS:
-        df[col] = df[col].fillna("").astype(str).str.strip()
-
-    if df["item_documental_descricao"].eq("").all():
-        df["item_documental_descricao"] = df["item_documental"]
-
-    if df["dossie_processo_descricao"].eq("").all():
-        df["dossie_processo_descricao"] = df["dossie_processo"]
-
-    if df["subserie_descricao"].eq("").all():
-        df["subserie_descricao"] = df["subserie"]
-
-    if df["serie_descricao"].eq("").all():
-        df["serie_descricao"] = df["serie"]
-
-    if df["source_priority"].eq("").all():
-        df["source_priority"] = "1"
-
-    vazia = df["destinacao_final"].eq("")
-
-    if "guarda_permanente" in df.columns:
-        gp = df["guarda_permanente"].fillna("").astype(str).str.strip()
-        df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
-
-    vazia = df["destinacao_final"].eq("")
-
-    if "eliminacao" in df.columns:
-        el = df["eliminacao"].fillna("").astype(str).str.strip()
-        df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
-
-    return df
+    return pd.concat([df_fim, df_meio], ignore_index=True)
 
 
 def apply_filters(df, filters=None):
