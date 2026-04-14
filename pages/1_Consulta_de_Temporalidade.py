@@ -10,6 +10,7 @@ st.title("Consulta de temporalidade")
 tipo = st.selectbox(
     "Selecione o tipo de atividade:",
     options=["meio", "fim"],
+    index=1,  # 🔹 padrão = atividade-fim
     format_func=lambda x: "Atividade-meio" if x == "meio" else "Atividade-fim",
     help="""
 Atividade-meio: funções administrativas
@@ -18,6 +19,17 @@ Atividade-fim: funções ligadas ao ensino, pesquisa, extensão
 e atividades acadêmicas.
 """
 )
+
+if "tipo" not in st.session_state:
+    st.session_state.tipo = "fim"
+
+tipo = st.selectbox(
+    "Selecione o tipo de atividade:",
+    options=["meio", "fim"],
+    index=["meio", "fim"].index(st.session_state.tipo),
+)
+
+st.session_state.tipo = tipo
 
 # 🔹 ALTERADO: agora passa o tipo
 df = load_ttd(tipo)
