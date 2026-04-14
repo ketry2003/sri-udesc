@@ -23,14 +23,13 @@ st.set_page_config(page_title="Inventário Documental", layout="wide")
 st.title("Inventário documental")
 
 # Base consolidada: atividade-fim + atividade-meio
-# Requer que services.data_loader.load_ttd aceite tipo="todos"
 df_ttd = load_ttd("todos")
 
 
 def calcular_ano_eliminacao(
     ano_emissao,
-    prazo_corrente_anos,
-    prazo_intermediario_anos,
+    prazo_corrente,
+    prazo_intermediario,
     destinacao_final
 ):
     if not ano_emissao:
@@ -44,16 +43,16 @@ def calcular_ano_eliminacao(
         ano = int(str(ano_emissao).strip())
         return str(
             ano
-            + int(prazo_corrente_anos or 0)
-            + int(prazo_intermediario_anos or 0)
+            + int(prazo_corrente or 0)
+            + int(prazo_intermediario or 0)
         )
     except Exception:
         return "-"
 
 
-def calcular_total(prazo_corrente_anos, prazo_intermediario_anos):
+def calcular_total(prazo_corrente, prazo_intermediario):
     try:
-        return int(prazo_corrente_anos or 0) + int(prazo_intermediario_anos or 0)
+        return int(prazo_corrente or 0) + int(prazo_intermediario or 0)
     except Exception:
         return ""
 
@@ -158,7 +157,7 @@ with aba1:
         a, b, c = st.columns(3)
         a.write(f"**Código:** {registro.get('codigo_classificacao', '') or '-'}")
         b.write(f"**Tipo documental:** {registro.get('item_documental', '') or '-'}")
-        c.write(f"**Classe segundo a TTD:** {registro.get('item_documental', '') or '-'}")
+        c.write(f"**Assunto:** {registro.get('assunto', '') or '-'}")
 
         d, e, f = st.columns(3)
         d.write(f"**Natureza:** {registro.get('natureza_documental', '') or '-'}")
@@ -181,9 +180,9 @@ with aba1:
         )
 
         col4, col5, col6 = st.columns(3)
-        assunto = col4.text_input(
+        assunto_digitado = col4.text_input(
             "Assunto",
-            value=registro["item_documental"] if registro is not None else "",
+            value=registro["assunto"] if registro is not None and registro.get("assunto") else "",
             placeholder="Descreva resumidamente o assunto",
         )
         numero_caixa = col5.text_input("Nº Caixa")
@@ -196,15 +195,15 @@ with aba1:
         classe_ttd = registro["item_documental"] if registro is not None else ""
         prazo_corrente = registro["prazo_corrente"] if registro is not None else ""
         prazo_intermediario = registro["prazo_intermediario"] if registro is not None else ""
-        prazo_corrente_anos = registro["prazo_corrente_anos"] if registro is not None else 0
-        prazo_intermediario_anos = registro["prazo_intermediario_anos"] if registro is not None else 0
+        prazo_corrente = registro["prazo_corrente"] if registro is not None and "prazo_corrente" in registro else 0
+        prazo_intermediario = registro["prazo_intermediario"] if registro is not None and "prazo_intermediario" in registro else 0
         destinacao_final = registro["destinacao_final"] if registro is not None else ""
 
-        total_prazo = calcular_total(prazo_corrente_anos, prazo_intermediario_anos)
+        total_prazo = calcular_total(prazo_corrente, prazo_intermediario)
         ano_eliminacao = calcular_ano_eliminacao(
             ano_emissao,
-            prazo_corrente_anos,
-            prazo_intermediario_anos,
+            prazo_corrente,
+            prazo_intermediario,
             destinacao_final,
         )
 
@@ -234,12 +233,12 @@ with aba1:
         y1, y2, y3 = st.columns(3)
         y1.text_input(
             "Fase Corrente em anos",
-            value=str(prazo_corrente_anos or ""),
+            value=str(prazo_corrente or ""),
             disabled=True,
         )
         y2.text_input(
             "Fase Intermediária em anos",
-            value=str(prazo_intermediario_anos or ""),
+            value=str(prazo_intermediario or ""),
             disabled=True,
         )
         y3.text_input("Total", value=str(total_prazo), disabled=True)
@@ -270,8 +269,8 @@ with aba1:
 
                 if referencia:
                     texto_obs.append(f"Referência: {referencia}")
-                if assunto:
-                    texto_obs.append(f"Assunto: {assunto}")
+                if assunto_digitado:
+                    texto_obs.append(f"Assunto: {assunto_digitado}")
                 if observacoes:
                     texto_obs.append(observacoes)
 
@@ -285,6 +284,7 @@ with aba1:
                     "subserie": registro.get("subserie", ""),
                     "dossie_processo": registro.get("dossie_processo", ""),
                     "item_documental": classe_ttd,
+                    "codigo_classificacao": codigo_classificacao,
                     "prazo_corrente": prazo_corrente,
                     "prazo_intermediario": prazo_intermediario,
                     "destinacao_final": destinacao_final,
@@ -337,6 +337,7 @@ with aba2:
             "subserie",
             "dossie_processo",
             "item_documental",
+            "codigo_classificacao",
             "prazo_corrente",
             "prazo_intermediario",
             "destinacao_final",

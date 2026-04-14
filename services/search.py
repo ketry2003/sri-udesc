@@ -16,6 +16,7 @@ REQUIRED_COLUMNS = [
     "subserie",
     "dossie_processo",
     "item_documental",
+    "assunto",
     "codigo_classificacao",
     "grupo_codigo",
     "subgrupo_codigo",
@@ -34,6 +35,11 @@ REQUIRED_COLUMNS = [
     "destinacao_final",
     "observacao",
     "source_priority",
+    "eliminacao",
+    "guarda_permanente",
+    "marcado_eliminacao",
+    "marcado_guarda_permanente",
+    "destinacao_resumida",
 ]
 
 
@@ -68,35 +74,94 @@ COL_MAP = {
     "subserie": "subserie",
     "dossie_processo": "dossie_processo",
     "item_documental": "item_documental",
+    "assunto": "assunto",
     "codigo_classificacao": "codigo_classificacao",
+
     "grupo_codigo": "grupo_codigo",
     "subgrupo_codigo": "subgrupo_codigo",
     "serie_codigo": "serie_codigo",
     "subserie_codigo": "subserie_codigo",
     "dossie_processo_codigo": "dossie_processo_codigo",
     "item_documental_codigo": "item_documental_codigo",
+
     "grupo_descricao": "grupo_descricao",
     "subgrupo_descricao": "subgrupo_descricao",
     "serie_descricao": "serie_descricao",
     "subserie_descricao": "subserie_descricao",
     "dossie_processo_descricao": "dossie_processo_descricao",
     "item_documental_descricao": "item_documental_descricao",
+
     "prazo_corrente": "prazo_corrente",
     "prazo_intermediario": "prazo_intermediario",
     "destinacao_final": "destinacao_final",
     "observacao": "observacao",
 
+    # seu novo modelo Excel
     "subfuncao": "subserie",
     "atividade": "dossie_processo",
     "documento": "item_documental",
     "prazo_intermediaria": "prazo_intermediario",
-    "destinacao_resumida": "destinacao_final",
+    "destinacao_resumida": "destinacao_resumida",
 
     "eliminacao": "eliminacao",
     "guarda_permanente": "guarda_permanente",
     "marcado_eliminacao": "marcado_eliminacao",
     "marcado_guarda_permanente": "marcado_guarda_permanente",
 }
+
+
+def _prepare_df(df, natureza_padrao, prioridade):
+    if df is None or df.empty:
+        return pd.DataFrame()
+
+    df = df.dropna(how="all").copy()
+
+    rename = {}
+    for col in df.columns:
+        rename[col] = COL_MAP.get(normalize(col), normalize(col))
+
+    df = df.rename(columns=rename)
+
+    for col in df.columns:
+        df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    for col in REQUIRED_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+
+    for col in REQUIRED_COLUMNS:
+        df[col] = df[col].fillna("").astype(str).str.strip()
+
+    # natureza
+    vazia = df["natureza_documental"] == ""
+    df.loc[vazia, "natureza_documental"] = natureza_padrao
+
+    # prioridade
+    vazia = df["source_priority"] == ""
+    df.loc[vazia, "source_priority"] = str(prioridade)
+
+    # descrições
+    if df["item_documental_descricao"].eq("").all():
+        df["item_documental_descricao"] = df["item_documental"]
+
+    # destino
+    vazia = df["destinacao_final"] == ""
+
+    gp = df["guarda_permanente"]
+    df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
+
+    vazia = df["destinacao_final"] == ""
+
+    el = df["eliminacao"]
+    df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
+
+    vazia = df["destinacao_final"] == ""
+
+    dr = df["destinacao_resumida"]
+    df.loc[vazia & dr.ne(""), "destinacao_final"] = dr
+
+    return df
+
 
 @lru_cache(maxsize=3)
 def load_ttd(tipo="todos", path=None):
@@ -106,120 +171,20 @@ def load_ttd(tipo="todos", path=None):
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
 
-    mapa_abas = {
-        "meio": "ativ_meio",
-        "fim": "ativ_fim",
-    }
-
-    if tipo not in ["meio", "fim", "todos"]:
+    if tipo not in {"meio", "fim", "todos"}:
         raise ValueError("Tipo deve ser 'meio', 'fim' ou 'todos'")
 
-    def preparar_df(df, natureza_padrao, prioridade):
-        if df is None or df.empty:
-            return pd.DataFrame()
+    df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
+    df_meio = _prepare_df(df_meio, "Atividade-meio", 2)
 
-        df = df.dropna(how="all").copy()
-
-        rename = {}
-        for col in df.columns:
-            rename[col] = COL_MAP.get(normalize(col), normalize(col))
-
-        df = df.rename(columns=rename)
-
-        for col in df.columns:
-            df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-
-        for col in REQUIRED_COLUMNS:
-            if col not in df.columns:
-                df[col] = ""
-
-        for col in REQUIRED_COLUMNS:
-            df[col] = df[col].fillna("").astype(str).str.strip()
-
-        if "natureza_documental" not in df.columns:
-            df["natureza_documental"] = natureza_padrao
-        else:
-            df["natureza_documental"] = df["natureza_documental"].fillna("").astype(str).str.strip()
-            df.loc[df["natureza_documental"] == "", "natureza_documental"] = natureza_padrao
-
-        if df["item_documental_descricao"].eq("").all():
-            df["item_documental_descricao"] = df["item_documental"]
-
-        if df["dossie_processo_descricao"].eq("").all():
-            df["dossie_processo_descricao"] = df["dossie_processo"]
-
-        if df["subserie_descricao"].eq("").all():
-            df["subserie_descricao"] = df["subserie"]
-
-        if df["serie_descricao"].eq("").all():
-            df["serie_descricao"] = df["serie"]
-
-        if "source_priority" not in df.columns:
-            df["source_priority"] = str(prioridade)
-        else:
-            df["source_priority"] = df["source_priority"].fillna("").astype(str).str.strip()
-            df.loc[df["source_priority"] == "", "source_priority"] = str(prioridade)
-
-        vazia = df["destinacao_final"].eq("")
-
-        if "guarda_permanente" in df.columns:
-            gp = df["guarda_permanente"].fillna("").astype(str).str.strip()
-            df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
-
-        vazia = df["destinacao_final"].eq("")
-
-        if "eliminacao" in df.columns:
-            el = df["eliminacao"].fillna("").astype(str).str.strip()
-            df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
-
-        return df
+    df_fim = pd.read_excel(excel_path, sheet_name="ativ_fim", dtype=str)
+    df_fim = _prepare_df(df_fim, "Atividade-fim", 1)
 
     if tipo == "meio":
-        df_meio = pd.read_excel(
-            excel_path,
-            sheet_name=mapa_abas["meio"],
-            engine="openpyxl",
-            dtype=str,
-        )
-        df_meio = preparar_df(df_meio, "Atividade-meio", 2)
-
-        if df_meio.empty:
-            raise ValueError("A aba 'ativ_meio' está vazia")
-
         return df_meio
 
     if tipo == "fim":
-        df_fim = pd.read_excel(
-            excel_path,
-            sheet_name=mapa_abas["fim"],
-            engine="openpyxl",
-            dtype=str,
-        )
-        df_fim = preparar_df(df_fim, "Atividade-fim", 1)
-
-        if df_fim.empty:
-            raise ValueError("A aba 'ativ_fim' está vazia")
-
         return df_fim
-
-    df_meio = pd.read_excel(
-        excel_path,
-        sheet_name=mapa_abas["meio"],
-        engine="openpyxl",
-        dtype=str,
-    )
-    df_fim = pd.read_excel(
-        excel_path,
-        sheet_name=mapa_abas["fim"],
-        engine="openpyxl",
-        dtype=str,
-    )
-
-    df_meio = preparar_df(df_meio, "Atividade-meio", 2)
-    df_fim = preparar_df(df_fim, "Atividade-fim", 1)
-
-    if df_meio.empty and df_fim.empty:
-        raise ValueError("As abas 'ativ_meio' e 'ativ_fim' estão vazias")
 
     return pd.concat([df_fim, df_meio], ignore_index=True)
 
@@ -228,105 +193,54 @@ def apply_filters(df, filters=None):
     if not filters:
         return df
 
-    filtered_df = df.copy()
+    out = df.copy()
 
     for col, value in filters.items():
-        if col not in filtered_df.columns:
+        if col not in out.columns:
             continue
-        if value is None:
-            continue
-        if isinstance(value, str) and value.strip() == "":
+        if not value:
             continue
 
-        filtered_df = filtered_df[
-            filtered_df[col].fillna("").astype(str).str.strip() == str(value).strip()
-        ]
+        out = out[out[col].fillna("").astype(str).str.strip() == str(value).strip()]
 
-    return filtered_df
+    return out
 
 
 def get_filter_options(df, column=None, filters=None):
-    filtered_df = apply_filters(df, filters)
+    df = apply_filters(df, filters)
 
-    if column is not None:
-        if column not in filtered_df.columns:
+    if column:
+        if column not in df.columns:
             return []
 
-        values = filtered_df[column].fillna("").astype(str).str.strip()
-        values = values[values != ""]
-        return sorted(values.unique().tolist())
+        vals = df[column].fillna("").astype(str).str.strip()
+        vals = vals[vals != ""]
+        return sorted(vals.unique())
 
-    filter_columns = [
-        "natureza_documental",
-        "grupo",
-        "subgrupo",
-        "serie",
-        "subserie",
-        "dossie_processo",
-        "item_documental",
-        "prazo_corrente",
-        "prazo_intermediario",
-        "destinacao_final",
-    ]
+    return {}
 
-    options = {}
-    for col in filter_columns:
-        if col in filtered_df.columns:
-            values = filtered_df[col].fillna("").astype(str).str.strip()
-            values = values[values != ""]
-            options[col] = sorted(values.unique().tolist())
-        else:
-            options[col] = []
-
-    return options
 
 def search_records(df, query="", filters=None, limit=30):
-    filtered_df = apply_filters(df, filters)
+    df = apply_filters(df, filters)
 
-    if query and str(query).strip():
+    if query:
         q = normalize_text(query)
-        search_cols = [
-            "item_documental",
-            "item_documental_descricao",
-            "dossie_processo",
-            "dossie_processo_descricao",
-            "subserie",
-            "subserie_descricao",
-            "serie",
-            "serie_descricao",
-            "subgrupo",
-            "subgrupo_descricao",
-            "grupo",
-            "grupo_descricao",
-            "codigo_classificacao",
-            "grupo_codigo",
-            "subgrupo_codigo",
-            "serie_codigo",
-            "subserie_codigo",
-            "dossie_processo_codigo",
-            "item_documental_codigo",
-            "observacao",
-        ]
 
         mask = False
-        for col in search_cols:
-            if col in filtered_df.columns:
-                col_text = filtered_df[col].fillna("").astype(str).map(normalize_text)
+        for col in [
+            "item_documental",
+            "codigo_classificacao",
+            "assunto",
+            "observacao",
+        ]:
+            if col in df.columns:
+                col_text = df[col].fillna("").astype(str).map(normalize_text)
                 col_mask = col_text.str.contains(q, na=False, regex=False)
                 mask = col_mask if isinstance(mask, bool) else (mask | col_mask)
 
         if not isinstance(mask, bool):
-            filtered_df = filtered_df[mask]
+            df = df[mask]
 
-    if "source_priority" in filtered_df.columns:
-        filtered_df = filtered_df.sort_values(
-            by=["source_priority", "codigo_classificacao", "item_documental"],
-            ascending=[True, True, True],
-        )
-    else:
-        filtered_df = filtered_df.sort_values(
-            by=["codigo_classificacao", "item_documental"],
-            ascending=[True, True],
-        )
-
-    return filtered_df.head(limit).copy()
+    return df.sort_values(
+        ["source_priority", "codigo_classificacao", "item_documental"]
+    ).head(limit)

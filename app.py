@@ -57,10 +57,13 @@ Refere-se às funções ligadas à finalidade institucional da universidade, com
 2. No módulo **Consulta de Temporalidade**, selecione o tipo de atividade.
 3. Utilize os filtros de classificação ou a pesquisa textual.
 4. Consulte os prazos de guarda e a destinação final do documento.
+5. Para saber mais consulte o site do Coordenadora de Documentação - CDOC (UDESC). Disponível em: https://www.udesc.br/proreitoria/proplan/cdoc
 
 ## Exemplo prático
 - Um documento relacionado a **férias de servidor** tende a estar em **atividade-meio**.
 - Um documento relacionado a **projeto de extensão** tende a estar em **atividade-fim**.
+            
+Desenvolvido por KP (CCT/UDESC) 2026
 
 Use o menu lateral para navegar entre os módulos do sistema.
 """)
