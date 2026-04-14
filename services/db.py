@@ -79,10 +79,81 @@ def list_inventory_items() -> list[sqlite3.Row]:
     return rows
 
 
+def list_setores_inventory() -> list[str]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT TRIM(COALESCE(setor, '')) AS setor
+            FROM inventory_items
+            WHERE TRIM(COALESCE(setor, '')) <> ''
+            ORDER BY setor
+            """
+        ).fetchall()
+    return [row["setor"] for row in rows]
+
+
+def list_inventory_items_by_setor(setor: str) -> list[sqlite3.Row]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM inventory_items
+            WHERE TRIM(COALESCE(setor, '')) = TRIM(?)
+            ORDER BY datetime(criado_em) DESC, id DESC
+            """,
+            (setor,),
+        ).fetchall()
+    return rows
+
+
 def delete_inventory_item(item_id: int) -> None:
     with get_conn() as conn:
-        conn.execute("DELETE FROM inventory_items WHERE id = ?", (item_id,))
         conn.execute("DELETE FROM validation_records WHERE inventory_id = ?", (item_id,))
+        conn.execute("DELETE FROM inventory_items WHERE id = ?", (item_id,))
+
+
+def delete_inventory_items(item_ids: list[int]) -> int:
+    if not item_ids:
+        return 0
+
+    placeholders = ", ".join(["?"] * len(item_ids))
+    with get_conn() as conn:
+        conn.execute(
+            f"DELETE FROM validation_records WHERE inventory_id IN ({placeholders})",
+            item_ids,
+        )
+        conn.execute(
+            f"DELETE FROM inventory_items WHERE id IN ({placeholders})",
+            item_ids,
+        )
+    return len(item_ids)
+
+
+def delete_inventory_items_by_setor(setor: str) -> int:
+    with get_conn() as conn:
+        ids = conn.execute(
+            """
+            SELECT id
+            FROM inventory_items
+            WHERE TRIM(COALESCE(setor, '')) = TRIM(?)
+            """,
+            (setor,),
+        ).fetchall()
+
+        item_ids = [row["id"] for row in ids]
+        if not item_ids:
+            return 0
+
+        placeholders = ", ".join(["?"] * len(item_ids))
+        conn.execute(
+            f"DELETE FROM validation_records WHERE inventory_id IN ({placeholders})",
+            item_ids,
+        )
+        conn.execute(
+            f"DELETE FROM inventory_items WHERE id IN ({placeholders})",
+            item_ids,
+        )
+    return len(item_ids)
 
 
 def replace_inventory_from_dataframe(df) -> int:
