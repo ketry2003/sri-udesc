@@ -122,7 +122,6 @@ def build_box_covers_from_template_docx_bytes(records: list[dict]) -> bytes:
         temp_doc = Document(str(template_path))
 
         mapping = {
-            mapping = {
         "fundo": row.get("fundo") or FUNDO_PADRAO,
         "unidade_macro": row.get("unidade_macro", ""),
         "setor_responsavel": row.get("setor_responsavel", ""),
