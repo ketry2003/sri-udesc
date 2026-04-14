@@ -98,23 +98,56 @@ COL_MAP = {
     "marcado_guarda_permanente": "marcado_guarda_permanente",
 }
 
-@lru_cache(maxsize=1)
-def load_ttd(path=None):
+
+@lru_cache(maxsize=3)
+def load_ttd(tipo="meio", path=None):
+    from pathlib import Path
+    import pandas as pd
+
     base_dir = Path(__file__).resolve().parent.parent
-    excel_path = Path(path) if path else base_dir / "data" / "reference" / "TTD.xlsx"
+    arquivo_ttd = base_dir / "data" / "reference" / "ttd.xlsx"
+    excel_path = path if path else arquivo_ttd
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
 
+    mapa_abas = {
+        "meio": "ativ_meio",
+        "fim": "ativ_fim"
+    }
+
+    if tipo not in mapa_abas:
+        raise ValueError("Tipo deve ser 'meio' ou 'fim'")
+
+    aba = mapa_abas[tipo]
+
     df = pd.read_excel(
         excel_path,
-        sheet_name="Todos",
+        sheet_name=aba,
         engine="openpyxl",
         dtype=str,
     )
 
     if df is None or df.empty:
-        raise ValueError("A planilha 'Todos' está vazia")
+        raise ValueError(f"A aba '{aba}' está vazia")
+
+    return df
+
+def load_ttd_completo(path=None):
+    from pathlib import Path
+    import pandas as pd
+
+    base_dir = Path(__file__).resolve().parent.parent
+    arquivo_ttd = base_dir / "data" / "reference" / "ttd.xlsx"
+    excel_path = path if path else arquivo_ttd
+
+    df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
+    df_fim = pd.read_excel(excel_path, sheet_name="ativ_fim", dtype=str)
+
+    df_meio["tipo_atividade"] = "meio"
+    df_fim["tipo_atividade"] = "fim"
+
+    df = pd.concat([df_meio, df_fim], ignore_index=True)
 
     return df
 
@@ -134,7 +167,8 @@ def apply_filters(df, filters=None):
             continue
 
         filtered_df = filtered_df[
-            filtered_df[col].fillna("").astype(str).str.strip() == str(value).strip()
+            filtered_df[col].fillna("").astype(str).str.strip()
+            == str(value).strip()
         ]
 
     return filtered_df

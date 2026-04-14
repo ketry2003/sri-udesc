@@ -1,34 +1,68 @@
 from __future__ import annotations
 
-import pandas as pd
 import streamlit as st
 
-from services.data_loader import load_ttd
-
-
-df = load_ttd()
-
-st.title("SRI Arquivístico UDESC - CCT")
-st.caption("Ferramenta de apoio para consulta de temporalidade, inventário, eliminação documental e capas de caixa.")
-
-col1, col2, col3 = st.columns(3)
-col1.metric("Registros TTD carregados", len(df))
-col2.metric(
-    "Atividade-meio",
-    int((df.get("natureza_documental", pd.Series(index=df.index, dtype="object")) == "Atividade-meio").sum())
-)
-col3.metric(
-    "Atividade-fim",
-    int((df.get("natureza_documental", pd.Series(index=df.index, dtype="object")) == "Atividade-fim").sum())
+st.set_page_config(
+    page_title="SRI UDESC",
+    page_icon="📁",
+    layout="wide"
 )
 
-st.markdown(
-    """
-### Módulos
-Use o menu lateral para acessar:
-- Consulta de temporalidade
-- Inventário
-- Eliminação documental
-- Capas de caixa
-"""
-)
+st.title("SRI – Sistema de Recuperação da Informação Arquivística")
+st.subheader("Arquivo Permanente | UDESC")
+
+st.markdown("""
+Bem-vindo ao Sistema de Recuperação da Informação Arquivística da UDESC.
+
+Este sistema foi desenvolvido para apoiar a consulta da classificação documental,
+dos prazos de guarda e da destinação final dos documentos produzidos e acumulados
+no âmbito da Universidade do Estado de Santa Catarina.
+
+## Objetivos do sistema
+- facilitar a consulta à Tabela de Temporalidade de Documentos (TTD);
+- apoiar a organização de arquivos correntes, intermediários e permanentes;
+- auxiliar setores administrativos na identificação documental;
+- contribuir para inventário, etiquetagem, acondicionamento e descarte documental.
+
+## Módulos disponíveis
+- **Consulta de Temporalidade**: permite pesquisar documentos e verificar classificação, prazos e destinação;
+- **Inventário**: auxilia na elaboração de inventários documentais;
+- **Etiquetas e Capas**: apoia a identificação de caixas, pastas e dossiês;
+- **Descarte Documental**: fornece apoio para procedimentos de eliminação documental.
+
+## Antes de iniciar a consulta
+A consulta à temporalidade documental é organizada em dois grandes grupos:
+
+### Atividade-meio
+Refere-se às funções administrativas e de apoio da instituição, como:
+- recursos humanos;
+- compras;
+- contratos;
+- patrimônio;
+- finanças;
+- protocolo;
+- gestão documental.
+
+### Atividade-fim
+Refere-se às funções ligadas à finalidade institucional da universidade, como:
+- ensino;
+- pesquisa;
+- extensão;
+- pós-graduação;
+- registro acadêmico;
+- atividades pedagógicas e finalísticas.
+
+## Como utilizar o sistema
+1. Acesse, no menu lateral, o módulo desejado.
+2. No módulo **Consulta de Temporalidade**, selecione o tipo de atividade.
+3. Utilize os filtros de classificação ou a pesquisa textual.
+4. Consulte os prazos de guarda e a destinação final do documento.
+
+## Exemplo prático
+- Um documento relacionado a **férias de servidor** tende a estar em **atividade-meio**.
+- Um documento relacionado a **projeto de extensão** tende a estar em **atividade-fim**.
+
+Use o menu lateral para navegar entre os módulos do sistema.
+""")
+
+st.info("Selecione um módulo no menu lateral para iniciar a navegação no sistema.")

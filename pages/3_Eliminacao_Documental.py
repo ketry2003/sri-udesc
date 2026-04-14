@@ -4,7 +4,7 @@ import streamlit as st
 
 from services.db import list_inventory_items
 from services.ui_helpers import dataframe_from_rows
-from exporters import (
+from services.exporters import (
     build_elimination_listing_dataframe,
     build_elimination_pdf,
     build_edital_pdf,
@@ -14,6 +14,11 @@ from exporters import (
 
 
 def salvar_arquivo_local(nome_arquivo: str, conteudo: bytes) -> str:
+    """
+    Salva arquivo apenas no ambiente onde o app está rodando.
+    Em ambiente local, salva na pasta ./saidas.
+    Em nuvem, salva no servidor temporário.
+    """
     pasta_saida = Path("saidas")
     pasta_saida.mkdir(exist_ok=True)
     caminho = pasta_saida / nome_arquivo
@@ -22,6 +27,7 @@ def salvar_arquivo_local(nome_arquivo: str, conteudo: bytes) -> str:
     return str(caminho.resolve())
 
 
+st.set_page_config(page_title="Eliminação Documental", layout="wide")
 st.title("Eliminação documental")
 
 rows = list_inventory_items()
@@ -32,18 +38,24 @@ if df.empty:
     st.stop()
 
 st.caption(
-    "Módulo baseado na IN SEA nº 10/2024: gera Anexo I (Listagem), "
-    "Anexo II (Edital) e Anexo III (Termo)."
+    "Módulo baseado na IN SEA nº 10/2024: gera Anexo I (Listagem de Eliminação), "
+    "Anexo II (Edital de Ciência de Eliminação) e Anexo III (Termo de Eliminação)."
 )
 
+# Monta opções de seleção com identificação mais clara
 opcoes = {
-    f"{row['tipo_documental']} | Caixa {row['caixa'] or '-'} | {row.get('datas_limite', '-') or '-'}": row.to_dict()
+    (
+        f"{row.get('tipo_documental', '-') or '-'} | "
+        f"Caixa {row.get('caixa', '-') or '-'} | "
+        f"{row.get('datas_limite', '-') or '-'}"
+    ): row.to_dict()
     for _, row in df.iterrows()
 }
 
 selecionados = st.multiselect(
     "Selecione os itens para eliminação",
-    options=list(opcoes.keys())
+    options=list(opcoes.keys()),
+    help="Somente itens com destinação final eliminável devem ser incluídos."
 )
 
 if not selecionados:
@@ -52,6 +64,7 @@ if not selecionados:
 
 records = [opcoes[k] for k in selecionados]
 
+# Bloqueia itens de guarda permanente
 itens_bloqueados = []
 for item in records:
     destinacao = str(item.get("destinacao_final", "")).lower()
@@ -60,9 +73,11 @@ for item in records:
 
 if itens_bloqueados:
     st.error(
-        "Este(s) item(ns) possuem destinação de GUARDA PERMANENTE e não podem ser incluídos na eliminação:\n\n- "
+        "Os itens abaixo possuem destinação de guarda permanente e não podem ser incluídos "
+        "na eliminação documental:\n\n- "
         + "\n- ".join(itens_bloqueados)
-        + "\n\nConsulte a Tabela de Temporalidade no módulo 'Consulta de temporalidade'."
+        + "\n\nRevise a seleção no inventário e confirme a temporalidade no módulo "
+        "'Consulta de temporalidade'."
     )
     st.stop()
 
@@ -75,7 +90,10 @@ st.markdown("## Dados do processo e dos anexos")
 col1, col2, col3 = st.columns(3)
 orgao_entidade = col1.text_input("Órgão/Entidade", value="UDESC")
 unidade_setor = col2.text_input("Unidade/Setor", value="CCT / Arquivo Permanente")
-processo_numero = col3.text_input("Processo (sigla, número/ano)", placeholder="Ex.: UDESC 12345/2026")
+processo_numero = col3.text_input(
+    "Processo (sigla, número/ano)",
+    placeholder="Ex.: UDESC 12345/2026"
+)
 
 col4, col5, col6, col7 = st.columns(4)
 listagem_numero = col4.text_input("Nº da Listagem", value="01")
@@ -85,11 +103,17 @@ edital_ano = col7.text_input("Ano do Edital", value="2026")
 
 col8, col9 = st.columns(2)
 nome_titular_orgao = col8.text_input("Nome do Titular do Órgão")
-cargo_titular_orgao = col9.text_input("Cargo do Titular do Órgão", placeholder="Ex.: Diretor Geral, Reitor(a)")
+cargo_titular_orgao = col9.text_input(
+    "Cargo do Titular do Órgão",
+    placeholder="Ex.: Diretor-Geral, Reitor(a)"
+)
 
 col10, col11 = st.columns(2)
 presidente_cpad = col10.text_input("Nome do Presidente da CPAD")
-cargo_presidente_cpad = col11.text_input("Cargo do Presidente da CPAD", value="Presidente da CPAD")
+cargo_presidente_cpad = col11.text_input(
+    "Cargo do Presidente da CPAD",
+    value="Presidente da CPAD"
+)
 
 col12, col13 = st.columns(2)
 responsavel_selecao = col12.text_input("Responsável pela seleção")
@@ -98,7 +122,10 @@ cargo_responsavel_selecao = col13.text_input("Cargo do responsável pela seleç�
 col14, col15, col16 = st.columns(3)
 local = col14.text_input("Local", value="Joinville/SC")
 data_local = col15.text_input("Data local", placeholder="Ex.: 08/04/2026")
-doe_numero_data = col16.text_input("DOE nº e data de publicação", placeholder="Ex.: DOE nº 22401, de 22/11/2024")
+doe_numero_data = col16.text_input(
+    "DOE nº e data de publicação",
+    placeholder="Ex.: DOE nº 22401, de 22/11/2024"
+)
 
 col17, col18 = st.columns(2)
 data_eliminacao_extenso = col17.text_input(
@@ -107,7 +134,7 @@ data_eliminacao_extenso = col17.text_input(
 )
 conjuntos_documentais = col18.text_input(
     "Conjuntos documentais (para o Edital)",
-    placeholder="Ex.: Cronogramas de horário de aula; atas; relatórios"
+    placeholder="Ex.: cronogramas de horário de aula; atas; relatórios"
 )
 
 datas_limite_gerais = st.text_input(
@@ -141,37 +168,63 @@ meta = {
 
 st.markdown("## Gerar arquivos")
 
-col_a, col_b = st.columns(2)
+col_a, col_b = st.columns([1, 1])
 
 with col_a:
     if st.button("Gerar Anexo I, II e III"):
-        anexo_i_pdf = build_elimination_pdf(records, meta)
-        anexo_ii_pdf = build_edital_pdf(records, meta)
-        anexo_iii_pdf = build_termo_pdf(records, meta)
-        eliminacao_excel = dataframe_to_excel_bytes(
-            build_elimination_listing_dataframe(records),
-            sheet_name="Listagem"
-        )
+        campos_obrigatorios = {
+            "Órgão/Entidade": orgao_entidade,
+            "Unidade/Setor": unidade_setor,
+            "Processo": processo_numero,
+            "Nº da Listagem": listagem_numero,
+            "Ano da Listagem": listagem_ano,
+            "Nº do Edital": edital_numero,
+            "Ano do Edital": edital_ano,
+            "Local": local,
+        }
 
-        nome_anexo_i = f"anexo_i_listagem_eliminacao_{listagem_numero}_{listagem_ano}.pdf"
-        nome_anexo_ii = f"anexo_ii_edital_ciencia_{edital_numero}_{edital_ano}.pdf"
-        nome_anexo_iii = f"anexo_iii_termo_eliminacao_{edital_numero}_{edital_ano}.pdf"
-        nome_excel = f"listagem_eliminacao_{listagem_numero}_{listagem_ano}.xlsx"
+        faltantes = [campo for campo, valor in campos_obrigatorios.items() if not str(valor).strip()]
+        if faltantes:
+            st.error(
+                "Preencha os campos obrigatórios antes de gerar os arquivos:\n\n- "
+                + "\n- ".join(faltantes)
+            )
+            st.stop()
 
-        st.session_state["anexo_i_pdf"] = anexo_i_pdf
-        st.session_state["anexo_ii_pdf"] = anexo_ii_pdf
-        st.session_state["anexo_iii_pdf"] = anexo_iii_pdf
-        st.session_state["eliminacao_excel"] = eliminacao_excel
+        try:
+            anexo_i_pdf = build_elimination_pdf(records, meta)
+            anexo_ii_pdf = build_edital_pdf(records, meta)
+            anexo_iii_pdf = build_termo_pdf(records, meta)
+            eliminacao_excel = dataframe_to_excel_bytes(
+                build_elimination_listing_dataframe(records),
+                sheet_name="Listagem"
+            )
 
-        st.session_state["caminho_anexo_i"] = salvar_arquivo_local(nome_anexo_i, anexo_i_pdf)
-        st.session_state["caminho_anexo_ii"] = salvar_arquivo_local(nome_anexo_ii, anexo_ii_pdf)
-        st.session_state["caminho_anexo_iii"] = salvar_arquivo_local(nome_anexo_iii, anexo_iii_pdf)
-        st.session_state["caminho_excel"] = salvar_arquivo_local(nome_excel, eliminacao_excel)
+            nome_anexo_i = f"anexo_i_listagem_eliminacao_{listagem_numero}_{listagem_ano}.pdf"
+            nome_anexo_ii = f"anexo_ii_edital_ciencia_{edital_numero}_{edital_ano}.pdf"
+            nome_anexo_iii = f"anexo_iii_termo_eliminacao_{edital_numero}_{edital_ano}.pdf"
+            nome_excel = f"listagem_eliminacao_{listagem_numero}_{listagem_ano}.xlsx"
 
-        st.success("Arquivos gerados com sucesso e salvos na pasta 'saidas'.")
+            st.session_state["anexo_i_pdf"] = anexo_i_pdf
+            st.session_state["anexo_ii_pdf"] = anexo_ii_pdf
+            st.session_state["anexo_iii_pdf"] = anexo_iii_pdf
+            st.session_state["eliminacao_excel"] = eliminacao_excel
+
+            # Salva localmente apenas como apoio técnico
+            st.session_state["caminho_anexo_i"] = salvar_arquivo_local(nome_anexo_i, anexo_i_pdf)
+            st.session_state["caminho_anexo_ii"] = salvar_arquivo_local(nome_anexo_ii, anexo_ii_pdf)
+            st.session_state["caminho_anexo_iii"] = salvar_arquivo_local(nome_anexo_iii, anexo_iii_pdf)
+            st.session_state["caminho_excel"] = salvar_arquivo_local(nome_excel, eliminacao_excel)
+
+            st.success("Arquivos gerados com sucesso.")
+        except Exception as e:
+            st.error(f"Erro ao gerar os arquivos: {e}")
 
 with col_b:
-    st.info("Preencha os campos acima e clique em 'Gerar Anexo I, II e III'.")
+    st.info(
+        "Preencha os dados do processo e clique em 'Gerar Anexo I, II e III'. "
+        "Depois use os botões de download abaixo."
+    )
 
 if "anexo_i_pdf" in st.session_state:
     st.markdown("### Downloads")
@@ -182,7 +235,6 @@ if "anexo_i_pdf" in st.session_state:
         file_name=f"anexo_i_listagem_eliminacao_{listagem_numero}_{listagem_ano}.pdf",
         mime="application/pdf",
         key="download_anexo_i_pdf",
-        on_click="ignore",
     )
 
     st.download_button(
@@ -191,7 +243,6 @@ if "anexo_i_pdf" in st.session_state:
         file_name=f"anexo_ii_edital_ciencia_{edital_numero}_{edital_ano}.pdf",
         mime="application/pdf",
         key="download_anexo_ii_pdf",
-        on_click="ignore",
     )
 
     st.download_button(
@@ -200,7 +251,6 @@ if "anexo_i_pdf" in st.session_state:
         file_name=f"anexo_iii_termo_eliminacao_{edital_numero}_{edital_ano}.pdf",
         mime="application/pdf",
         key="download_anexo_iii_pdf",
-        on_click="ignore",
     )
 
     st.download_button(
@@ -209,11 +259,14 @@ if "anexo_i_pdf" in st.session_state:
         file_name=f"listagem_eliminacao_{listagem_numero}_{listagem_ano}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         key="download_eliminacao_excel",
-        on_click="ignore",
     )
 
-    st.markdown("### Arquivos salvos no computador")
-    st.code(st.session_state.get("caminho_anexo_i", ""))
-    st.code(st.session_state.get("caminho_anexo_ii", ""))
-    st.code(st.session_state.get("caminho_anexo_iii", ""))
-    st.code(st.session_state.get("caminho_excel", ""))
+    with st.expander("Detalhes técnicos dos arquivos gerados", expanded=False):
+        st.warning(
+            "Os caminhos abaixo referem-se ao ambiente onde o app está rodando. "
+            "Na nuvem, eles não representam o seu computador."
+        )
+        st.code(st.session_state.get("caminho_anexo_i", ""))
+        st.code(st.session_state.get("caminho_anexo_ii", ""))
+        st.code(st.session_state.get("caminho_anexo_iii", ""))
+        st.code(st.session_state.get("caminho_excel", ""))

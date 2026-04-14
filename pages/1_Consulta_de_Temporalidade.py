@@ -6,7 +6,21 @@ st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
 
 st.title("Consulta de temporalidade")
 
-df = load_ttd()
+# 🔹 NOVO: seletor de tipo de atividade
+tipo = st.selectbox(
+    "Selecione o tipo de atividade:",
+    options=["meio", "fim"],
+    format_func=lambda x: "Atividade-meio" if x == "meio" else "Atividade-fim",
+    help="""
+Atividade-meio: funções administrativas
+(RH, compras, contratos, patrimônio, etc).
+Atividade-fim: funções ligadas ao ensino, pesquisa, extensão
+e atividades acadêmicas.
+"""
+)
+
+# 🔹 ALTERADO: agora passa o tipo
+df = load_ttd(tipo)
 
 st.caption("Pesquise por tipo documental ou pelo número/código de classificação.")
 

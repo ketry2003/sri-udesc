@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from io import BytesIO
+from copy import deepcopy
 from datetime import datetime
+from io import BytesIO
+from pathlib import Path
 
 import pandas as pd
 from docx import Document
-from docx.enum.section import WD_SECTION
-from docx.shared import Cm, Pt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+)
 
 from config import FUNDO_PADRAO
 
@@ -54,57 +56,115 @@ def dataframe_to_excel_bytes(df: pd.DataFrame, sheet_name: str = "dados") -> byt
     return output.getvalue()
 
 
-def build_box_covers_docx_bytes(records: list[dict]) -> bytes:
-    doc = Document()
-    section = doc.sections[0]
-    section.top_margin = Cm(1.5)
-    section.bottom_margin = Cm(1.5)
-    section.left_margin = Cm(1.5)
-    section.right_margin = Cm(1.5)
+def _replace_text_in_paragraph(paragraph, mapping: dict) -> None:
+    """
+    Substitui placeholders no formato {{ campo }} em um parágrafo.
+    Mantém ao máximo a formatação do primeiro run.
+    """
+    if not paragraph.text:
+        return
 
-    for idx, row in enumerate(records):
-        if idx > 0:
-            doc.add_section(WD_SECTION.NEW_PAGE)
+    texto = paragraph.text
+    alterado = False
 
-        p = doc.add_paragraph()
-        p.style = doc.styles["Title"]
-        run = p.add_run("CAPA / ETIQUETA DE CAIXA")
-        run.bold = True
-        run.font.size = Pt(18)
+    for key, value in mapping.items():
+        placeholder = "{{ " + key + " }}"
+        if placeholder in texto:
+            texto = texto.replace(placeholder, str(value or ""))
+            alterado = True
 
-        info = [
-            ("Fundo", row.get("fundo") or FUNDO_PADRAO),
-            ("Grupo", row.get("grupo", "")),
-            ("Subgrupo", row.get("subgrupo", "")),
-            ("Série", row.get("serie", "")),
-            ("Subsérie", row.get("subserie", "")),
-            ("Dossiê / Processo", row.get("dossie_processo", "")),
-            ("Item documental", row.get("item_documental", "")),
-            ("Setor", row.get("setor", "")),
-            ("Caixa", row.get("caixa", "")),
-            ("Datas-limite", row.get("datas_limite", "")),
-            (
-                "Temporalidade",
-                f"Corrente: {row.get('prazo_corrente', '')} | "
-                f"Intermediário: {row.get('prazo_intermediario', '')} | "
-                f"Destinação: {row.get('destinacao_final', '')}",
-            ),
-        ]
+    if alterado:
+        if paragraph.runs:
+            paragraph.runs[0].text = texto
+            for run in paragraph.runs[1:]:
+                run.text = ""
+        else:
+            paragraph.text = texto
 
-        table = doc.add_table(rows=0, cols=2)
-        table.style = "Table Grid"
-        for label, value in info:
-            cells = table.add_row().cells
-            cells[0].text = str(label)
-            cells[1].text = str(value or "-")
 
-        doc.add_paragraph(
-            "Universidade do Estado de Santa Catarina - UDESC / Centro de Ciências Tecnológicas - CCT"
-        )
+def _replace_text_in_table(table, mapping: dict) -> None:
+    for row in table.rows:
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                _replace_text_in_paragraph(paragraph, mapping)
+            for nested_table in cell.tables:
+                _replace_text_in_table(nested_table, mapping)
+
+
+def _replace_placeholders_in_doc(doc: Document, mapping: dict) -> None:
+    for paragraph in doc.paragraphs:
+        _replace_text_in_paragraph(paragraph, mapping)
+
+    for table in doc.tables:
+        _replace_text_in_table(table, mapping)
+
+
+def build_box_covers_from_template_docx_bytes(records: list[dict]) -> bytes:
+    """
+    Gera capas/etiquetas de caixa a partir de um template DOCX institucional.
+    O layout é preservado a partir do arquivo:
+    data/reference/etiqueta_caixas.docx
+    """
+    base_dir = Path(__file__).resolve().parent.parent
+    template_path = base_dir / "data" / "reference" / "etiqueta_caixas.docx"
+
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template DOCX não encontrado: {template_path}")
+
+    output_doc = Document()
+
+    # Remove o parágrafo vazio inicial do documento novo
+    if output_doc.paragraphs:
+        p = output_doc.paragraphs[0]._element
+        p.getparent().remove(p)
+
+    for index, row in enumerate(records):
+        temp_doc = Document(str(template_path))
+
+        mapping = {
+            mapping = {
+        "fundo": row.get("fundo") or FUNDO_PADRAO,
+        "unidade_macro": row.get("unidade_macro", ""),
+        "setor_responsavel": row.get("setor_responsavel", ""),
+        "unidade_documentacao": row.get("unidade_documentacao", ""),
+        "codigo_classificacao": row.get("codigo_classificacao", ""),
+        "assunto": row.get("assunto", ""),
+
+        "datas_limite_resumo": row.get("datas_limite_resumo", ""),
+        "datas_limite_detalhadas": row.get("datas_limite_detalhadas", ""),
+
+        "prazo_corrente": row.get("prazo_corrente", ""),
+        "prazo_intermediario": row.get("prazo_intermediario", ""),
+
+        "destinacao": row.get("destinacao", ""),
+        "destaque_permanente": row.get("destaque_permanente", ""),
+
+        "numero_caixa": row.get("numero_caixa", ""),
+
+        "observacao": row.get("observacao", ""),
+        "lista_itens_caixa": row.get("lista_itens_caixa", ""),
+        }
+
+        _replace_placeholders_in_doc(temp_doc, mapping)
+
+        for element in temp_doc.element.body:
+            output_doc.element.body.append(deepcopy(element))
+
+        if index < len(records) - 1:
+            output_doc.add_page_break()
 
     output = BytesIO()
-    doc.save(output)
+    output_doc.save(output)
+    output.seek(0)
     return output.getvalue()
+
+
+def build_box_covers_docx_bytes(records: list[dict]) -> bytes:
+    """
+    Mantida por compatibilidade com o restante do projeto.
+    Agora usa o template DOCX institucional.
+    """
+    return build_box_covers_from_template_docx_bytes(records)
 
 
 def _doc_template(buffer: BytesIO) -> SimpleDocTemplate:
