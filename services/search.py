@@ -35,11 +35,6 @@ REQUIRED_COLUMNS = [
     "destinacao_final",
     "observacao",
     "source_priority",
-    "eliminacao",
-    "guarda_permanente",
-    "marcado_eliminacao",
-    "marcado_guarda_permanente",
-    "destinacao_resumida",
 ]
 
 
@@ -65,6 +60,14 @@ def normalize_text(text):
     return text
 
 
+def natural_key(text):
+    text = str(text or "")
+    return [
+        int(part) if part.isdigit() else part.lower()
+        for part in re.split(r"(\d+)", text)
+    ]
+
+
 COL_MAP = {
     "natureza_documental": "natureza_documental",
     "natureza": "natureza_documental",
@@ -76,37 +79,22 @@ COL_MAP = {
     "item_documental": "item_documental",
     "assunto": "assunto",
     "codigo_classificacao": "codigo_classificacao",
-
     "grupo_codigo": "grupo_codigo",
     "subgrupo_codigo": "subgrupo_codigo",
     "serie_codigo": "serie_codigo",
     "subserie_codigo": "subserie_codigo",
     "dossie_processo_codigo": "dossie_processo_codigo",
     "item_documental_codigo": "item_documental_codigo",
-
     "grupo_descricao": "grupo_descricao",
     "subgrupo_descricao": "subgrupo_descricao",
     "serie_descricao": "serie_descricao",
     "subserie_descricao": "subserie_descricao",
     "dossie_processo_descricao": "dossie_processo_descricao",
     "item_documental_descricao": "item_documental_descricao",
-
     "prazo_corrente": "prazo_corrente",
     "prazo_intermediario": "prazo_intermediario",
     "destinacao_final": "destinacao_final",
     "observacao": "observacao",
-
-    # seu novo modelo Excel
-    "subfuncao": "subserie",
-    "atividade": "dossie_processo",
-    "documento": "item_documental",
-    "prazo_intermediaria": "prazo_intermediario",
-    "destinacao_resumida": "destinacao_resumida",
-
-    "eliminacao": "eliminacao",
-    "guarda_permanente": "guarda_permanente",
-    "marcado_eliminacao": "marcado_eliminacao",
-    "marcado_guarda_permanente": "marcado_guarda_permanente",
 }
 
 
@@ -122,9 +110,6 @@ def _prepare_df(df, natureza_padrao, prioridade):
 
     df = df.rename(columns=rename)
 
-    for col in df.columns:
-        df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-
     for col in REQUIRED_COLUMNS:
         if col not in df.columns:
             df[col] = ""
@@ -132,33 +117,11 @@ def _prepare_df(df, natureza_padrao, prioridade):
     for col in REQUIRED_COLUMNS:
         df[col] = df[col].fillna("").astype(str).str.strip()
 
-    # natureza
-    vazia = df["natureza_documental"] == ""
-    df.loc[vazia, "natureza_documental"] = natureza_padrao
+    if df["natureza_documental"].eq("").all():
+        df["natureza_documental"] = natureza_padrao
 
-    # prioridade
-    vazia = df["source_priority"] == ""
-    df.loc[vazia, "source_priority"] = str(prioridade)
-
-    # descrições
-    if df["item_documental_descricao"].eq("").all():
-        df["item_documental_descricao"] = df["item_documental"]
-
-    # destino
-    vazia = df["destinacao_final"] == ""
-
-    gp = df["guarda_permanente"]
-    df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
-
-    vazia = df["destinacao_final"] == ""
-
-    el = df["eliminacao"]
-    df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
-
-    vazia = df["destinacao_final"] == ""
-
-    dr = df["destinacao_resumida"]
-    df.loc[vazia & dr.ne(""), "destinacao_final"] = dr
+    if df["source_priority"].eq("").all():
+        df["source_priority"] = str(prioridade)
 
     return df
 
@@ -170,9 +133,6 @@ def load_ttd(tipo="todos", path=None):
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
-
-    if tipo not in {"meio", "fim", "todos"}:
-        raise ValueError("Tipo deve ser 'meio', 'fim' ou 'todos'")
 
     df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
     df_meio = _prepare_df(df_meio, "Atividade-meio", 2)
@@ -201,7 +161,10 @@ def apply_filters(df, filters=None):
         if not value:
             continue
 
-        out = out[out[col].fillna("").astype(str).str.strip() == str(value).strip()]
+        out = out[
+            out[col].fillna("").astype(str).str.strip()
+            == str(value).strip()
+        ]
 
     return out
 
@@ -209,15 +172,13 @@ def apply_filters(df, filters=None):
 def get_filter_options(df, column=None, filters=None):
     df = apply_filters(df, filters)
 
-    if column:
-        if column not in df.columns:
-            return []
+    if not column or column not in df.columns:
+        return []
 
-        vals = df[column].fillna("").astype(str).str.strip()
-        vals = vals[vals != ""]
-        return sorted(vals.unique())
+    vals = df[column].fillna("").astype(str).str.strip()
+    vals = vals[vals != ""].unique().tolist()
 
-    return {}
+    return sorted(vals, key=natural_key)
 
 
 def search_records(df, query="", filters=None, limit=30):
@@ -226,21 +187,30 @@ def search_records(df, query="", filters=None, limit=30):
     if query:
         q = normalize_text(query)
 
-        mask = False
-        for col in [
+        campos_busca = [
             "item_documental",
             "codigo_classificacao",
             "assunto",
+            "subserie",
+            "dossie_processo",
             "observacao",
-        ]:
-            if col in df.columns:
-                col_text = df[col].fillna("").astype(str).map(normalize_text)
-                col_mask = col_text.str.contains(q, na=False, regex=False)
-                mask = col_mask if isinstance(mask, bool) else (mask | col_mask)
+        ]
 
-        if not isinstance(mask, bool):
+        mask = None
+
+        for col in campos_busca:
+            if col not in df.columns:
+                continue
+
+            col_text = df[col].fillna("").astype(str).map(normalize_text)
+            atual = col_text.str.contains(q, na=False, regex=False)
+
+            mask = atual if mask is None else (mask | atual)
+
+        if mask is not None:
             df = df[mask]
 
     return df.sort_values(
-        ["source_priority", "codigo_classificacao", "item_documental"]
+        by=["source_priority", "codigo_classificacao", "item_documental"],
+        key=lambda col: col.map(natural_key) if col.name == "codigo_classificacao" else col
     ).head(limit)
