@@ -13,3 +13,5 @@ FUNDO_PADRAO = "UDESC"
 
 OFFICIAL_BOX_COVER_NAME = "capas_caixas_udesc.docx"
 QUICK_FILL_WORKBOOK_NAME = "inventario_documental_preenchimento_rapido.xlsx"
+
+OFFICIAL_INVENTORY_TEMPLATE_PATH = REFERENCE_DIR / "inventario_documental_modelo.xlsx"
