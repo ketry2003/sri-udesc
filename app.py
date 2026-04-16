@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
+from services.db import init_db
+
+init_db()
 
 st.set_page_config(
     page_title="SRI UDESC",

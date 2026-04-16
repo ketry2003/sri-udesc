@@ -2,6 +2,8 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
+from services.db import init_db
+
 from config import DB_PATH
 
 SCHEMA = """
