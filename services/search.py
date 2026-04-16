@@ -35,6 +35,11 @@ REQUIRED_COLUMNS = [
     "destinacao_final",
     "observacao",
     "source_priority",
+    "eliminacao",
+    "guarda_permanente",
+    "marcado_eliminacao",
+    "marcado_guarda_permanente",
+    "destinacao_resumida",
 ]
 
 
@@ -79,22 +84,35 @@ COL_MAP = {
     "item_documental": "item_documental",
     "assunto": "assunto",
     "codigo_classificacao": "codigo_classificacao",
+
     "grupo_codigo": "grupo_codigo",
     "subgrupo_codigo": "subgrupo_codigo",
     "serie_codigo": "serie_codigo",
     "subserie_codigo": "subserie_codigo",
     "dossie_processo_codigo": "dossie_processo_codigo",
     "item_documental_codigo": "item_documental_codigo",
+
     "grupo_descricao": "grupo_descricao",
     "subgrupo_descricao": "subgrupo_descricao",
     "serie_descricao": "serie_descricao",
     "subserie_descricao": "subserie_descricao",
     "dossie_processo_descricao": "dossie_processo_descricao",
     "item_documental_descricao": "item_documental_descricao",
+
     "prazo_corrente": "prazo_corrente",
     "prazo_intermediario": "prazo_intermediario",
     "destinacao_final": "destinacao_final",
     "observacao": "observacao",
+
+    # MAPEAMENTO DA ABA ativ_fim
+    "subfuncao": "subserie",
+    "atividade": "dossie_processo",
+
+    "eliminacao": "eliminacao",
+    "guarda_permanente": "guarda_permanente",
+    "marcado_eliminacao": "marcado_eliminacao",
+    "marcado_guarda_permanente": "marcado_guarda_permanente",
+    "destinacao_resumida": "destinacao_resumida",
 }
 
 
@@ -117,11 +135,33 @@ def _prepare_df(df, natureza_padrao, prioridade):
     for col in REQUIRED_COLUMNS:
         df[col] = df[col].fillna("").astype(str).str.strip()
 
+    # natureza_documental
     if df["natureza_documental"].eq("").all():
         df["natureza_documental"] = natureza_padrao
 
+    # prioridade
     if df["source_priority"].eq("").all():
         df["source_priority"] = str(prioridade)
+
+    # descrição do item
+    if df["item_documental_descricao"].eq("").all():
+        df["item_documental_descricao"] = df["item_documental"]
+
+    # destinação final
+    vazia = df["destinacao_final"] == ""
+
+    gp = df["guarda_permanente"]
+    df.loc[vazia & gp.ne(""), "destinacao_final"] = "Guarda permanente"
+
+    vazia = df["destinacao_final"] == ""
+
+    el = df["eliminacao"]
+    df.loc[vazia & el.ne(""), "destinacao_final"] = "Eliminação"
+
+    vazia = df["destinacao_final"] == ""
+
+    dr = df["destinacao_resumida"]
+    df.loc[vazia & dr.ne(""), "destinacao_final"] = dr
 
     return df
 
