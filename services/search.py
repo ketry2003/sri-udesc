@@ -62,10 +62,10 @@ def normalize_text(text):
 
 def natural_key(text):
     text = str(text or "")
-    return [
+    return tuple(
         int(part) if part.isdigit() else part.lower()
         for part in re.split(r"(\d+)", text)
-    ]
+    )
 
 
 COL_MAP = {
@@ -133,6 +133,9 @@ def load_ttd(tipo="todos", path=None):
 
     if not excel_path.exists():
         raise FileNotFoundError(f"Arquivo Excel não encontrado: {excel_path}")
+
+    if tipo not in {"meio", "fim", "todos"}:
+        raise ValueError("Tipo deve ser 'meio', 'fim' ou 'todos'")
 
     df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
     df_meio = _prepare_df(df_meio, "Atividade-meio", 2)
@@ -210,7 +213,31 @@ def search_records(df, query="", filters=None, limit=30):
         if mask is not None:
             df = df[mask]
 
-    return df.sort_values(
-        by=["source_priority", "codigo_classificacao", "item_documental"],
-        key=lambda col: col.map(natural_key) if col.name == "codigo_classificacao" else col
+    if df.empty:
+        return df.head(limit)
+
+    df = df.copy()
+    df["_sort_source_priority"] = pd.to_numeric(
+        df["source_priority"], errors="coerce"
+    ).fillna(9999)
+    df["_sort_codigo_classificacao"] = df["codigo_classificacao"].map(natural_key)
+    df["_sort_item_documental"] = (
+        df["item_documental"].fillna("").astype(str).str.lower()
+    )
+
+    df = df.sort_values(
+        by=[
+            "_sort_source_priority",
+            "_sort_codigo_classificacao",
+            "_sort_item_documental",
+        ]
+    )
+
+    return df.drop(
+        columns=[
+            "_sort_source_priority",
+            "_sort_codigo_classificacao",
+            "_sort_item_documental",
+        ],
+        errors="ignore",
     ).head(limit)
