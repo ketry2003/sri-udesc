@@ -2,7 +2,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from services.db import list_inventory_items
+from services.db import list_setores_inventory, list_inventory_items_by_setor
 from services.ui_helpers import dataframe_from_rows
 from services.exporters import (
     build_elimination_listing_dataframe,
@@ -30,21 +30,38 @@ def salvar_arquivo_local(nome_arquivo: str, conteudo: bytes) -> str:
 st.set_page_config(page_title="Eliminação Documental", layout="wide")
 st.title("Eliminação documental")
 
-rows = list_inventory_items()
-df = dataframe_from_rows(rows)
-
-if df.empty:
-    st.info("Nenhum item disponível no inventário.")
-    st.stop()
-
 st.caption(
     "Módulo baseado na IN SEA nº 10/2024: gera Anexo I (Listagem de Eliminação), "
     "Anexo II (Edital de Ciência de Eliminação) e Anexo III (Termo de Eliminação)."
 )
 
+setores = list_setores_inventory()
+
+if not setores:
+    st.info("Nenhum item disponível no inventário.")
+    st.stop()
+
+setor_escolhido = st.selectbox(
+    "Selecione o setor / proveniência",
+    [""] + setores,
+    index=0,
+)
+
+if not setor_escolhido:
+    st.info("Selecione um setor para visualizar os itens.")
+    st.stop()
+
+rows = list_inventory_items_by_setor(setor_escolhido)
+df = dataframe_from_rows(rows)
+
+if df.empty:
+    st.info("Nenhum item disponível no inventário para este setor.")
+    st.stop()
+
 # Monta opções de seleção com identificação mais clara
 opcoes = {
     (
+        f"#{row.get('id', '-') or '-'} | "
         f"{row.get('tipo_documental', '-') or '-'} | "
         f"Caixa {row.get('caixa', '-') or '-'} | "
         f"{row.get('datas_limite', '-') or '-'}"
@@ -89,7 +106,7 @@ st.markdown("## Dados do processo e dos anexos")
 
 col1, col2, col3 = st.columns(3)
 orgao_entidade = col1.text_input("Órgão/Entidade", value="UDESC")
-unidade_setor = col2.text_input("Unidade/Setor", value="CCT / Arquivo Permanente")
+unidade_setor = col2.text_input("Unidade/Setor", value=setor_escolhido)
 processo_numero = col3.text_input(
     "Processo (sigla, número/ano)",
     placeholder="Ex.: UDESC 12345/2026"
@@ -183,42 +200,60 @@ with col_a:
             "Local": local,
         }
 
-        faltantes = [campo for campo, valor in campos_obrigatorios.items() if not str(valor).strip()]
+        faltantes = [
+            campo for campo, valor in campos_obrigatorios.items()
+            if not str(valor).strip()
+        ]
+
         if faltantes:
             st.error(
                 "Preencha os campos obrigatórios antes de gerar os arquivos:\n\n- "
                 + "\n- ".join(faltantes)
             )
-            st.stop()
+        else:
+            try:
+                anexo_i_pdf = build_elimination_pdf(records, meta)
+                anexo_ii_pdf = build_edital_pdf(records, meta)
+                anexo_iii_pdf = build_termo_pdf(records, meta)
+                eliminacao_excel = dataframe_to_excel_bytes(
+                    build_elimination_listing_dataframe(records),
+                    sheet_name="Listagem"
+                )
 
-        try:
-            anexo_i_pdf = build_elimination_pdf(records, meta)
-            anexo_ii_pdf = build_edital_pdf(records, meta)
-            anexo_iii_pdf = build_termo_pdf(records, meta)
-            eliminacao_excel = dataframe_to_excel_bytes(
-                build_elimination_listing_dataframe(records),
-                sheet_name="Listagem"
-            )
+                nome_anexo_i = (
+                    f"anexo_i_listagem_eliminacao_{listagem_numero}_{listagem_ano}.pdf"
+                )
+                nome_anexo_ii = (
+                    f"anexo_ii_edital_ciencia_{edital_numero}_{edital_ano}.pdf"
+                )
+                nome_anexo_iii = (
+                    f"anexo_iii_termo_eliminacao_{edital_numero}_{edital_ano}.pdf"
+                )
+                nome_excel = (
+                    f"listagem_eliminacao_{listagem_numero}_{listagem_ano}.xlsx"
+                )
 
-            nome_anexo_i = f"anexo_i_listagem_eliminacao_{listagem_numero}_{listagem_ano}.pdf"
-            nome_anexo_ii = f"anexo_ii_edital_ciencia_{edital_numero}_{edital_ano}.pdf"
-            nome_anexo_iii = f"anexo_iii_termo_eliminacao_{edital_numero}_{edital_ano}.pdf"
-            nome_excel = f"listagem_eliminacao_{listagem_numero}_{listagem_ano}.xlsx"
+                st.session_state["anexo_i_pdf"] = anexo_i_pdf
+                st.session_state["anexo_ii_pdf"] = anexo_ii_pdf
+                st.session_state["anexo_iii_pdf"] = anexo_iii_pdf
+                st.session_state["eliminacao_excel"] = eliminacao_excel
 
-            st.session_state["anexo_i_pdf"] = anexo_i_pdf
-            st.session_state["anexo_ii_pdf"] = anexo_ii_pdf
-            st.session_state["anexo_iii_pdf"] = anexo_iii_pdf
-            st.session_state["eliminacao_excel"] = eliminacao_excel
+                st.session_state["caminho_anexo_i"] = salvar_arquivo_local(
+                    nome_anexo_i, anexo_i_pdf
+                )
+                st.session_state["caminho_anexo_ii"] = salvar_arquivo_local(
+                    nome_anexo_ii, anexo_ii_pdf
+                )
+                st.session_state["caminho_anexo_iii"] = salvar_arquivo_local(
+                    nome_anexo_iii, anexo_iii_pdf
+                )
+                st.session_state["caminho_excel"] = salvar_arquivo_local(
+                    nome_excel, eliminacao_excel
+                )
 
-            # Salva localmente apenas como apoio técnico
-            st.session_state["caminho_anexo_i"] = salvar_arquivo_local(nome_anexo_i, anexo_i_pdf)
-            st.session_state["caminho_anexo_ii"] = salvar_arquivo_local(nome_anexo_ii, anexo_ii_pdf)
-            st.session_state["caminho_anexo_iii"] = salvar_arquivo_local(nome_anexo_iii, anexo_iii_pdf)
-            st.session_state["caminho_excel"] = salvar_arquivo_local(nome_excel, eliminacao_excel)
-
-            st.success("Arquivos gerados com sucesso.")
-        except Exception as e:
-            st.error(f"Erro ao gerar os arquivos: {e}")
+                st.success("Arquivos gerados com sucesso.")
+            except Exception as e:
+                st.error(f"Erro ao gerar os arquivos: {e}")
 
 with col_b:
     st.info(

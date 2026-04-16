@@ -1,22 +1,38 @@
 import streamlit as st
 
 from config import FUNDO_PADRAO, OFFICIAL_BOX_COVER_NAME
-from services.db import list_inventory_items
+from services.db import list_setores_inventory, list_inventory_items_by_setor
 from services.exporters import build_box_covers_from_template_docx_bytes
 from services.ui_helpers import dataframe_from_rows
 
 st.set_page_config(page_title="Capas / Etiquetas de Caixa", layout="wide")
 st.title("Capas / etiquetas de caixa")
 
-rows = list_inventory_items()
-inv_df = dataframe_from_rows(rows)
-
 st.caption(
     "As capas aproveitam automaticamente os dados do inventário e da classificação já associada aos documentos."
 )
 
-if inv_df.empty:
+setores = list_setores_inventory()
+
+if not setores:
     st.info("Cadastre itens no inventário antes de gerar capas.")
+    st.stop()
+
+setor_escolhido = st.selectbox(
+    "Selecione o setor / proveniência",
+    [""] + setores,
+    index=0,
+)
+
+if not setor_escolhido:
+    st.info("Selecione um setor para visualizar as caixas.")
+    st.stop()
+
+rows = list_inventory_items_by_setor(setor_escolhido)
+inv_df = dataframe_from_rows(rows)
+
+if inv_df.empty:
+    st.info("Nenhum item salvo para este setor.")
     st.stop()
 
 # Mantém apenas linhas com número de caixa
@@ -25,13 +41,13 @@ inv_df["caixa"] = inv_df["caixa"].astype(str).str.strip()
 inv_df = inv_df[inv_df["caixa"] != ""]
 
 if inv_df.empty:
-    st.info("Nenhum item do inventário possui número de caixa informado.")
+    st.info("Nenhum item do inventário deste setor possui número de caixa informado.")
     st.stop()
 
 fundo = st.text_input("Fundo", value=FUNDO_PADRAO)
 orgao_entidade = st.text_input("Órgão/Entidade", value="UDESC")
-unidade_macro = st.text_input("Centro / Reitoria", value="CCT / Arquivo Permanente")
-setor_responsavel = st.text_input("Setor responsável", value="Arquivo Permanente")
+unidade_macro = st.text_input("Centro / Reitoria", value=setor_escolhido)
+setor_responsavel = st.text_input("Setor responsável", value=setor_escolhido)
 
 caixas_disponiveis = sorted(inv_df["caixa"].dropna().astype(str).unique().tolist())
 
@@ -56,7 +72,8 @@ for caixa in selecionadas:
 
     # Datas-limite consolidadas
     datas = [
-        str(v).strip() for v in caixa_df["datas_limite"].fillna("").tolist()
+        str(v).strip()
+        for v in caixa_df["datas_limite"].fillna("").tolist()
         if str(v).strip()
     ]
     datas_limite = " / ".join(sorted(set(datas))) if datas else "-"
@@ -73,7 +90,8 @@ for caixa in selecionadas:
     )
 
     tipos = [
-        str(v).strip() for v in caixa_df["tipo_documental"].fillna("").tolist()
+        str(v).strip()
+        for v in caixa_df["tipo_documental"].fillna("").tolist()
         if str(v).strip()
     ]
     assunto = " ; ".join(sorted(set(tipos[:3]))) if tipos else "-"
@@ -92,8 +110,12 @@ for caixa in selecionadas:
         else []
     )
 
-    prazo_corrente = " / ".join(sorted(set([p for p in prazos_correntes if p.strip()]))) or "-"
-    prazo_intermediario = " / ".join(sorted(set([p for p in prazos_intermediarios if p.strip()]))) or "-"
+    prazo_corrente = " / ".join(
+        sorted(set([p for p in prazos_correntes if p.strip()]))
+    ) or "-"
+    prazo_intermediario = " / ".join(
+        sorted(set([p for p in prazos_intermediarios if p.strip()]))
+    ) or "-"
 
     destinacao = "GUARDA PERMANENTE" if guarda_permanente else "ELIMINAÇÃO"
     destaque_permanente = "GUARDA PERMANENTE" if guarda_permanente else ""
@@ -106,7 +128,8 @@ for caixa in selecionadas:
     )
 
     observacoes = [
-        str(v).strip() for v in caixa_df["observacoes"].fillna("").tolist()
+        str(v).strip()
+        for v in caixa_df["observacoes"].fillna("").tolist()
         if str(v).strip()
     ]
     observacao = " | ".join(sorted(set(observacoes[:3]))) if observacoes else ""
@@ -119,13 +142,15 @@ for caixa in selecionadas:
         "unidade_documentacao": unidade_documentacao,
         "codigo_classificacao": codigo_classificacao or "-",
         "assunto": assunto,
-        "datas_limite": datas_limite,
+        "datas_limite_resumo": datas_limite,
+        "datas_limite_detalhadas": datas_limite,
         "prazo_corrente": prazo_corrente,
         "prazo_intermediario": prazo_intermediario,
         "destinacao": destinacao,
         "destaque_permanente": destaque_permanente,
         "numero_caixa": str(caixa),
         "observacao": observacao,
+        "lista_itens_caixa": "\n".join(sorted(set(tipos))) if tipos else "",
     }
     records.append(record)
     preview_rows.append(record)
