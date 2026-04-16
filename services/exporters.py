@@ -19,18 +19,19 @@ from config import FUNDO_PADRAO
 
 
 def dataframe_to_excel_bytes(df: pd.DataFrame, sheet_name: str = "dados") -> bytes:
+    """
+    Exporta DataFrame para Excel em memória.
+    Corrigido para colunas vazias / NaN.
+    """
     output = BytesIO()
+
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
+
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
 
-        wrap = workbook.add_format({
-            "text_wrap": True,
-            "valign": "top",
-            "border": 1,
-        })
-        header = workbook.add_format({
+        fmt_header = workbook.add_format({
             "bold": True,
             "text_wrap": True,
             "valign": "vcenter",
@@ -39,20 +40,37 @@ def dataframe_to_excel_bytes(df: pd.DataFrame, sheet_name: str = "dados") -> byt
             "bg_color": "#D9E2F3",
         })
 
+        fmt_body = workbook.add_format({
+            "text_wrap": True,
+            "valign": "top",
+            "border": 1,
+        })
+
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, fmt_header)
+
         for idx, col in enumerate(df.columns):
             if df.empty:
                 max_len = 10
             else:
-                max_len = int(df[col].astype(str).str.len().max())
-            width = min(max(len(str(col)), max_len) + 2, 45)
-            worksheet.set_column(idx, idx, width, wrap)
+                serie = df[col].fillna("").astype(str)
+                max_len_val = serie.str.len().max()
+                max_len = int(max_len_val) if pd.notna(max_len_val) else 10
 
-        for col_idx, col in enumerate(df.columns):
-            worksheet.write(0, col_idx, col, header)
+            largura = min(max(len(str(col)), max_len) + 2, 45)
+            worksheet.set_column(idx, idx, largura, fmt_body)
 
         worksheet.freeze_panes(1, 0)
-        worksheet.autofilter(0, 0, max(len(df), 1), max(len(df.columns) - 1, 0))
 
+        if len(df.columns) > 0:
+            worksheet.autofilter(
+                0,
+                0,
+                max(len(df), 1),
+                len(df.columns) - 1
+            )
+
+    output.seek(0)
     return output.getvalue()
 
 
@@ -113,7 +131,6 @@ def build_box_covers_from_template_docx_bytes(records: list[dict]) -> bytes:
 
     output_doc = Document()
 
-    # Remove o parágrafo vazio inicial do documento novo
     if output_doc.paragraphs:
         p = output_doc.paragraphs[0]._element
         p.getparent().remove(p)
@@ -122,26 +139,21 @@ def build_box_covers_from_template_docx_bytes(records: list[dict]) -> bytes:
         temp_doc = Document(str(template_path))
 
         mapping = {
-        "fundo": row.get("fundo") or FUNDO_PADRAO,
-        "unidade_macro": row.get("unidade_macro", ""),
-        "setor_responsavel": row.get("setor_responsavel", ""),
-        "unidade_documentacao": row.get("unidade_documentacao", ""),
-        "codigo_classificacao": row.get("codigo_classificacao", ""),
-        "assunto": row.get("assunto", ""),
-
-        "datas_limite_resumo": row.get("datas_limite_resumo", ""),
-        "datas_limite_detalhadas": row.get("datas_limite_detalhadas", ""),
-
-        "prazo_corrente": row.get("prazo_corrente", ""),
-        "prazo_intermediario": row.get("prazo_intermediario", ""),
-
-        "destinacao": row.get("destinacao", ""),
-        "destaque_permanente": row.get("destaque_permanente", ""),
-
-        "numero_caixa": row.get("numero_caixa", ""),
-
-        "observacao": row.get("observacao", ""),
-        "lista_itens_caixa": row.get("lista_itens_caixa", ""),
+            "fundo": row.get("fundo") or FUNDO_PADRAO,
+            "unidade_macro": row.get("unidade_macro", ""),
+            "setor_responsavel": row.get("setor_responsavel", ""),
+            "unidade_documentacao": row.get("unidade_documentacao", ""),
+            "codigo_classificacao": row.get("codigo_classificacao", ""),
+            "assunto": row.get("assunto", ""),
+            "datas_limite_resumo": row.get("datas_limite_resumo", ""),
+            "datas_limite_detalhadas": row.get("datas_limite_detalhadas", ""),
+            "prazo_corrente": row.get("prazo_corrente", ""),
+            "prazo_intermediario": row.get("prazo_intermediario", ""),
+            "destinacao": row.get("destinacao", ""),
+            "destaque_permanente": row.get("destaque_permanente", ""),
+            "numero_caixa": row.get("numero_caixa", ""),
+            "observacao": row.get("observacao", ""),
+            "lista_itens_caixa": row.get("lista_itens_caixa", ""),
         }
 
         _replace_placeholders_in_doc(temp_doc, mapping)
