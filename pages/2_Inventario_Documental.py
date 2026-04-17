@@ -284,24 +284,25 @@ with aba1:
 
         enviado = st.form_submit_button("Adicionar ao inventário")
 
-        if proveniencia == "Selecione...":
-        st.error("Selecione a Proveniência / Setor.")
-
         if enviado:
-            if registro is None:
+            if proveniencia == "Selecione...":
+                st.error("Selecione a Proveniência / Setor.")
+
+            elif registro is None:
                 st.error(
                     "Primeiro localize um documento na TTD pelo código de "
                     "classificação ou pelo tipo documental."
                 )
-            elif not proveniencia.strip():
-                st.error("Informe a proveniência / setor antes de adicionar o item.")
+
             else:
                 texto_obs = []
 
                 if referencia:
                     texto_obs.append(f"Referência: {referencia}")
+
                 if assunto_digitado:
                     texto_obs.append(f"Assunto: {assunto_digitado}")
+
                 if observacoes:
                     texto_obs.append(observacoes)
 
