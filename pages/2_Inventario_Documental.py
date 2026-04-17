@@ -182,9 +182,10 @@ with aba1:
 
         col1, col2, col3 = st.columns(3)
         proveniencia = col1.selectbox(
-            "Proveniência",
-            [""] + PROVENIENCIAS_PADRAO,
+            "Proveniência / Setor *",
+            ["Selecione..."] + PROVENIENCIAS_PADRAO,
             index=0,
+            help="Campo obrigatório. Selecione o setor produtor da documentação."
         )
         ano_emissao = col2.text_input("Ano de emissão", placeholder="Ex.: 2024")
         referencia = col3.text_input(
@@ -283,6 +284,9 @@ with aba1:
 
         enviado = st.form_submit_button("Adicionar ao inventário")
 
+        if proveniencia == "Selecione...":
+        st.error("Selecione a Proveniência / Setor.")
+
         if enviado:
             if registro is None:
                 st.error(
@@ -290,7 +294,7 @@ with aba1:
                     "classificação ou pelo tipo documental."
                 )
             elif not proveniencia.strip():
-                st.error("Informe a proveniência antes de adicionar o item.")
+                st.error("Informe a proveniência / setor antes de adicionar o item.")
             else:
                 texto_obs = []
 
