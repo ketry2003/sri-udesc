@@ -79,7 +79,34 @@ Refere-se às funções ligadas à finalidade institucional da universidade, com
 - Um documento relacionado a **férias de servidor** tende a estar em **atividade-meio**.
 - Um documento relacionado a **projeto de extensão** tende a estar em **atividade-fim**.
 
-Desenvolvido por KP (CCT/UDESC) 2026
+Desenvolvido por KGFP (CCT/UDESC) 2026.
+            
+Diferença entre arquivo corrente, intermediário e permanente:
+
+Os documentos passam por fases conforme o uso e a importância:
+
+Arquivo Corrente
+
+Documentos usados no dia a dia pelo setor, com consulta frequente.
+
+Exemplos: processos em andamento, memorandos recentes, contratos vigentes.
+
+Arquivo Intermediário
+
+Documentos que já foram usados, mas ainda precisam ser guardados por prazo legal ou administrativo.
+
+Exemplos: processos encerrados, contratos vencidos dentro do prazo de guarda.
+
+Arquivo Permanente
+
+Documentos que têm valor histórico, institucional ou jurídico e devem ser guardados definitivamente.
+
+Exemplos: atos de criação, documentos históricos, registros importantes da instituição.
+
+Resumo simples
+Corrente: uso atual
+Intermediário: guarda temporária
+Permanente: guarda definitiva
 
 Use o menu lateral para navegar entre os módulos do sistema.
 """)
