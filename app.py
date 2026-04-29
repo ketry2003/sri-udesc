@@ -81,7 +81,7 @@ Refere-se às funções ligadas à finalidade institucional da universidade, com
 
 
 
-## **Diferença entre arquivo corrente, intermediário e permanente:"**
+## **Diferença entre arquivo corrente, intermediário e permanente:**
 
 Os documentos passam por fases conforme o uso e a importância:
 
