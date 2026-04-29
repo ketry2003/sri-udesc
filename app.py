@@ -79,9 +79,9 @@ Refere-se às funções ligadas à finalidade institucional da universidade, com
 - Um documento relacionado a **férias de servidor** tende a estar em **atividade-meio**.
 - Um documento relacionado a **projeto de extensão** tende a estar em **atividade-fim**.
 
-Desenvolvido por KGFP (CCT/UDESC) 2026.
-            
-Diferença entre arquivo corrente, intermediário e permanente:
+
+
+##Diferença entre arquivo corrente, intermediário e permanente:
 
 Os documentos passam por fases conforme o uso e a importância:
 
@@ -110,5 +110,7 @@ Permanente: guarda definitiva
 
 Use o menu lateral para navegar entre os módulos do sistema.
 """)
+
+## Desenvolvido por KGFP (CCT/UDESC) 2026.
 
 st.info("Selecione um módulo no menu lateral para iniciar a navegação no sistema.")
