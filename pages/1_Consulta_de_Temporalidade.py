@@ -1,8 +1,54 @@
+from pathlib import Path
+
+import pandas as pd
 import streamlit as st
+
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
 
+
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
+
+
+@st.cache_data
+def carregar_tesauro():
+    arquivo = (
+        Path(__file__).resolve().parent.parent
+        / "data"
+        / "reference"
+        / "vocabulario.xlsx"
+    )
+
+    if not arquivo.exists():
+        st.error("Arquivo vocabulario.xlsx não encontrado em data/reference.")
+        return pd.DataFrame()
+
+    return pd.read_excel(arquivo, sheet_name="Busca Geral")
+
+
+def buscar_tesauro(texto):
+    tesauro = carregar_tesauro()
+
+    if tesauro.empty:
+        return pd.DataFrame()
+
+    termo = texto.lower().strip()
+
+    if termo == "":
+        return pd.DataFrame()
+
+    resultado = tesauro[
+        tesauro.apply(
+            lambda linha: linha.astype(str)
+            .str.lower()
+            .str.contains(termo, na=False, regex=False)
+            .any(),
+            axis=1
+        )
+    ]
+
+    return resultado.head(10)
+
 
 st.title("Consulta de temporalidade")
 
@@ -30,8 +76,48 @@ st.caption("Pesquise por tipo documental ou pelo número/código de classificaç
 
 query = st.text_input(
     "Busca livre por tipo documental ou código de classificação",
-    placeholder="Ex.: diário de classe | 06.24.01 | 06.24.01.02.01.001"
+    placeholder="Ex.: diário de classe | CI | PTI | 06.24.01 | 06.24.01.02.01.001"
 )
+
+# Sugestões do Tesauro somente para atividade-fim
+if query and tipo == "fim":
+    sugestoes = buscar_tesauro(query)
+
+    if not sugestoes.empty:
+        with st.expander("🔎 Sugestões do Tesauro UDESC", expanded=True):
+            colunas_exibir = [
+                "Termo encontrado / possível busca",
+                "Termo padronizado sugerido",
+                "Área",
+                "Subárea",
+                "Observação para inventário",
+            ]
+
+            colunas_existentes = [
+                coluna for coluna in colunas_exibir if coluna in sugestoes.columns
+            ]
+
+            st.dataframe(
+                sugestoes[colunas_existentes],
+                use_container_width=True,
+                hide_index=True
+            )
+
+            termo_sugerido = sugestoes.iloc[0].get(
+                "Termo padronizado sugerido",
+                ""
+            )
+
+            if termo_sugerido:
+                st.info(
+                    f"Termo padronizado mais provável: **{termo_sugerido}**"
+                )
+
+    else:
+        st.warning(
+            "Nenhuma equivalência encontrada no tesauro. "
+            "Se necessário, registrar como pendente de classificação."
+        )
 
 filters = {}
 
@@ -130,7 +216,7 @@ results = search_records(
 st.write(f"{len(results)} resultado(s)")
 
 if results.empty:
-    st.info("Nenhum resultado encontrado.")
+    st.info("Nenhum resultado encontrado na TTD.")
 else:
     for _, row in results.iterrows():
         with st.container(border=True):
