@@ -25,10 +25,37 @@ def carregar_tesauro(tipo):
 
     df = pd.read_excel(arquivo)
 
-    # filtra pelo tipo selecionado
-    if "tipo" in df.columns:
-        df["tipo"] = df["tipo"].astype(str).str.lower().str.strip()
-        df = df[df["tipo"] == tipo]
+    # Padroniza nomes das colunas
+    df.columns = (
+        df.columns
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+    )
+
+    # Identifica a coluna que informa se é meio ou fim
+    coluna_tipo = None
+
+    for possivel in ["tipo", "tipo_de_atividade", "atividade"]:
+        if possivel in df.columns:
+            coluna_tipo = possivel
+            break
+
+    # Filtra pelo tipo selecionado: meio ou fim
+    if coluna_tipo:
+        df[coluna_tipo] = (
+            df[coluna_tipo]
+            .astype(str)
+            .str.lower()
+            .str.strip()
+            .str.replace("atividade-", "")
+            .str.replace("atividade_", "")
+            .str.replace("atividade ", "")
+        )
+
+        df = df[df[coluna_tipo] == tipo]
 
     return df
 
@@ -87,17 +114,14 @@ query = st.text_input(
     placeholder="Ex.: PTI | férias | CI | contrato | estágio | diário de classe"
 )
 
-# TESAURO
+# TESAURO / VOCABULÁRIO CONTROLADO
 if query:
     sugestoes = buscar_tesauro(query, tipo)
 
     if not sugestoes.empty:
         with st.expander("🔎 Sugestões do Vocabulário Controlado", expanded=True):
 
-            termo_sugerido = sugestoes.iloc[0].get(
-                "termo_padronizado",
-                sugestoes.iloc[0].get("Termo padronizado sugerido", "")
-            )
+            termo_sugerido = sugestoes.iloc[0].get("termo_padronizado", "")
 
             if termo_sugerido:
                 st.success(
@@ -110,11 +134,8 @@ if query:
                 "codigo_ttd",
                 "subarea",
                 "observacao",
-                "Termo encontrado / possível busca",
-                "Termo padronizado sugerido",
-                "Subárea",
-                "Observação para inventário",
-]
+                "observacao_para_inventario",
+            ]
 
             colunas_existentes = [
                 c for c in colunas_exibir if c in sugestoes.columns
