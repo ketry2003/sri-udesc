@@ -11,7 +11,7 @@ st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
 
 
 @st.cache_data
-def carregar_tesauro(tipo):
+def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = (
         Path(__file__).resolve().parent.parent
         / "data"
@@ -23,7 +23,7 @@ def carregar_tesauro(tipo):
         st.error("Arquivo vocabulario_controlado.xlsx não encontrado em data/reference.")
         return pd.DataFrame()
 
-    df = pd.read_excel(arquivo)
+    df = pd.read_excel(arquivo, sheet_name="busca_geral")
 
     df.columns = (
         df.columns
@@ -43,13 +43,13 @@ def carregar_tesauro(tipo):
 
     if coluna_tipo:
         df[coluna_tipo] = (
-            df[coluna_tipo]
             .astype(str)
             .str.lower()
             .str.strip()
-            .str.replace("atividade-", "")
-            .str.replace("atividade_", "")
-            .str.replace("atividade ", "")
+            .str.replace("atividade-", "", regex=False)
+            .str.replace("atividade_", "", regex=False)
+            .str.replace("atividade ", "", regex=False)
+            .str.replace("\xa0", "", regex=False)  # remove espaço invisível do Excel
         )
 
         df = df[df[coluna_tipo] == tipo]
