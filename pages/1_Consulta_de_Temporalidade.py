@@ -10,14 +10,18 @@ from services.ui_helpers import status_badge
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
 
 
-@st.cache_data
-def carregar_tesauro(tipo, arquivo_modificado):
-    arquivo = (
+def caminho_vocabulario():
+    return (
         Path(__file__).resolve().parent.parent
         / "data"
         / "reference"
         / "vocabulario_controlado.xlsx"
     )
+
+
+@st.cache_data
+def carregar_tesauro(tipo, arquivo_modificado):
+    arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
         st.error("Arquivo vocabulario_controlado.xlsx não encontrado em data/reference.")
@@ -43,13 +47,14 @@ def carregar_tesauro(tipo, arquivo_modificado):
 
     if coluna_tipo:
         df[coluna_tipo] = (
+            df[coluna_tipo]
             .astype(str)
             .str.lower()
             .str.strip()
             .str.replace("atividade-", "", regex=False)
             .str.replace("atividade_", "", regex=False)
             .str.replace("atividade ", "", regex=False)
-            .str.replace("\xa0", "", regex=False)  # remove espaço invisível do Excel
+            .str.replace("\xa0", "", regex=False)
         )
 
         df = df[df[coluna_tipo] == tipo]
@@ -58,7 +63,12 @@ def carregar_tesauro(tipo, arquivo_modificado):
 
 
 def buscar_tesauro(texto, tipo):
-    tesauro = carregar_tesauro(tipo)
+    arquivo = caminho_vocabulario()
+
+    if not arquivo.exists():
+        return pd.DataFrame()
+
+    tesauro = carregar_tesauro(tipo, arquivo.stat().st_mtime)
 
     if tesauro.empty:
         return pd.DataFrame()
@@ -128,7 +138,6 @@ query = st.text_input(
     placeholder="Ex.: PTI | férias | CI | contrato | estágio | diário de classe"
 )
 
-# TESAURO / VOCABULÁRIO CONTROLADO
 if query:
     sugestoes = buscar_tesauro(query, tipo)
 
@@ -172,7 +181,6 @@ if query:
 
 filters = {}
 
-# FILTROS
 if tipo == "meio":
     cols = st.columns(3)
 
@@ -250,15 +258,20 @@ else:
         )
     )
 
-# RESULTADOS TTD
+filtros_ativos = {k: v for k, v in filters.items() if v}
+
+if not query and not filtros_ativos:
+    st.info("Digite um termo ou selecione um filtro para iniciar a consulta.")
+    st.stop()
+
 results = search_records(
     df,
     query=query,
-    filters={k: v for k, v in filters.items() if v},
-    limit=30
+    filters=filtros_ativos,
+    limit=100
 )
 
-st.write(f"{len(results)} resultado(s)")
+st.write(f"{len(results)} resultado(s) exibido(s)")
 
 if results.empty:
     st.info("Nenhum resultado encontrado na TTD.")
