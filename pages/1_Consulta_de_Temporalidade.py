@@ -25,7 +25,6 @@ def carregar_tesauro(tipo):
 
     df = pd.read_excel(arquivo)
 
-    # Padroniza nomes das colunas
     df.columns = (
         df.columns
         .astype(str)
@@ -35,15 +34,13 @@ def carregar_tesauro(tipo):
         .str.replace("/", "_")
     )
 
-    # Identifica a coluna que informa se é meio ou fim
     coluna_tipo = None
 
-    for possivel in ["tipo", "tipo_de_atividade", "atividade"]:
+    for possivel in ["tipo", "tipo_atividade", "tipo_de_atividade", "atividade"]:
         if possivel in df.columns:
             coluna_tipo = possivel
             break
 
-    # Filtra pelo tipo selecionado: meio ou fim
     if coluna_tipo:
         df[coluna_tipo] = (
             df[coluna_tipo]
@@ -71,14 +68,31 @@ def buscar_tesauro(texto, tipo):
     if termo == "":
         return pd.DataFrame()
 
+    colunas_busca = [
+        "termo_encontrado",
+        "termo_padronizado",
+        "assunto",
+        "subarea",
+        "atividade",
+        "codigo_classificacao",
+    ]
+
+    colunas_existentes = [c for c in colunas_busca if c in tesauro.columns]
+
+    if not colunas_existentes:
+        return pd.DataFrame()
+
     resultado = tesauro[
-        tesauro.apply(
-            lambda linha: linha.astype(str)
-            .str.lower()
-            .str.contains(termo, na=False, regex=False)
-            .any(),
-            axis=1
+        tesauro[colunas_existentes]
+        .astype(str)
+        .apply(
+            lambda coluna: coluna.str.lower().str.contains(
+                termo,
+                na=False,
+                regex=False
+            )
         )
+        .any(axis=1)
     ]
 
     return resultado.head(10)
@@ -131,10 +145,13 @@ if query:
             colunas_exibir = [
                 "termo_encontrado",
                 "termo_padronizado",
-                "codigo_ttd",
+                "codigo_classificacao",
                 "subarea",
-                "observacao",
-                "observacao_para_inventario",
+                "assunto",
+                "prazo_corrente",
+                "prazo_intermediario",
+                "destinacao",
+                "obs",
             ]
 
             colunas_existentes = [
