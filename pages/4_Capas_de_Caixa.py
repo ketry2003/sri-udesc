@@ -13,8 +13,8 @@ from services.ui_helpers import dataframe_from_rows
 
 # Caminho compatível com Streamlit Cloud.
 # A imagem precisa estar no GitHub dentro de: data/reference/logo_udesc.png
-BASE_DIR = Path(__file__).resolve().parent
-LOGO_PATH = BASE_DIR / "data" / "reference" / "logo_udesc.png"
+BASE_DIR = Path(__file__).resolve().parents[1]
+LOGO_PATH = Path("data/reference/logo_udesc.png")
 
 
 def add_logo_to_docx_bytes(docx_bytes):
