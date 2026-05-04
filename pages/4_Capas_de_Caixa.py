@@ -1,9 +1,49 @@
+from io import BytesIO
+from pathlib import Path
+
 import streamlit as st
+from docx import Document
+from docx.shared import Inches
 
 from config import FUNDO_PADRAO, OFFICIAL_BOX_COVER_NAME
 from services.db import list_setores_inventory, list_inventory_items_by_setor
 from services.exporters import build_box_covers_from_template_docx_bytes
 from services.ui_helpers import dataframe_from_rows
+
+
+# Caminho compatível com Streamlit Cloud.
+# A imagem precisa estar no GitHub dentro de: data/reference/logo_udesc.png
+BASE_DIR = Path(__file__).resolve().parent
+LOGO_PATH = BASE_DIR / "data" / "reference" / "logo_udesc.png"
+
+
+def add_logo_to_docx_bytes(docx_bytes):
+    """Insere a logo da UDESC no cabeçalho do DOCX gerado."""
+    doc = Document(BytesIO(docx_bytes))
+
+    if not LOGO_PATH.exists():
+        raise FileNotFoundError(
+            f"Logo não encontrada em: {LOGO_PATH}. "
+            "Confira se o arquivo logo_udesc.png está em data/reference/."
+        )
+
+    for section in doc.sections:
+        header = section.header
+
+        # Usa o primeiro parágrafo do cabeçalho ou cria um se não existir.
+        paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+
+        # Limpa o cabeçalho para evitar duplicação da logo.
+        paragraph.clear()
+
+        run = paragraph.add_run()
+        run.add_picture(str(LOGO_PATH), width=Inches(1.4))
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
 
 st.set_page_config(page_title="Capas / Etiquetas de Caixa", layout="wide")
 st.title("Capas / etiquetas de caixa")
@@ -54,7 +94,7 @@ caixas_disponiveis = sorted(inv_df["caixa"].dropna().astype(str).unique().tolist
 selecionadas = st.multiselect(
     "Selecione as caixas para gerar a capa",
     caixas_disponiveis,
-    format_func=lambda x: f"Caixa {x}"
+    format_func=lambda x: f"Caixa {x}",
 )
 
 if not selecionadas:
@@ -158,9 +198,15 @@ for caixa in selecionadas:
 st.subheader("Pré-visualização das capas")
 st.dataframe(dataframe_from_rows(preview_rows), use_container_width=True)
 
-st.download_button(
-    "Baixar capas em DOCX",
-    data=build_box_covers_from_template_docx_bytes(records),
-    file_name=OFFICIAL_BOX_COVER_NAME,
-    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-)
+try:
+    docx_bytes = build_box_covers_from_template_docx_bytes(records)
+    docx_with_logo = add_logo_to_docx_bytes(docx_bytes)
+
+    st.download_button(
+        "Baixar capas em DOCX",
+        data=docx_with_logo,
+        file_name=OFFICIAL_BOX_COVER_NAME,
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+except FileNotFoundError as e:
+    st.error(str(e))
