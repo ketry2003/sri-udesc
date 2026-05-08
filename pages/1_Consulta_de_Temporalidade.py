@@ -75,19 +75,17 @@ def carregar_tesauro(tipo, arquivo_modificado):
         df = df[df[coluna_tipo] == tipo]
 
     colunas_busca = [
-        "termo_encontrado",
-        "termo_padronizado",
-        "assunto",
-        "subarea",
+        "tipo_documental",
+        "termo_preferido_oficial",
+        "termos_populares_sugeridos",
+        "pergunta_guia_usuario",
+        "assunto_tecnico",
+        "funcao",
+        "subfuncao",
         "atividade",
         "codigo_classificacao",
-        "sinonimos",
-        "exemplos_de_busca",
-        "linguagem_usuario",
-        "classe_documental",
-        "item_documental",
-        "dossie_processo",
-        "subserie",
+        "observacao",
+        "texto_busca_sistema",
     ]
 
     colunas_existentes = [c for c in colunas_busca if c in df.columns]
@@ -163,8 +161,11 @@ df = load_ttd(tipo)
 st.caption("Pesquise descrevendo o documento com suas próprias palavras.")
 
 query = st.text_input(
-    "Descreva o documento ou assunto",
-    placeholder="Ex.: perdi a prova | troca de orientador | estágio obrigatório | colação de grau | bolsa de extensão"
+    "Digite o nome do documento, processo ou assunto",
+    placeholder=(
+        "Ex.: edital de monitoria | ata de defesa | "
+        "termo de compromisso de estágio | relatório final | portaria de banca"
+    )
 )
 
 if query:
@@ -174,47 +175,93 @@ if query:
         with st.expander("🔎 Sugestões do ", expanded=True):
 
             primeira_linha = sugestoes.iloc[0]
-            termo_sugerido = primeira_linha.get("termo_padronizado", "")
-            score = primeira_linha.get("score", "")
+            documento = primeira_linha.get("termo_preferido_oficial", "")
+            tipo_doc = primeira_linha.get("tipo_documental", "")
+            assunto = primeira_linha.get("assunto_tecnico", "")
+            codigo = primeira_linha.get("codigo_classificacao", "")
+            score = int(primeira_linha.get("score", 0))
 
-            if termo_sugerido:
-                st.success(
-                    f"Termo padronizado mais provável: **{termo_sugerido}** "
-                    f"({int(score)}% de compatibilidade)"
-                )
+            st.success(
+                f"""
+            Documento mais provável encontrado: **{documento}**
+
+            Tipo documental: {tipo_doc}  
+            Assunto técnico: {assunto}  
+            Código de classificação: {codigo}  
+            Compatibilidade: {score}%
+            """
+            )
 
             colunas_exibir = [
                 "score",
-                "termo_encontrado",
-                "termo_padronizado",
+                "termo_preferido_oficial",
+                "tipo_documental",
+                "assunto_tecnico",
                 "codigo_classificacao",
-                "subarea",
-                "assunto",
-                "sinonimos",
-                "exemplos_de_busca",
+                "funcao",
+                "subfuncao",
+                "atividade",
                 "prazo_corrente",
                 "prazo_intermediario",
                 "destinacao",
-                "destinacao_final",
-                "obs",
-                "observacao",
+                "confianca_revisao",
             ]
 
             colunas_existentes = [
                 c for c in colunas_exibir if c in sugestoes.columns
             ]
 
+            sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
+                "score": "Compatibilidade",
+                "termo_preferido_oficial": "Documento oficial",
+                "tipo_documental": "Tipo documental",
+                "assunto_tecnico": "Assunto técnico",
+                "codigo_classificacao": "Código",
+                "funcao": "Função",
+                "subfuncao": "Subfunção",
+                "atividade": "Atividade",
+                "prazo_corrente": "Prazo corrente",
+                "prazo_intermediario": "Prazo intermediário",
+                "destinacao": "Destinação",
+                "confianca_revisao": "Confiança/revisão",
+            })
+
             st.dataframe(
-                sugestoes[colunas_existentes],
+                sugestoes_exibir,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            colunas_existentes = [
+                c for c in colunas_exibir if c in sugestoes.columns
+            ]
+
+            sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
+                "score": "Compatibilidade",
+                "termo_padronizado": "Documento",
+                "assunto": "Assunto",
+                "codigo_classificacao": "Código",
+                "subserie": "Subsérie",
+                "dossie_processo": "Dossiê/Processo",
+                "prazo_corrente": "Prazo Corrente",
+                "prazo_intermediario": "Prazo Intermediário",
+                "destinacao_final": "Destinação"
+            })
+
+            st.dataframe(
+                sugestoes_exibir,
                 use_container_width=True,
                 hide_index=True
             )
 
     else:
         st.warning(
-            "Nenhum termo encontrado no . "
-            "Tente descrever de outra forma, por exemplo: 'pedido de matrícula', "
-            "'troca de orientador', 'perdi a prova', 'bolsa de pesquisa'."
+            "Nenhum termo encontrado no vocabulário controlado. "
+            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
+            "Exemplos: 'ata de defesa', 'edital de monitoria', "
+            "'termo de compromisso de estágio', 'relatório final', "
+            "'portaria de banca', 'histórico escolar', "
+            "'processo de jubilação', 'certificado de monitoria'."
         )
 
 
