@@ -16,7 +16,7 @@ def caminho_vocabulario():
         Path(__file__).resolve().parent.parent
         / "data"
         / "reference"
-        / "vocabulario_controlado.xlsx"
+        / "planilha_atualizada.xlsx"
     )
 
 
@@ -47,7 +47,7 @@ def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
-        st.error("Arquivo vocabulario_controlado.xlsx não encontrado em data/reference.")
+        st.error("Arquivo planilha_atualizada".xlsx não encontrado em data/reference.")
         return pd.DataFrame()
 
     df = pd.read_excel(arquivo, sheet_name="busca_geral")
@@ -171,7 +171,7 @@ if query:
     sugestoes = buscar_tesauro(query, tipo)
 
     if not sugestoes.empty:
-        with st.expander("🔎 Sugestões do Vocabulário Controlado", expanded=True):
+        with st.expander("🔎 Sugestões do ", expanded=True):
 
             primeira_linha = sugestoes.iloc[0]
             termo_sugerido = primeira_linha.get("termo_padronizado", "")
@@ -212,7 +212,7 @@ if query:
 
     else:
         st.warning(
-            "Nenhum termo encontrado no vocabulário controlado. "
+            "Nenhum termo encontrado no . "
             "Tente descrever de outra forma, por exemplo: 'pedido de matrícula', "
             "'troca de orientador', 'perdi a prova', 'bolsa de pesquisa'."
         )
