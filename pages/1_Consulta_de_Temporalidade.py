@@ -47,7 +47,7 @@ def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
-        st.error("Arquivo planilha_atualizada".xlsx não encontrado em data/reference.")
+        st.error('Arquivo planilha_atualizada.xlsx não encontrado em data/reference.')
         return pd.DataFrame()
 
     df = pd.read_excel(arquivo, sheet_name="base_adaptada")
