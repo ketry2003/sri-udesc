@@ -47,7 +47,7 @@ def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
-        st.error('Arquivo planilha_atualizada.xlsx não encontrado em data/reference.')
+        st.error("Arquivo planilha_atualizada.xlsx não encontrado em data/reference.")
         return pd.DataFrame()
 
     df = pd.read_excel(arquivo, sheet_name="base_adaptada")
@@ -158,7 +158,10 @@ st.session_state.tipo = tipo
 
 df = load_ttd(tipo)
 
-st.caption("Pesquise descrevendo o documento com suas próprias palavras.")
+st.caption(
+    "Pesquise pelo nome do documento, processo, formulário, ata, edital, "
+    "portaria, relatório ou assunto."
+)
 
 query = st.text_input(
     "Digite o nome do documento, processo ou assunto",
@@ -168,43 +171,38 @@ query = st.text_input(
     )
 )
 
+
+# =========================
+# SUGESTÕES DO VOCABULÁRIO
+# =========================
+
 if query:
     sugestoes = buscar_tesauro(query, tipo)
 
     if not sugestoes.empty:
-        with st.expander("🔎 Sugestões do ", expanded=True):
+        with st.expander("🔎 Sugestões do vocabulário controlado", expanded=True):
 
             primeira_linha = sugestoes.iloc[0]
+
             documento = primeira_linha.get("termo_preferido_oficial", "")
             tipo_doc = primeira_linha.get("tipo_documental", "")
             assunto = primeira_linha.get("assunto_tecnico", "")
             codigo = primeira_linha.get("codigo_classificacao", "")
-            score = int(primeira_linha.get("score", 0))
 
             st.success(
                 f"""
-            Documento mais provável encontrado: **{documento}**
+Documento mais provável encontrado: **{documento}**
 
-            Tipo documental: {tipo_doc}  
-            Assunto técnico: {assunto}  
-            Código de classificação: {codigo}  
-            Compatibilidade: {score}%
-            """
+Tipo documental: {tipo_doc}  
+Assunto técnico: {assunto}  
+Código de classificação: {codigo}
+"""
             )
 
             colunas_exibir = [
-                "score",
                 "termo_preferido_oficial",
-                "tipo_documental",
                 "assunto_tecnico",
                 "codigo_classificacao",
-                "funcao",
-                "subfuncao",
-                "atividade",
-                "prazo_corrente",
-                "prazo_intermediario",
-                "destinacao",
-                "confianca_revisao",
             ]
 
             colunas_existentes = [
@@ -212,40 +210,9 @@ if query:
             ]
 
             sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
-                "score": "Compatibilidade",
                 "termo_preferido_oficial": "Documento oficial",
-                "tipo_documental": "Tipo documental",
                 "assunto_tecnico": "Assunto técnico",
                 "codigo_classificacao": "Código",
-                "funcao": "Função",
-                "subfuncao": "Subfunção",
-                "atividade": "Atividade",
-                "prazo_corrente": "Prazo corrente",
-                "prazo_intermediario": "Prazo intermediário",
-                "destinacao": "Destinação",
-                "confianca_revisao": "Confiança/revisão",
-            })
-
-            st.dataframe(
-                sugestoes_exibir,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            colunas_existentes = [
-                c for c in colunas_exibir if c in sugestoes.columns
-            ]
-
-            sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
-                "score": "Compatibilidade",
-                "termo_padronizado": "Documento",
-                "assunto": "Assunto",
-                "codigo_classificacao": "Código",
-                "subserie": "Subsérie",
-                "dossie_processo": "Dossiê/Processo",
-                "prazo_corrente": "Prazo Corrente",
-                "prazo_intermediario": "Prazo Intermediário",
-                "destinacao_final": "Destinação"
             })
 
             st.dataframe(
@@ -265,91 +232,100 @@ if query:
         )
 
 
+# =========================
+# FILTROS AVANÇADOS
+# =========================
+
 filters = {}
 
-if tipo == "meio":
-    cols = st.columns(3)
+with st.expander("Filtros avançados"):
+    if tipo == "meio":
+        cols = st.columns(3)
 
-    filters["natureza_documental"] = cols[0].selectbox(
-        "Natureza",
-        [""] + get_filter_options(df, "natureza_documental")
-    )
-
-    filters["grupo"] = cols[1].selectbox(
-        "Grupo",
-        [""] + get_filter_options(
-            df,
-            "grupo",
-            {"natureza_documental": filters["natureza_documental"]}
+        filters["natureza_documental"] = cols[0].selectbox(
+            "Natureza",
+            [""] + get_filter_options(df, "natureza_documental")
         )
-    )
 
-    filters["subgrupo"] = cols[2].selectbox(
-        "Subgrupo",
-        [""] + get_filter_options(
-            df,
-            "subgrupo",
-            {k: v for k, v in filters.items() if v}
+        filters["grupo"] = cols[1].selectbox(
+            "Grupo",
+            [""] + get_filter_options(
+                df,
+                "grupo",
+                {"natureza_documental": filters["natureza_documental"]}
+            )
         )
-    )
 
-    cols2 = st.columns(3)
-
-    filters["serie"] = cols2[0].selectbox(
-        "Série",
-        [""] + get_filter_options(
-            df,
-            "serie",
-            {k: v for k, v in filters.items() if v}
+        filters["subgrupo"] = cols[2].selectbox(
+            "Subgrupo",
+            [""] + get_filter_options(
+                df,
+                "subgrupo",
+                {k: v for k, v in filters.items() if v}
+            )
         )
-    )
 
-    filters["subserie"] = cols2[1].selectbox(
-        "Subsérie",
-        [""] + get_filter_options(
-            df,
-            "subserie",
-            {k: v for k, v in filters.items() if v}
+        cols2 = st.columns(3)
+
+        filters["serie"] = cols2[0].selectbox(
+            "Série",
+            [""] + get_filter_options(
+                df,
+                "serie",
+                {k: v for k, v in filters.items() if v}
+            )
         )
-    )
 
-    filters["dossie_processo"] = cols2[2].selectbox(
-        "Dossiê / Processo",
-        [""] + get_filter_options(
-            df,
-            "dossie_processo",
-            {k: v for k, v in filters.items() if v}
+        filters["subserie"] = cols2[1].selectbox(
+            "Subsérie",
+            [""] + get_filter_options(
+                df,
+                "subserie",
+                {k: v for k, v in filters.items() if v}
+            )
         )
-    )
 
-else:
-    st.info(
-        "Na atividade-fim, a consulta foi simplificada para focar em "
-        "subsérie e dossiê/processo."
-    )
-
-    cols = st.columns(2)
-
-    filters["subserie"] = cols[0].selectbox(
-        "Subsérie",
-        [""] + get_filter_options(df, "subserie")
-    )
-
-    filters["dossie_processo"] = cols[1].selectbox(
-        "Dossiê / Processo",
-        [""] + get_filter_options(
-            df,
-            "dossie_processo",
-            {k: v for k, v in filters.items() if v}
+        filters["dossie_processo"] = cols2[2].selectbox(
+            "Dossiê / Processo",
+            [""] + get_filter_options(
+                df,
+                "dossie_processo",
+                {k: v for k, v in filters.items() if v}
+            )
         )
-    )
+
+    else:
+        st.info(
+            "Filtros técnicos para refinamento da atividade-fim."
+        )
+
+        cols = st.columns(2)
+
+        filters["subserie"] = cols[0].selectbox(
+            "Subsérie",
+            [""] + get_filter_options(df, "subserie")
+        )
+
+        filters["dossie_processo"] = cols[1].selectbox(
+            "Dossiê / Processo",
+            [""] + get_filter_options(
+                df,
+                "dossie_processo",
+                {k: v for k, v in filters.items() if v}
+            )
+        )
+
 
 filtros_ativos = {k: v for k, v in filters.items() if v}
 
 if not query and not filtros_ativos:
-    st.info("Digite um termo ou selecione um filtro para iniciar a consulta.")
+    st.info("Digite um termo ou use os filtros avançados para iniciar a consulta.")
     st.stop()
 
+
+# =========================
+# RESULTADOS DA TTD
+# =========================
 
 results = search_records(
     df,
@@ -372,17 +348,61 @@ else:
             left.subheader(row.get("item_documental", "") or "-")
 
             left.write(
-                f"**Código de classificação:** {row.get('codigo_classificacao', '') or '-'}"
+                f"**Código de classificação:** "
+                f"{row.get('codigo_classificacao', '') or '-'}"
             )
 
             if tipo == "meio":
-                left.write(f"**Natureza:** {row.get('natureza_documental', '') or '-'}")
-                left.write(f"**Grupo:** {row.get('grupo', '') or '-'}")
-                left.write(f"**Subgrupo:** {row.get('subgrupo', '') or '-'}")
-                left.write(f"**Série:** {row.get('serie', '') or '-'}")
+                left.write(
+                    f"**Natureza:** "
+                    f"{row.get('natureza_documental', '') or '-'}"
+                )
+                left.write(
+                    f"**Grupo:** "
+                    f"{row.get('grupo', '') or '-'}"
+                )
+                left.write(
+                    f"**Subgrupo:** "
+                    f"{row.get('subgrupo', '') or '-'}"
+                )
+                left.write(
+                    f"**Série:** "
+                    f"{row.get('serie', '') or '-'}"
+                )
 
-            left.write(f"**Subsérie:** {row.get('subserie', '') or '-'}")
-            left.write(f"**Dossiê / Processo:** {row.get('dossie_processo', '') or '-'}")
+            left.write(
+                f"**Subsérie:** "
+                f"{row.get('subserie', '') or '-'}"
+            )
+
+            left.write(
+                f"**Dossiê / Processo:** "
+                f"{row.get('dossie_processo', '') or '-'}"
+            )
+
+            if row.get("assunto_tecnico"):
+                left.write(
+                    f"**Assunto técnico:** "
+                    f"{row.get('assunto_tecnico', '') or '-'}"
+                )
+
+            if row.get("funcao"):
+                left.write(
+                    f"**Função:** "
+                    f"{row.get('funcao', '') or '-'}"
+                )
+
+            if row.get("subfuncao"):
+                left.write(
+                    f"**Subfunção:** "
+                    f"{row.get('subfuncao', '') or '-'}"
+                )
+
+            if row.get("atividade"):
+                left.write(
+                    f"**Atividade:** "
+                    f"{row.get('atividade', '') or '-'}"
+                )
 
             right.write("**Temporalidade**")
             right.write(f"Corrente: {row.get('prazo_corrente', '') or '-'}")
