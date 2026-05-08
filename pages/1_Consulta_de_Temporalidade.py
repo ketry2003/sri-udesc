@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from rapidfuzz import fuzz
+from pathlib import Path
+import unicodedata
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
@@ -33,13 +35,25 @@ def normalizar_colunas(df):
     return df
 
 
+def remover_acentos(texto):
+    return "".join(
+        caractere
+        for caractere in unicodedata.normalize("NFD", str(texto))
+        if unicodedata.category(caractere) != "Mn"
+    )
+
+
 def normalizar_texto(texto):
-    return (
+    texto = (
         str(texto)
         .lower()
         .strip()
         .replace("\xa0", " ")
     )
+
+    texto = remover_acentos(texto)
+
+    return texto
 
 
 @st.cache_data
