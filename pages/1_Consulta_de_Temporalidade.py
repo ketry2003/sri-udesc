@@ -50,7 +50,7 @@ def carregar_tesauro(tipo, arquivo_modificado):
         st.error("Arquivo planilha_atualizada".xlsx não encontrado em data/reference.")
         return pd.DataFrame()
 
-    df = pd.read_excel(arquivo, sheet_name="busca_geral")
+    df = pd.read_excel(arquivo, sheet_name="base_adaptada")
     df = normalizar_colunas(df)
 
     coluna_tipo = None
