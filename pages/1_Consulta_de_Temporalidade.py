@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from rapidfuzz import fuzz
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
@@ -19,6 +20,28 @@ def caminho_vocabulario():
     )
 
 
+def normalizar_colunas(df):
+    df.columns = (
+        df.columns
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+        .str.replace("-", "_")
+    )
+    return df
+
+
+def normalizar_texto(texto):
+    return (
+        str(texto)
+        .lower()
+        .strip()
+        .replace("\xa0", " ")
+    )
+
+
 @st.cache_data
 def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = caminho_vocabulario()
@@ -28,15 +51,7 @@ def carregar_tesauro(tipo, arquivo_modificado):
         return pd.DataFrame()
 
     df = pd.read_excel(arquivo, sheet_name="busca_geral")
-
-    df.columns = (
-        df.columns
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace("/", "_")
-    )
+    df = normalizar_colunas(df)
 
     coluna_tipo = None
 
@@ -59,10 +74,39 @@ def carregar_tesauro(tipo, arquivo_modificado):
 
         df = df[df[coluna_tipo] == tipo]
 
+    colunas_busca = [
+        "termo_encontrado",
+        "termo_padronizado",
+        "assunto",
+        "subarea",
+        "atividade",
+        "codigo_classificacao",
+        "sinonimos",
+        "exemplos_de_busca",
+        "linguagem_usuario",
+        "classe_documental",
+        "item_documental",
+        "dossie_processo",
+        "subserie",
+    ]
+
+    colunas_existentes = [c for c in colunas_busca if c in df.columns]
+
+    if colunas_existentes:
+        df["texto_busca"] = (
+            df[colunas_existentes]
+            .fillna("")
+            .astype(str)
+            .agg(" ".join, axis=1)
+            .apply(normalizar_texto)
+        )
+    else:
+        df["texto_busca"] = ""
+
     return df
 
 
-def buscar_tesauro(texto, tipo):
+def buscar_tesauro(texto, tipo, limite=10, corte=55):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
@@ -73,39 +117,24 @@ def buscar_tesauro(texto, tipo):
     if tesauro.empty:
         return pd.DataFrame()
 
-    termo = texto.lower().strip()
+    termo = normalizar_texto(texto)
 
     if termo == "":
         return pd.DataFrame()
 
-    colunas_busca = [
-        "termo_encontrado",
-        "termo_padronizado",
-        "assunto",
-        "subarea",
-        "atividade",
-        "codigo_classificacao",
-    ]
+    tesauro = tesauro.copy()
 
-    colunas_existentes = [c for c in colunas_busca if c in tesauro.columns]
+    tesauro["score"] = tesauro["texto_busca"].apply(
+        lambda texto_base: fuzz.WRatio(termo, texto_base)
+    )
 
-    if not colunas_existentes:
-        return pd.DataFrame()
+    resultado = (
+        tesauro[tesauro["score"] >= corte]
+        .sort_values("score", ascending=False)
+        .head(limite)
+    )
 
-    resultado = tesauro[
-        tesauro[colunas_existentes]
-        .astype(str)
-        .apply(
-            lambda coluna: coluna.str.lower().str.contains(
-                termo,
-                na=False,
-                regex=False
-            )
-        )
-        .any(axis=1)
-    ]
-
-    return resultado.head(10)
+    return resultado
 
 
 st.title("Consulta de temporalidade")
@@ -131,11 +160,11 @@ st.session_state.tipo = tipo
 
 df = load_ttd(tipo)
 
-st.caption("Pesquise por tipo documental ou pelo número/código de classificação.")
+st.caption("Pesquise descrevendo o documento com suas próprias palavras.")
 
 query = st.text_input(
-    "Busca livre por tipo documental ou código de classificação",
-    placeholder="Ex.: PTI | férias | CI | contrato | estágio | diário de classe"
+    "Descreva o documento ou assunto",
+    placeholder="Ex.: perdi a prova | troca de orientador | estágio obrigatório | colação de grau | bolsa de extensão"
 )
 
 if query:
@@ -144,23 +173,31 @@ if query:
     if not sugestoes.empty:
         with st.expander("🔎 Sugestões do Vocabulário Controlado", expanded=True):
 
-            termo_sugerido = sugestoes.iloc[0].get("termo_padronizado", "")
+            primeira_linha = sugestoes.iloc[0]
+            termo_sugerido = primeira_linha.get("termo_padronizado", "")
+            score = primeira_linha.get("score", "")
 
             if termo_sugerido:
                 st.success(
-                    f"Termo padronizado mais provável: **{termo_sugerido}**"
+                    f"Termo padronizado mais provável: **{termo_sugerido}** "
+                    f"({int(score)}% de compatibilidade)"
                 )
 
             colunas_exibir = [
+                "score",
                 "termo_encontrado",
                 "termo_padronizado",
                 "codigo_classificacao",
                 "subarea",
                 "assunto",
+                "sinonimos",
+                "exemplos_de_busca",
                 "prazo_corrente",
                 "prazo_intermediario",
                 "destinacao",
+                "destinacao_final",
                 "obs",
+                "observacao",
             ]
 
             colunas_existentes = [
@@ -176,8 +213,10 @@ if query:
     else:
         st.warning(
             "Nenhum termo encontrado no vocabulário controlado. "
-            "Tente pesquisar por assunto geral."
+            "Tente descrever de outra forma, por exemplo: 'pedido de matrícula', "
+            "'troca de orientador', 'perdi a prova', 'bolsa de pesquisa'."
         )
+
 
 filters = {}
 
@@ -263,6 +302,7 @@ filtros_ativos = {k: v for k, v in filters.items() if v}
 if not query and not filtros_ativos:
     st.info("Digite um termo ou selecione um filtro para iniciar a consulta.")
     st.stop()
+
 
 results = search_records(
     df,
