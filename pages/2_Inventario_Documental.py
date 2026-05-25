@@ -10,6 +10,7 @@ from services.db import (
     delete_inventory_items,
     delete_inventory_items_by_setor,
     replace_inventory_from_dataframe_by_setor,
+    update_inventory_item,
 )
 from services.forms import (
     build_quick_fill_workbook,
@@ -427,7 +428,167 @@ with aba2:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
+                st.markdown("### Editar item salvo")
+
+                opcoes_edicao = []
+                mapa_edicao = {}
+
+                for _, row in df_inv.iterrows():
+
+                    rotulo = (
+                        f"#{row['id']} | "
+                        f"{row.get('tipo_documental', '-') or '-'} | "
+                        f"Caixa {row.get('caixa', '-') or '-'} | "
+                        f"{row.get('datas_limite', '-') or '-'}"
+                    )
+
+                    opcoes_edicao.append(rotulo)
+                    mapa_edicao[rotulo] = row
+
+                item_para_editar = st.selectbox(
+                    "Selecione o item para editar",
+                    [""] + opcoes_edicao,
+                )
+
+                if item_para_editar:
+
+                    item = mapa_edicao[item_para_editar]
+
+                    with st.form("form_editar_item"):
+
+                        novo_ano = st.text_input(
+                            "Ano de emissão / Datas-limite",
+                            value=str(item.get("datas_limite", "") or ""),
+                        )
+
+                        nova_caixa = st.text_input(
+                            "Nº Caixa",
+                            value=str(item.get("caixa", "") or ""),
+                        )
+
+                        nova_quantidade = st.number_input(
+                            "Quantidade",
+                            min_value=1,
+                            value=int(item.get("quantidade", 1) or 1),
+                        )
+
+                        novas_observacoes = st.text_area(
+                            "Observações",
+                            value=str(item.get("observacoes", "") or ""),
+                        )
+
+                        salvar_edicao = st.form_submit_button(
+                            "Salvar alterações"
+                        )
+
+                        if salvar_edicao:
+
+                            payload = {
+                                "datas_limite": novo_ano,
+                                "quantidade": nova_quantidade,
+                                "caixa": nova_caixa,
+                                "observacoes": novas_observacoes,
+                            }
+
+                            total = update_inventory_item(
+                                int(item["id"]),
+                                payload,
+                            )
+
+                            if total > 0:
+
+                                st.success(
+                                    "Item atualizado com sucesso."
+                                )
+
+                                st.rerun()
+
+                            else:
+
+                                st.warning(
+                                    "Nenhuma alteração foi salva."
+                                )
+
                 st.markdown("### Exclusão em lote")
+
+                opcoes = []
+                mapa_ids = {}
+
+                for _, row in df_inv.iterrows():
+
+                    rotulo = (
+                        f"#{row['id']} | "
+                        f"{row.get('tipo_documental', '-') or '-'} | "
+                        f"Caixa {row.get('caixa', '-') or '-'} | "
+                        f"{row.get('datas_limite', '-') or '-'}"
+                    )
+
+                    opcoes.append(rotulo)
+                    mapa_ids[rotulo] = int(row["id"])
+
+                selecionar_todos = st.checkbox(
+                    "Selecionar todos os itens deste setor"
+                )
+
+                selecionados = st.multiselect(
+                    "Itens para excluir",
+                    options=opcoes,
+                    default=opcoes if selecionar_todos else [],
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+
+                    if st.button("Excluir itens selecionados"):
+
+                        ids = [mapa_ids[item] for item in selecionados]
+
+                        total = delete_inventory_items(ids)
+
+                        if total > 0:
+
+                            st.success(
+                                f"{total} item(ns) excluído(s)."
+                            )
+
+                            st.rerun()
+
+                        else:
+
+                            st.warning(
+                                "Nenhum item selecionado."
+                            )
+
+                with col2:
+
+                    if st.button("Excluir tudo deste setor"):
+
+                        total = delete_inventory_items_by_setor(
+                            setor_escolhido
+                        )
+
+                        if total > 0:
+
+                            st.success(
+                                f"Todos os {total} item(ns) do setor foram excluídos."
+                            )
+
+                            st.rerun()
+
+                        else:
+
+                            st.warning(
+                                "Não havia itens para excluir."
+                            )
+                st.markdown("### Editar item salvo")
+
+                # AQUI ENTRA O BLOCO DE EDIÇÃO INTEIRO
+
+                st.markdown("### Exclusão em lote")
+
+            opcoes = []
+            mapa_ids = {}
 
                 opcoes = []
                 mapa_ids = {}

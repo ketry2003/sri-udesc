@@ -335,3 +335,32 @@ def list_elimination_candidates() -> list[sqlite3.Row]:
             """
         ).fetchall()
     return rows
+
+def update_inventory_item(item_id, payload):
+
+    with get_conn() as conn:
+
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            UPDATE inventory_items
+            SET
+                datas_limite = ?,
+                quantidade = ?,
+                caixa = ?,
+                observacoes = ?
+            WHERE id = ?
+            """,
+            (
+                payload.get("datas_limite", ""),
+                payload.get("quantidade", 1),
+                payload.get("caixa", ""),
+                payload.get("observacoes", ""),
+                item_id,
+            ),
+        )
+
+        total = cur.rowcount
+
+    return total
