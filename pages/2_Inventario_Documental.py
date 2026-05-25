@@ -178,8 +178,15 @@ with aba1:
         d.write(f"**Subsérie:** {registro.get('subserie', '') or '-'}")
         e.write(f"**Dossiê/Processo:** {registro.get('dossie_processo', '') or '-'}")
 
-    with st.form("form_inventario_assistido"):
+        with st.form("form_inventario_assistido"):
         st.markdown("### Dados do inventário")
+
+        permitir_sem_classificacao = st.checkbox(
+            "Documento sem classificação definida",
+            help="Use quando o documento não se encaixar claramente em nenhuma categoria da TTD."
+        )
+
+        col1, col2, col3 = st.columns(3)
 
         col1, col2, col3 = st.columns(3)
         proveniencia = col1.selectbox(
@@ -289,11 +296,11 @@ with aba1:
             if proveniencia == "Selecione...":
                 st.error("Selecione a Proveniência / Setor.")
 
-            elif registro is None:
-                st.error(
-                    "Primeiro localize um documento na TTD pelo código de "
-                    "classificação ou pelo tipo documental."
-                )
+            elif registro is None and not permitir_sem_classificacao:
+            st.error(
+                "Primeiro localize um documento na TTD ou marque a opção "
+                "'Documento sem classificação definida'."
+            )
 
             else:
                 texto_obs = []
