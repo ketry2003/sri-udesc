@@ -5,3 +5,4 @@ rapidfuzz
 python-docx
 docxtpl
 reportlab
+xlsxwriter
