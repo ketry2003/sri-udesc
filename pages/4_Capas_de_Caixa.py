@@ -29,7 +29,7 @@ st.title("Capas / Etiquetas de Caixa")
 # TEMPLATE WORD
 # =========================================================
 
-TEMPLATE_PATH = Path("data/templates/capa_caixa.docx")
+TEMPLATE_PATH = Path("data/reference/capa_caixa.docx")
 
 if not TEMPLATE_PATH.exists():
     st.error(
