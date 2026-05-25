@@ -179,9 +179,9 @@ with aba1:
         e.write(f"**Dossiê/Processo:** {registro.get('dossie_processo', '') or '-'}")
 
         with st.form("form_inventario_assistido"):
-        st.markdown("### Dados do inventário")
+            st.markdown("### Dados do inventário")
 
-        permitir_sem_classificacao = st.checkbox(
+            permitir_sem_classificacao = st.checkbox(
             "Documento sem classificação definida",
             help="Use quando o documento não se encaixar claramente em nenhuma categoria da TTD."
         )
