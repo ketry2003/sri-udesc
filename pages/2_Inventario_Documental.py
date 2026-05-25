@@ -178,15 +178,16 @@ with aba1:
         d.write(f"**Subsérie:** {registro.get('subserie', '') or '-'}")
         e.write(f"**Dossiê/Processo:** {registro.get('dossie_processo', '') or '-'}")
 
-        with st.form("form_inventario_assistido"):
-            st.markdown("### Dados do inventário")
+    with st.form("form_inventario_assistido"):
+        st.markdown("### Dados do inventário")
 
-            permitir_sem_classificacao = st.checkbox(
+        permitir_sem_classificacao = st.checkbox(
             "Documento sem classificação definida",
-            help="Use quando o documento não se encaixar claramente em nenhuma categoria da TTD."
+            help=(
+                "Use quando o documento não se encaixar claramente em nenhuma "
+                "categoria da TTD. O item ficará marcado como A avaliar."
+            ),
         )
-
-        col1, col2, col3 = st.columns(3)
 
         col1, col2, col3 = st.columns(3)
         proveniencia = col1.selectbox(
@@ -297,12 +298,34 @@ with aba1:
                 st.error("Selecione a Proveniência / Setor.")
 
             elif registro is None and not permitir_sem_classificacao:
-            st.error(
-                "Primeiro localize um documento na TTD ou marque a opção "
-                "'Documento sem classificação definida'."
-            )
+                st.error(
+                    "Primeiro localize um documento na TTD ou marque a opção "
+                    "Documento sem classificação definida."
+                )
 
             else:
+                if registro is None and permitir_sem_classificacao:
+                    registro = {
+                        "natureza_documental": "Não classificado",
+                        "grupo": "",
+                        "subgrupo": "",
+                        "serie": "",
+                        "subserie": "",
+                        "dossie_processo": "",
+                        "item_documental": assunto_digitado or "Documento sem classificação definida",
+                        "codigo_classificacao": "",
+                        "prazo_corrente": "",
+                        "prazo_intermediario": "",
+                        "destinacao_final": "A avaliar",
+                    }
+
+                    codigo_classificacao = ""
+                    tipo_documental = assunto_digitado or "Documento sem classificação definida"
+                    classe_ttd = tipo_documental
+                    prazo_corrente = ""
+                    prazo_intermediario = ""
+                    destinacao_final = "A avaliar"
+
                 texto_obs = []
 
                 if referencia:
@@ -491,10 +514,7 @@ with aba2:
                                 "observacoes": novas_observacoes,
                             }
 
-                            total = update_inventory_item(
-                                int(item["id"]),
-                                payload,
-                            )
+                            total = update_inventory_item(int(item["id"]), payload)
 
                             if total > 0:
                                 st.success("Item atualizado com sucesso.")
