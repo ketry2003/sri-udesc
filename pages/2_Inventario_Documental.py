@@ -434,7 +434,6 @@ with aba2:
                 mapa_edicao = {}
 
                 for _, row in df_inv.iterrows():
-
                     rotulo = (
                         f"#{row['id']} | "
                         f"{row.get('tipo_documental', '-') or '-'} | "
@@ -451,11 +450,9 @@ with aba2:
                 )
 
                 if item_para_editar:
-
                     item = mapa_edicao[item_para_editar]
 
                     with st.form("form_editar_item"):
-
                         novo_ano = st.text_input(
                             "Ano de emissão / Datas-limite",
                             value=str(item.get("datas_limite", "") or ""),
@@ -477,12 +474,9 @@ with aba2:
                             value=str(item.get("observacoes", "") or ""),
                         )
 
-                        salvar_edicao = st.form_submit_button(
-                            "Salvar alterações"
-                        )
+                        salvar_edicao = st.form_submit_button("Salvar alterações")
 
                         if salvar_edicao:
-
                             payload = {
                                 "datas_limite": novo_ano,
                                 "quantidade": nova_quantidade,
@@ -496,99 +490,12 @@ with aba2:
                             )
 
                             if total > 0:
-
-                                st.success(
-                                    "Item atualizado com sucesso."
-                                )
-
+                                st.success("Item atualizado com sucesso.")
                                 st.rerun()
-
                             else:
-
-                                st.warning(
-                                    "Nenhuma alteração foi salva."
-                                )
+                                st.warning("Nenhuma alteração foi salva.")
 
                 st.markdown("### Exclusão em lote")
-
-                opcoes = []
-                mapa_ids = {}
-
-                for _, row in df_inv.iterrows():
-
-                    rotulo = (
-                        f"#{row['id']} | "
-                        f"{row.get('tipo_documental', '-') or '-'} | "
-                        f"Caixa {row.get('caixa', '-') or '-'} | "
-                        f"{row.get('datas_limite', '-') or '-'}"
-                    )
-
-                    opcoes.append(rotulo)
-                    mapa_ids[rotulo] = int(row["id"])
-
-                selecionar_todos = st.checkbox(
-                    "Selecionar todos os itens deste setor"
-                )
-
-                selecionados = st.multiselect(
-                    "Itens para excluir",
-                    options=opcoes,
-                    default=opcoes if selecionar_todos else [],
-                )
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-
-                    if st.button("Excluir itens selecionados"):
-
-                        ids = [mapa_ids[item] for item in selecionados]
-
-                        total = delete_inventory_items(ids)
-
-                        if total > 0:
-
-                            st.success(
-                                f"{total} item(ns) excluído(s)."
-                            )
-
-                            st.rerun()
-
-                        else:
-
-                            st.warning(
-                                "Nenhum item selecionado."
-                            )
-
-                with col2:
-
-                    if st.button("Excluir tudo deste setor"):
-
-                        total = delete_inventory_items_by_setor(
-                            setor_escolhido
-                        )
-
-                        if total > 0:
-
-                            st.success(
-                                f"Todos os {total} item(ns) do setor foram excluídos."
-                            )
-
-                            st.rerun()
-
-                        else:
-
-                            st.warning(
-                                "Não havia itens para excluir."
-                            )
-                st.markdown("### Editar item salvo")
-
-                # AQUI ENTRA O BLOCO DE EDIÇÃO INTEIRO
-
-                st.markdown("### Exclusão em lote")
-
-            opcoes = []
-            mapa_ids = {}
 
                 opcoes = []
                 mapa_ids = {}
