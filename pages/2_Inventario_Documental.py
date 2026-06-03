@@ -572,45 +572,45 @@ with aba2:
 
                 with col1:
                     if st.button("Excluir itens selecionados"):
-                        ids = [mapa_ids[item] for item in selecionados]
+                        senha_exclusao = st.text_input(
+                    "Senha de administrador para exclusão",
+                    type="password",
+                    key="senha_exclusao_geral"
+                )
 
-                        total = delete_inventory_items(ids)
+                col1, col2 = st.columns(2)
 
-                        if total > 0:
-                            st.success(f"{total} item(ns) excluído(s).")
-                            st.rerun()
+                with col1:
+                    if st.button("Excluir itens selecionados"):
+                        if senha_exclusao != "cct":
+                            st.error("Senha incorreta. Exclusão cancelada.")
                         else:
-                            st.warning("Nenhum item selecionado.")
+                            ids = [mapa_ids[item] for item in selecionados]
+                            total = delete_inventory_items(ids)
+
+                            if total > 0:
+                                st.success(f"{total} item(ns) excluído(s).")
+                                st.rerun()
+                            else:
+                                st.warning("Nenhum item selecionado.")
 
                 with col2:
-                    senha = st.text_input(
-                        "Senha de administrador",
-                        type="password",
-                        key="senha_exclusao"
-                    )
-
                     confirmacao = st.checkbox(
                         "Confirmo que desejo excluir todos os itens deste setor"
                     )
 
                     if st.button("Excluir tudo deste setor"):
-
-                        if senha != "cct":
-                            st.error("Senha incorreta.")
-
+                        if senha_exclusao != "cct":
+                            st.error("Senha incorreta. Exclusão cancelada.")
                         elif not confirmacao:
                             st.error("Marque a confirmação.")
-
                         else:
-                            total = delete_inventory_items_by_setor(
-                                setor_escolhido
-                            )
+                            total = delete_inventory_items_by_setor(setor_escolhido)
 
                             if total > 0:
                                 st.success(
                                     f"Todos os {total} item(ns) do setor foram excluídos."
                                 )
                                 st.rerun()
-
                             else:
                                 st.warning("Não havia itens para excluir.")
