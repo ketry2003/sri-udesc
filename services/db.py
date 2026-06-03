@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS validation_records (
 
 
 def get_database_url() -> str:
+    def get_database_url():
     if st is not None:
         try:
             return st.secrets["SUPABASE_DB_URL"]
@@ -82,6 +83,9 @@ def get_conn():
 
 
 def init_db() -> None:
+    print("Conectando ao Supabase...")
+    cur.execute(SCHEMA)
+    print("Supabase conectado com sucesso!")
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
