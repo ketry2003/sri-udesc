@@ -9,7 +9,6 @@ from services.db import (
     list_inventory_items_by_setor,
     delete_inventory_items,
     delete_inventory_items_by_setor,
-    replace_inventory_from_dataframe_by_setor,
     update_inventory_item,
 )
 from services.forms import (
@@ -397,10 +396,32 @@ with aba1:
                     )
 
                     if st.button("Importar planilha para este setor"):
-                        total = replace_inventory_from_dataframe_by_setor(
-                            df_importado,
-                            setor_importacao,
-                        )
+                    total = 0
+
+                    for _, row in df_importado.iterrows():
+
+                        payload = {
+                            "setor": setor_importacao,
+                            "tipo_documental": row.get("tipo_documental", ""),
+                            "natureza_documental": row.get("natureza_documental", ""),
+                            "grupo": row.get("grupo", ""),
+                            "subgrupo": row.get("subgrupo", ""),
+                            "serie": row.get("serie", ""),
+                            "subserie": row.get("subserie", ""),
+                            "dossie_processo": row.get("dossie_processo", ""),
+                            "item_documental": row.get("item_documental", ""),
+                            "codigo_classificacao": row.get("codigo_classificacao", ""),
+                            "prazo_corrente": row.get("prazo_corrente", ""),
+                            "prazo_intermediario": row.get("prazo_intermediario", ""),
+                            "destinacao_final": row.get("destinacao_final", ""),
+                            "datas_limite": row.get("datas_limite", ""),
+                            "quantidade": int(row.get("quantidade", 1) or 1),
+                            "caixa": row.get("caixa", ""),
+                            "observacoes": row.get("observacoes", ""),
+                        }
+
+                        insert_inventory_item(payload)
+                        total += 1
                         st.success(
                             f"Inventário do setor {setor_importacao} atualizado com {total} item(ns)."
                         )
@@ -564,14 +585,34 @@ with aba2:
 
                 with col2:
                     if st.button("Excluir tudo deste setor"):
-                        total = delete_inventory_items_by_setor(
-                            setor_escolhido
-                        )
+                    senha = st.text_input(
+                        "Senha de administrador",
+                        type="password",
+                        key="senha_exclusao"
+                    )
 
-                        if total > 0:
-                            st.success(
-                                f"Todos os {total} item(ns) do setor foram excluídos."
-                            )
-                            st.rerun()
+                    confirmacao = st.checkbox(
+                        "Confirmo que desejo excluir todos os itens deste setor"
+                    )
+
+                    if st.button("Excluir tudo deste setor"):
+
+                        if senha != "cct":
+                            st.error("Senha incorreta.")
+
+                        elif not confirmacao:
+                            st.error("Marque a confirmação.")
+
                         else:
-                            st.warning("Não havia itens para excluir.")
+                            total = delete_inventory_items_by_setor(
+                                setor_escolhido
+                            )
+
+                            if total > 0:
+                                st.success(
+                                    f"Todos os {total} item(ns) do setor foram excluídos."
+                                )
+                                st.rerun()
+
+                            else:
+                                st.warning("Não havia itens para excluir.")
