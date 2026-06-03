@@ -336,6 +336,7 @@ def list_elimination_candidates() -> list[sqlite3.Row]:
         ).fetchall()
     return rows
 
+
 def update_inventory_item(item_id, payload):
 
     with get_conn() as conn:

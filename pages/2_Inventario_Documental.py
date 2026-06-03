@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 from config import QUICK_FILL_WORKBOOK_NAME
@@ -395,36 +394,36 @@ with aba1:
                         f"Confirme a importação para substituir apenas o inventário do setor: {setor_importacao}."
                     )
 
-                    if st.button("Importar planilha para este setor"):
-                    total = 0
+            if st.button("Importar planilha para este setor"):
+                total = 0
 
-                    for _, row in df_importado.iterrows():
+                for _, row in df_importado.iterrows():
 
-                        payload = {
-                            "setor": setor_importacao,
-                            "tipo_documental": row.get("tipo_documental", ""),
-                            "natureza_documental": row.get("natureza_documental", ""),
-                            "grupo": row.get("grupo", ""),
-                            "subgrupo": row.get("subgrupo", ""),
-                            "serie": row.get("serie", ""),
-                            "subserie": row.get("subserie", ""),
-                            "dossie_processo": row.get("dossie_processo", ""),
-                            "item_documental": row.get("item_documental", ""),
-                            "codigo_classificacao": row.get("codigo_classificacao", ""),
-                            "prazo_corrente": row.get("prazo_corrente", ""),
-                            "prazo_intermediario": row.get("prazo_intermediario", ""),
-                            "destinacao_final": row.get("destinacao_final", ""),
-                            "datas_limite": row.get("datas_limite", ""),
-                            "quantidade": int(row.get("quantidade", 1) or 1),
-                            "caixa": row.get("caixa", ""),
-                            "observacoes": row.get("observacoes", ""),
+                    payload = {
+                        "setor": setor_importacao,
+                        "tipo_documental": row.get("tipo_documental", ""),
+                        "natureza_documental": row.get("natureza_documental", ""),
+                        "grupo": row.get("grupo", ""),
+                        "subgrupo": row.get("subgrupo", ""),
+                        "serie": row.get("serie", ""),
+                        "subserie": row.get("subserie", ""),
+                        "dossie_processo": row.get("dossie_processo", ""),
+                        "item_documental": row.get("item_documental", ""),
+                        "codigo_classificacao": row.get("codigo_classificacao", ""),
+                        "prazo_corrente": row.get("prazo_corrente", ""),
+                        "prazo_intermediario": row.get("prazo_intermediario", ""),
+                        "destinacao_final": row.get("destinacao_final", ""),
+                        "datas_limite": row.get("datas_limite", ""),
+                        "quantidade": int(row.get("quantidade", 1) or 1),
+                        "caixa": row.get("caixa", ""),
+                        "observacoes": row.get("observacoes", ""),
                         }
 
-                        insert_inventory_item(payload)
-                        total += 1
-                        st.success(
-                            f"Inventário do setor {setor_importacao} atualizado com {total} item(ns)."
-                        )
+            insert_inventory_item(payload)
+            total += 1
+            st.success(
+                f"Inventário do setor {setor_importacao} atualizado com {total} item(ns)."
+            )
         except Exception as e:
             st.error(f"Erro ao ler planilha: {e}")
 
@@ -584,7 +583,6 @@ with aba2:
                             st.warning("Nenhum item selecionado.")
 
                 with col2:
-                    if st.button("Excluir tudo deste setor"):
                     senha = st.text_input(
                         "Senha de administrador",
                         type="password",
