@@ -47,11 +47,11 @@ CREATE TABLE IF NOT EXISTS validation_records (
 
 
 def get_database_url() -> str:
-    def get_database_url():
     if st is not None:
         try:
             return st.secrets["SUPABASE_DB_URL"]
         except Exception:
+            # fall back to environment variable if Streamlit secrets unavailable
             pass
 
     url = os.getenv("SUPABASE_DB_URL")
@@ -67,6 +67,8 @@ def get_database_url() -> str:
 
 @contextmanager
 def get_conn():
+    if st is not None:
+        st.sidebar.success("Banco ativo: Supabase")
     conn = psycopg2.connect(
         get_database_url(),
         cursor_factory=RealDictCursor,
@@ -84,11 +86,12 @@ def get_conn():
 
 def init_db() -> None:
     print("Conectando ao Supabase...")
-    cur.execute(SCHEMA)
-    print("Supabase conectado com sucesso!")
+
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
+
+    print("Supabase conectado com sucesso!")
 
 
 def insert_inventory_item(payload: dict) -> int:
