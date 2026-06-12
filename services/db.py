@@ -1,435 +1,224 @@
 from __future__ import annotations
 
-import os
-from contextlib import contextmanager
-
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import os    
 
 try:
     import streamlit as st
 except Exception:
     st = None
 
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS inventory_items (
-    id BIGSERIAL PRIMARY KEY,
-    setor TEXT NOT NULL,
-    tipo_documental TEXT,
-    natureza_documental TEXT,
-    grupo TEXT,
-    subgrupo TEXT,
-    serie TEXT,
-    subserie TEXT,
-    dossie_processo TEXT,
-    item_documental TEXT,
-    codigo_classificacao TEXT,
-    prazo_corrente TEXT,
-    prazo_intermediario TEXT,
-    destinacao_final TEXT,
-    datas_limite TEXT,
-    quantidade INTEGER DEFAULT 1,
-    caixa TEXT,
-    observacoes TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS validation_records (
-    id BIGSERIAL PRIMARY KEY,
-    inventory_id BIGINT REFERENCES inventory_items(id) ON DELETE CASCADE,
-    situacao_prazo TEXT,
-    pode_eliminar BOOLEAN DEFAULT FALSE,
-    justificativa TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
+from supabase import create_client
 
 
-def get_database_url() -> str:
+def get_supabase_client():
     if st is not None:
-        try:
-            return st.secrets["SUPABASE_DB_URL"]
-        except Exception:
-            # fall back to environment variable if Streamlit secrets unavailable
-            pass
+        url = st.secrets.get("SUPABASE_URL", "")
+        key = st.secrets.get("SUPABASE_KEY", "")
+    else:
+        url = os.getenv("SUPABASE_URL", "")
+        key = os.getenv("SUPABASE_KEY", "")
 
-    url = os.getenv("SUPABASE_DB_URL")
-
-    if not url:
+    if not url or not key:
         raise RuntimeError(
-            "SUPABASE_DB_URL não configurado. "
-            "Configure em .streamlit/secrets.toml ou nas Secrets do Streamlit Cloud."
+            "SUPABASE_URL e SUPABASE_KEY não configurados."
         )
 
-    return url
+    return create_client(url, key)
 
 
-@contextmanager
-def get_conn():
+def init_db():
     if st is not None:
-        st.sidebar.success("Banco ativo: Supabase")
-    conn = psycopg2.connect(
-        get_database_url(),
-        cursor_factory=RealDictCursor,
-    )
-
-    try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+        st.sidebar.success("Banco ativo: Supabase API")
 
 
-def init_db() -> None:
-    print("Conectando ao Supabase...")
-
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(SCHEMA)
-
-    print("Supabase conectado com sucesso!")
+def _response_data(response):
+    return response.data or []
 
 
 def insert_inventory_item(payload: dict) -> int:
-    fields = [
-        "setor",
-        "tipo_documental",
-        "natureza_documental",
-        "grupo",
-        "subgrupo",
-        "serie",
-        "subserie",
-        "dossie_processo",
-        "item_documental",
-        "codigo_classificacao",
-        "prazo_corrente",
-        "prazo_intermediario",
-        "destinacao_final",
-        "datas_limite",
-        "quantidade",
-        "caixa",
-        "observacoes",
-    ]
+    supabase = get_supabase_client()
 
-    values = [payload.get(field) for field in fields]
-    placeholders = ", ".join(["%s"] * len(fields))
+    data = {
+        "setor": payload.get("setor", ""),
+        "tipo_documental": payload.get("tipo_documental", ""),
+        "natureza_documental": payload.get("natureza_documental", ""),
+        "grupo": payload.get("grupo", ""),
+        "subgrupo": payload.get("subgrupo", ""),
+        "serie": payload.get("serie", ""),
+        "subserie": payload.get("subserie", ""),
+        "dossie_processo": payload.get("dossie_processo", ""),
+        "item_documental": payload.get("item_documental", ""),
+        "codigo_classificacao": payload.get("codigo_classificacao", ""),
+        "prazo_corrente": payload.get("prazo_corrente", ""),
+        "prazo_intermediario": payload.get("prazo_intermediario", ""),
+        "destinacao_final": payload.get("destinacao_final", ""),
+        "datas_limite": payload.get("datas_limite", ""),
+        "quantidade": int(payload.get("quantidade", 1) or 1),
+        "caixa": (
+            numero_caixa.strip()
+            if numero_caixa.strip()
+            else get_next_caixa_by_setor(proveniencia)
+        ),
+        "observacoes": payload.get("observacoes", ""),
+    }
 
-    sql = f"""
-        INSERT INTO inventory_items ({", ".join(fields)})
-        VALUES ({placeholders})
-        RETURNING id
-    """
+    response = (
+        supabase
+        .table("inventory_items")
+        .insert(data)
+        .execute()
+    )
 
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, values)
-            row = cur.fetchone()
-            return int(row["id"])
+    rows = _response_data(response)
 
+    if not rows:
+        raise RuntimeError("Erro ao inserir item no Supabase.")
 
-def list_inventory_items() -> list[dict]:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT *
-                FROM inventory_items
-                ORDER BY criado_em DESC, id DESC
-                """
-            )
-            return cur.fetchall()
+    return int(rows[0]["id"])
 
 
-def list_setores_inventory() -> list[str]:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT DISTINCT TRIM(COALESCE(setor, '')) AS setor
-                FROM inventory_items
-                WHERE TRIM(COALESCE(setor, '')) <> ''
-                ORDER BY setor
-                """
-            )
-            rows = cur.fetchall()
+def list_inventory_items():
+    supabase = get_supabase_client()
 
-    return [row["setor"] for row in rows]
+    response = (
+        supabase
+        .table("inventory_items")
+        .select("*")
+        .order("id", desc=True)
+        .execute()
+    )
+
+    return _response_data(response)
 
 
-def list_inventory_items_by_setor(setor: str) -> list[dict]:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT *
-                FROM inventory_items
-                WHERE TRIM(COALESCE(setor, '')) = TRIM(%s)
-                ORDER BY criado_em DESC, id DESC
-                """,
-                (setor,),
-            )
-            return cur.fetchall()
+def list_setores_inventory():
+    rows = list_inventory_items()
+
+    setores = sorted(
+        {
+            str(row.get("setor", "")).strip()
+            for row in rows
+            if str(row.get("setor", "")).strip()
+        }
+    )
+
+    return setores
 
 
-def delete_inventory_item(item_id: int) -> None:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "DELETE FROM validation_records WHERE inventory_id = %s",
-                (item_id,),
-            )
-            cur.execute(
-                "DELETE FROM inventory_items WHERE id = %s",
-                (item_id,),
-            )
+def list_inventory_items_by_setor(setor):
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("inventory_items")
+        .select("*")
+        .eq("setor", setor)
+        .order("id", desc=True)
+        .execute()
+    )
+
+    return _response_data(response)
+
+def get_next_caixa_by_setor(setor):
+    itens = list_inventory_items_by_setor(setor)
+
+    numeros = []
+
+    for item in itens:
+        caixa = str(item.get("caixa", "")).strip()
+
+        if caixa.isdigit():
+            numeros.append(int(caixa))
+
+    proximo = max(numeros, default=0) + 1
+
+    return str(proximo).zfill(2)
 
 
-def delete_inventory_items(item_ids: list[int]) -> int:
+def delete_inventory_item(item_id):
+    supabase = get_supabase_client()
+
+    supabase.table("validation_records").delete().eq(
+        "inventory_id",
+        item_id
+    ).execute()
+
+    supabase.table("inventory_items").delete().eq(
+        "id",
+        item_id
+    ).execute()
+
+
+def delete_inventory_items(item_ids):
     if not item_ids:
         return 0
 
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "DELETE FROM validation_records WHERE inventory_id = ANY(%s)",
-                (item_ids,),
-            )
-            cur.execute(
-                "DELETE FROM inventory_items WHERE id = ANY(%s)",
-                (item_ids,),
-            )
+    supabase = get_supabase_client()
+
+    for item_id in item_ids:
+        delete_inventory_item(item_id)
 
     return len(item_ids)
 
 
-def delete_inventory_items_by_setor(setor: str) -> int:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id
-                FROM inventory_items
-                WHERE TRIM(COALESCE(setor, '')) = TRIM(%s)
-                """,
-                (setor,),
-            )
+def delete_inventory_items_by_setor(setor):
+    itens = list_inventory_items_by_setor(setor)
 
-            rows = cur.fetchall()
-            item_ids = [row["id"] for row in rows]
+    ids = [item["id"] for item in itens]
 
-            if not item_ids:
-                return 0
-
-            cur.execute(
-                "DELETE FROM validation_records WHERE inventory_id = ANY(%s)",
-                (item_ids,),
-            )
-            cur.execute(
-                "DELETE FROM inventory_items WHERE id = ANY(%s)",
-                (item_ids,),
-            )
-
-    return len(item_ids)
-
-
-def replace_inventory_from_dataframe(df) -> int:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM validation_records")
-            cur.execute("DELETE FROM inventory_items")
-
-            for _, row in df.iterrows():
-                cur.execute(
-                    """
-                    INSERT INTO inventory_items (
-                        setor,
-                        tipo_documental,
-                        natureza_documental,
-                        grupo,
-                        subgrupo,
-                        serie,
-                        subserie,
-                        dossie_processo,
-                        item_documental,
-                        codigo_classificacao,
-                        prazo_corrente,
-                        prazo_intermediario,
-                        destinacao_final,
-                        datas_limite,
-                        quantidade,
-                        caixa,
-                        observacoes
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        row.get("setor", ""),
-                        row.get("tipo_documental", ""),
-                        row.get("natureza_documental", ""),
-                        row.get("grupo", ""),
-                        row.get("subgrupo", ""),
-                        row.get("serie", ""),
-                        row.get("subserie", ""),
-                        row.get("dossie_processo", ""),
-                        row.get("item_documental", ""),
-                        row.get("codigo_classificacao", ""),
-                        row.get("prazo_corrente", ""),
-                        row.get("prazo_intermediario", ""),
-                        row.get("destinacao_final", ""),
-                        row.get("datas_limite", ""),
-                        int(row.get("quantidade", 1) or 1),
-                        row.get("caixa", ""),
-                        row.get("observacoes", ""),
-                    ),
-                )
-
-    return len(df)
-
-
-def replace_inventory_from_dataframe_by_setor(df, setor: str) -> int:
-    setor = str(setor or "").strip()
-
-    if not setor:
-        raise ValueError("Setor não informado.")
-
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id
-                FROM inventory_items
-                WHERE TRIM(COALESCE(setor, '')) = TRIM(%s)
-                """,
-                (setor,),
-            )
-
-            rows = cur.fetchall()
-            item_ids = [row["id"] for row in rows]
-
-            if item_ids:
-                cur.execute(
-                    "DELETE FROM validation_records WHERE inventory_id = ANY(%s)",
-                    (item_ids,),
-                )
-                cur.execute(
-                    "DELETE FROM inventory_items WHERE id = ANY(%s)",
-                    (item_ids,),
-                )
-
-            for _, row in df.iterrows():
-                cur.execute(
-                    """
-                    INSERT INTO inventory_items (
-                        setor,
-                        tipo_documental,
-                        natureza_documental,
-                        grupo,
-                        subgrupo,
-                        serie,
-                        subserie,
-                        dossie_processo,
-                        item_documental,
-                        codigo_classificacao,
-                        prazo_corrente,
-                        prazo_intermediario,
-                        destinacao_final,
-                        datas_limite,
-                        quantidade,
-                        caixa,
-                        observacoes
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        setor,
-                        row.get("tipo_documental", ""),
-                        row.get("natureza_documental", ""),
-                        row.get("grupo", ""),
-                        row.get("subgrupo", ""),
-                        row.get("serie", ""),
-                        row.get("subserie", ""),
-                        row.get("dossie_processo", ""),
-                        row.get("item_documental", ""),
-                        row.get("codigo_classificacao", ""),
-                        row.get("prazo_corrente", ""),
-                        row.get("prazo_intermediario", ""),
-                        row.get("destinacao_final", ""),
-                        row.get("datas_limite", ""),
-                        int(row.get("quantidade", 1) or 1),
-                        row.get("caixa", ""),
-                        row.get("observacoes", ""),
-                    ),
-                )
-
-    return len(df)
+    return delete_inventory_items(ids)
 
 
 def save_validation_record(
-    inventory_id: int,
-    situacao_prazo: str,
-    pode_eliminar: bool,
-    justificativa: str,
-) -> None:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO validation_records (
-                    inventory_id,
-                    situacao_prazo,
-                    pode_eliminar,
-                    justificativa
-                ) VALUES (%s, %s, %s, %s)
-                """,
-                (
-                    inventory_id,
-                    situacao_prazo,
-                    bool(pode_eliminar),
-                    justificativa,
-                ),
-            )
+    inventory_id,
+    situacao_prazo,
+    pode_eliminar,
+    justificativa,
+):
+    supabase = get_supabase_client()
+
+    data = {
+        "inventory_id": inventory_id,
+        "situacao_prazo": situacao_prazo,
+        "pode_eliminar": bool(pode_eliminar),
+        "justificativa": justificativa,
+    }
+
+    supabase.table("validation_records").insert(
+        data
+    ).execute()
 
 
-def list_elimination_candidates() -> list[dict]:
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT i.*, v.situacao_prazo, v.pode_eliminar, v.justificativa
-                FROM inventory_items i
-                INNER JOIN validation_records v ON v.inventory_id = i.id
-                WHERE v.pode_eliminar = TRUE
-                  AND LOWER(COALESCE(i.destinacao_final, '')) NOT LIKE '%permanente%'
-                ORDER BY i.caixa, i.tipo_documental
-                """
-            )
-            return cur.fetchall()
+def list_elimination_candidates():
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("validation_records")
+        .select("*, inventory_items(*)")
+        .eq("pode_eliminar", True)
+        .execute()
+    )
+
+    return _response_data(response)
 
 
 def update_inventory_item(item_id, payload):
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                UPDATE inventory_items
-                SET
-                    datas_limite = %s,
-                    quantidade = %s,
-                    caixa = %s,
-                    observacoes = %s
-                WHERE id = %s
-                """,
-                (
-                    payload.get("datas_limite", ""),
-                    payload.get("quantidade", 1),
-                    payload.get("caixa", ""),
-                    payload.get("observacoes", ""),
-                    item_id,
-                ),
-            )
+    supabase = get_supabase_client()
 
-            total = cur.rowcount
+    data = {
+        "datas_limite": payload.get("datas_limite", ""),
+        "quantidade": payload.get("quantidade", 1),
+        "caixa": payload.get("caixa", ""),
+        "observacoes": payload.get("observacoes", ""),
+    }
 
-    return total
+    response = (
+        supabase
+        .table("inventory_items")
+        .update(data)
+        .eq("id", item_id)
+        .execute()
+    )
+
+    return len(_response_data(response))
