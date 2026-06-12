@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os    
+import os
 
 try:
     import streamlit as st
@@ -54,11 +54,7 @@ def insert_inventory_item(payload: dict) -> int:
         "destinacao_final": payload.get("destinacao_final", ""),
         "datas_limite": payload.get("datas_limite", ""),
         "quantidade": int(payload.get("quantidade", 1) or 1),
-        "caixa": (
-            numero_caixa.strip()
-            if numero_caixa.strip()
-            else get_next_caixa_by_setor(proveniencia)
-        ),
+        "caixa": str(payload.get("caixa", "")).strip(),
         "observacoes": payload.get("observacoes", ""),
     }
 
@@ -119,6 +115,7 @@ def list_inventory_items_by_setor(setor):
 
     return _response_data(response)
 
+
 def get_next_caixa_by_setor(setor):
     itens = list_inventory_items_by_setor(setor)
 
@@ -132,7 +129,7 @@ def get_next_caixa_by_setor(setor):
 
     proximo = max(numeros, default=0) + 1
 
-    return str(proximo).zfill(2)
+    return str(proximo).zfill(3)
 
 
 def delete_inventory_item(item_id):
@@ -152,8 +149,6 @@ def delete_inventory_item(item_id):
 def delete_inventory_items(item_ids):
     if not item_ids:
         return 0
-
-    supabase = get_supabase_client()
 
     for item_id in item_ids:
         delete_inventory_item(item_id)
