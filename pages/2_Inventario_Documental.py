@@ -24,7 +24,6 @@ st.set_page_config(page_title="Inventário Documental", layout="wide")
 
 st.title("Inventário documental")
 
-# Base consolidada: atividade-fim + atividade-meio
 df_ttd = load_ttd("todos")
 
 
@@ -38,6 +37,7 @@ def calcular_ano_eliminacao(
         return "-"
 
     destino = str(destinacao_final or "").lower()
+
     if "permanente" in destino:
         return "-"
 
@@ -63,7 +63,13 @@ def filtrar_ttd(df, codigo_busca="", tipo_busca="", natureza=""):
     out = df.copy()
 
     if natureza and "natureza_documental" in out.columns:
-        out = out[out["natureza_documental"] == natureza]
+        out = out[
+            out["natureza_documental"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            == natureza.strip().lower()
+        ]
 
     if codigo_busca.strip() and "codigo_classificacao" in out.columns:
         codigo_norm = normalize_text(codigo_busca)
@@ -98,14 +104,17 @@ def filtrar_ttd(df, codigo_busca="", tipo_busca="", natureza=""):
 def valor_registro(registro, campo, padrao=""):
     if registro is None:
         return padrao
+
     try:
         valor = registro.get(campo, padrao)
     except AttributeError:
         valor = registro[campo] if campo in registro else padrao
+
     return valor if valor is not None else padrao
 
 
 aba1, aba2 = st.tabs(["Adicionar item", "Inventário salvo"])
+
 
 with aba1:
     st.caption(
@@ -127,6 +136,7 @@ with aba1:
         )
 
     workbook_bytes = build_quick_fill_workbook(df_ttd)
+
     st.download_button(
         "Baixar formulário oficial em Excel (preenchimento rápido)",
         data=workbook_bytes,
@@ -142,6 +152,7 @@ with aba1:
     st.subheader("Preenchimento assistido")
 
     c1, c2, c3 = st.columns(3)
+
     natureza_escolhida = c1.selectbox(
         "Natureza documental",
         ["", "Atividade-fim", "Atividade-meio"],
@@ -151,18 +162,26 @@ with aba1:
             "Use atividade-meio como apoio ou segunda fonte."
         ),
     )
+
     codigo_busca = c2.text_input(
         "Buscar pelo código de classificação",
         placeholder="Ex.: 06.24.01",
     )
+
     tipo_busca = c3.text_input(
         "Buscar pelo tipo documental",
         placeholder="Ex.: diário de classe, ofício, ata",
     )
 
-    sugestoes = filtrar_ttd(df_ttd, codigo_busca, tipo_busca, natureza_escolhida)
+    sugestoes = filtrar_ttd(
+        df_ttd,
+        codigo_busca,
+        tipo_busca,
+        natureza_escolhida,
+    )
 
     registro = None
+
     if not sugestoes.empty:
         opcoes = [
             f"{row.get('codigo_classificacao', '')} | "
@@ -180,13 +199,33 @@ with aba1:
         st.success("Classificação localizada.")
 
         a, b, c = st.columns(3)
-        a.write(f"**Código:** {valor_registro(registro, 'codigo_classificacao', '-') or '-'}")
-        b.write(f"**Tipo documental:** {valor_registro(registro, 'item_documental', '-') or '-'}")
-        c.write(f"**Assunto:** {valor_registro(registro, 'assunto', '-') or '-'}")
+
+        a.write(
+            f"**Código:** "
+            f"{valor_registro(registro, 'codigo_classificacao', '-') or '-'}"
+        )
+
+        b.write(
+            f"**Tipo documental:** "
+            f"{valor_registro(registro, 'item_documental', '-') or '-'}"
+        )
+
+        c.write(
+            f"**Assunto:** "
+            f"{valor_registro(registro, 'assunto', '-') or '-'}"
+        )
 
         d, e = st.columns(2)
-        d.write(f"**Subsérie:** {valor_registro(registro, 'subserie', '-') or '-'}")
-        e.write(f"**Dossiê/Processo:** {valor_registro(registro, 'dossie_processo', '-') or '-'}")
+
+        d.write(
+            f"**Subsérie:** "
+            f"{valor_registro(registro, 'subserie', '-') or '-'}"
+        )
+
+        e.write(
+            f"**Dossiê/Processo:** "
+            f"{valor_registro(registro, 'dossie_processo', '-') or '-'}"
+        )
 
     with st.form("form_inventario_assistido"):
         st.markdown("### Dados do inventário")
@@ -200,19 +239,46 @@ with aba1:
         )
 
         col1, col2, col3 = st.columns(3)
-        proveniencia = col1.selectbox(
+
+        opcoes_proveniencia = (
+            ["Selecione..."]
+            + PROVENIENCIAS_PADRAO
+            + ["Outro"]
+        )
+
+        proveniencia_opcao = col1.selectbox(
             "Proveniência / Setor *",
-            ["Selecione..."] + PROVENIENCIAS_PADRAO,
+            opcoes_proveniencia,
             index=0,
             help="Campo obrigatório. Selecione o setor produtor da documentação.",
         )
-        ano_emissao = col2.text_input("Ano de emissão", placeholder="Ex.: 2024")
+
+        proveniencia_outro = ""
+
+        if proveniencia_opcao == "Outro":
+            proveniencia_outro = st.text_input(
+                "Informe o nome do setor/proveniência",
+                placeholder="Ex.: Setor de Obras",
+            )
+
+        proveniencia = (
+            proveniencia_outro.strip()
+            if proveniencia_opcao == "Outro"
+            else proveniencia_opcao
+        )
+
+        ano_emissao = col2.text_input(
+            "Ano de emissão",
+            placeholder="Ex.: 2024",
+        )
+
         referencia = col3.text_input(
             "Referência",
             placeholder="Ex.: nº processo, turma, matrícula",
         )
 
         col4, col5, col6 = st.columns(3)
+
         assunto_digitado = col4.text_input(
             "Assunto",
             value=(
@@ -224,7 +290,8 @@ with aba1:
         )
 
         caixa_sugerida = ""
-        if proveniencia != "Selecione...":
+
+        if proveniencia and proveniencia != "Selecione...":
             try:
                 caixa_sugerida = get_next_caixa_by_setor(proveniencia)
             except Exception:
@@ -253,16 +320,59 @@ with aba1:
 
         st.markdown("### Campos preenchidos automaticamente")
 
-        codigo_classificacao = valor_registro(registro, "codigo_classificacao", "")
-        tipo_documental = valor_registro(registro, "item_documental", "")
-        classe_ttd = valor_registro(registro, "item_documental", "")
-        prazo_corrente = valor_registro(registro, "prazo_corrente", 0)
-        prazo_intermediario = valor_registro(registro, "prazo_intermediario", 0)
-        destinacao_final = valor_registro(registro, "destinacao_final", "")
-        subserie = valor_registro(registro, "subserie", "")
-        dossie_processo = valor_registro(registro, "dossie_processo", "")
+        codigo_classificacao = valor_registro(
+            registro,
+            "codigo_classificacao",
+            "",
+        )
 
-        total_prazo = calcular_total(prazo_corrente, prazo_intermediario)
+        tipo_documental = valor_registro(
+            registro,
+            "item_documental",
+            "",
+        )
+
+        classe_ttd = valor_registro(
+            registro,
+            "item_documental",
+            "",
+        )
+
+        prazo_corrente = valor_registro(
+            registro,
+            "prazo_corrente",
+            0,
+        )
+
+        prazo_intermediario = valor_registro(
+            registro,
+            "prazo_intermediario",
+            0,
+        )
+
+        destinacao_final = valor_registro(
+            registro,
+            "destinacao_final",
+            "",
+        )
+
+        subserie = valor_registro(
+            registro,
+            "subserie",
+            "",
+        )
+
+        dossie_processo = valor_registro(
+            registro,
+            "dossie_processo",
+            "",
+        )
+
+        total_prazo = calcular_total(
+            prazo_corrente,
+            prazo_intermediario,
+        )
+
         ano_eliminacao = calcular_ano_eliminacao(
             ano_emissao,
             prazo_corrente,
@@ -277,16 +387,19 @@ with aba1:
         )
 
         x1, x2, x3 = st.columns(3)
+
         x1.text_input(
             "Código segundo o Plano de Classificação",
             value=str(codigo_classificacao or ""),
             disabled=True,
         )
+
         x2.text_input(
             "Tipo documental localizado",
             value=str(tipo_documental or ""),
             disabled=True,
         )
+
         x3.text_input(
             "Classe segundo a TTD",
             value=str(classe_ttd or ""),
@@ -294,26 +407,58 @@ with aba1:
         )
 
         x4, x5 = st.columns(2)
-        x4.text_input("Subsérie", value=str(subserie or ""), disabled=True)
-        x5.text_input("Dossiê/Processo", value=str(dossie_processo or ""), disabled=True)
+
+        x4.text_input(
+            "Subsérie",
+            value=str(subserie or ""),
+            disabled=True,
+        )
+
+        x5.text_input(
+            "Dossiê/Processo",
+            value=str(dossie_processo or ""),
+            disabled=True,
+        )
 
         y1, y2, y3 = st.columns(3)
+
         y1.text_input(
             "Fase Corrente em anos",
             value=str(prazo_corrente or ""),
             disabled=True,
         )
+
         y2.text_input(
             "Fase Intermediária em anos",
             value=str(prazo_intermediario or ""),
             disabled=True,
         )
-        y3.text_input("Total", value=str(total_prazo), disabled=True)
+
+        y3.text_input(
+            "Total",
+            value=str(total_prazo),
+            disabled=True,
+        )
 
         z1, z2, z3 = st.columns(3)
-        z1.text_input("Destinação", value=str(destinacao_final or ""), disabled=True)
-        z2.text_input("Eliminação no ano de", value=str(ano_eliminacao), disabled=True)
-        z3.text_input("Guarda Permanente", value=str(guarda_permanente), disabled=True)
+
+        z1.text_input(
+            "Destinação",
+            value=str(destinacao_final or ""),
+            disabled=True,
+        )
+
+        z2.text_input(
+            "Eliminação no ano de",
+            value=str(ano_eliminacao),
+            disabled=True,
+        )
+
+        z3.text_input(
+            "Guarda Permanente",
+            value=str(guarda_permanente),
+            disabled=True,
+        )
 
         observacoes = st.text_area(
             "Observações",
@@ -326,8 +471,8 @@ with aba1:
         enviado = st.form_submit_button("Adicionar ao inventário")
 
         if enviado:
-            if proveniencia == "Selecione...":
-                st.error("Selecione a Proveniência / Setor.")
+            if proveniencia == "Selecione..." or not proveniencia.strip():
+                st.error("Selecione ou informe a Proveniência / Setor.")
 
             elif registro is None and not permitir_sem_classificacao:
                 st.error(
@@ -344,7 +489,10 @@ with aba1:
                         "serie": "",
                         "subserie": "",
                         "dossie_processo": "",
-                        "item_documental": assunto_digitado or "Documento sem classificação definida",
+                        "item_documental": (
+                            assunto_digitado
+                            or "Documento sem classificação definida"
+                        ),
                         "codigo_classificacao": "",
                         "prazo_corrente": "",
                         "prazo_intermediario": "",
@@ -352,7 +500,10 @@ with aba1:
                     }
 
                     codigo_classificacao = ""
-                    tipo_documental = assunto_digitado or "Documento sem classificação definida"
+                    tipo_documental = (
+                        assunto_digitado
+                        or "Documento sem classificação definida"
+                    )
                     classe_ttd = tipo_documental
                     prazo_corrente = ""
                     prazo_intermediario = ""
@@ -372,12 +523,20 @@ with aba1:
                 payload = {
                     "setor": proveniencia,
                     "tipo_documental": tipo_documental,
-                    "natureza_documental": valor_registro(registro, "natureza_documental", ""),
+                    "natureza_documental": valor_registro(
+                        registro,
+                        "natureza_documental",
+                        "",
+                    ),
                     "grupo": valor_registro(registro, "grupo", ""),
                     "subgrupo": valor_registro(registro, "subgrupo", ""),
                     "serie": valor_registro(registro, "serie", ""),
                     "subserie": valor_registro(registro, "subserie", ""),
-                    "dossie_processo": valor_registro(registro, "dossie_processo", ""),
+                    "dossie_processo": valor_registro(
+                        registro,
+                        "dossie_processo",
+                        "",
+                    ),
                     "item_documental": classe_ttd,
                     "codigo_classificacao": codigo_classificacao,
                     "prazo_corrente": prazo_corrente,
@@ -390,7 +549,10 @@ with aba1:
                 }
 
                 insert_inventory_item(payload)
-                st.success("Item adicionado ao inventário com preenchimento assistido.")
+
+                st.success(
+                    "Item adicionado ao inventário com preenchimento assistido."
+                )
 
     st.divider()
     st.subheader("Importar planilha preenchida")
@@ -400,11 +562,28 @@ with aba1:
         "sem afetar os demais setores."
     )
 
-    setor_importacao = st.selectbox(
+    opcoes_importacao = [""] + PROVENIENCIAS_PADRAO + ["Outro"]
+
+    setor_importacao_opcao = st.selectbox(
         "Setor/proveniência para importação",
-        [""] + PROVENIENCIAS_PADRAO,
+        opcoes_importacao,
         index=0,
-        key="setor_importacao",
+        key="setor_importacao_opcao",
+    )
+
+    setor_importacao_outro = ""
+
+    if setor_importacao_opcao == "Outro":
+        setor_importacao_outro = st.text_input(
+            "Informe o nome do setor/proveniência para importação",
+            placeholder="Ex.: Setor de Obras",
+            key="setor_importacao_outro",
+        )
+
+    setor_importacao = (
+        setor_importacao_outro.strip()
+        if setor_importacao_opcao == "Outro"
+        else setor_importacao_opcao
     )
 
     arquivo = st.file_uploader(
@@ -415,13 +594,14 @@ with aba1:
     if arquivo is not None:
         try:
             df_importado = parse_inventory_workbook(arquivo, df_ttd)
+
             st.write(f"{len(df_importado)} item(ns) localizado(s) na planilha.")
             st.dataframe(df_importado, use_container_width=True)
 
             if not df_importado.empty:
                 if not setor_importacao.strip():
                     st.warning(
-                        "Selecione o setor/proveniência antes de importar a planilha."
+                        "Selecione ou informe o setor/proveniência antes de importar a planilha."
                     )
                 else:
                     st.warning(
@@ -430,28 +610,48 @@ with aba1:
 
             if st.button("Importar planilha para este setor"):
                 if not setor_importacao.strip():
-                    st.error("Selecione o setor/proveniência antes de importar.")
+                    st.error(
+                        "Selecione ou informe o setor/proveniência antes de importar."
+                    )
+
                 elif df_importado.empty:
                     st.warning("A planilha não possui itens para importar.")
+
                 else:
                     delete_inventory_items_by_setor(setor_importacao)
+
                     total = 0
 
                     for _, row in df_importado.iterrows():
                         payload = {
                             "setor": setor_importacao,
                             "tipo_documental": row.get("tipo_documental", ""),
-                            "natureza_documental": row.get("natureza_documental", ""),
+                            "natureza_documental": row.get(
+                                "natureza_documental",
+                                "",
+                            ),
                             "grupo": row.get("grupo", ""),
                             "subgrupo": row.get("subgrupo", ""),
                             "serie": row.get("serie", ""),
                             "subserie": row.get("subserie", ""),
-                            "dossie_processo": row.get("dossie_processo", ""),
+                            "dossie_processo": row.get(
+                                "dossie_processo",
+                                "",
+                            ),
                             "item_documental": row.get("item_documental", ""),
-                            "codigo_classificacao": row.get("codigo_classificacao", ""),
+                            "codigo_classificacao": row.get(
+                                "codigo_classificacao",
+                                "",
+                            ),
                             "prazo_corrente": row.get("prazo_corrente", ""),
-                            "prazo_intermediario": row.get("prazo_intermediario", ""),
-                            "destinacao_final": row.get("destinacao_final", ""),
+                            "prazo_intermediario": row.get(
+                                "prazo_intermediario",
+                                "",
+                            ),
+                            "destinacao_final": row.get(
+                                "destinacao_final",
+                                "",
+                            ),
                             "datas_limite": row.get("datas_limite", ""),
                             "quantidade": int(row.get("quantidade", 1) or 1),
                             "caixa": row.get("caixa", ""),
@@ -464,10 +664,12 @@ with aba1:
                     st.success(
                         f"Inventário do setor {setor_importacao} atualizado com {total} item(ns)."
                     )
+
                     st.rerun()
 
         except Exception as e:
             st.error(f"Erro ao ler planilha: {e}")
+
 
 with aba2:
     st.subheader("Inventário salvo por setor / proveniência")
@@ -476,6 +678,7 @@ with aba2:
 
     if not setores:
         st.info("Nenhum item salvo ainda.")
+
     else:
         setor_escolhido = st.selectbox(
             "Selecione o setor",
@@ -489,6 +692,7 @@ with aba2:
 
             if df_inv.empty:
                 st.info("Nenhum item salvo para este setor.")
+
             else:
                 st.dataframe(df_inv, use_container_width=True)
 
@@ -516,11 +720,14 @@ with aba2:
                 st.download_button(
                     "Baixar inventário deste setor em Excel",
                     data=dataframe_to_excel_bytes(export_df, "Inventário"),
-                    file_name=f"inventario_{setor_escolhido}.xlsx".replace(" ", "_"),
+                    file_name=f"inventario_{setor_escolhido}.xlsx".replace(
+                        " ",
+                        "_",
+                    ),
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
-                st.markdown("### Editar item salvo")
+                st.markdown("### Editar ou excluir item salvo")
 
                 opcoes_edicao = []
                 mapa_edicao = {}
@@ -537,12 +744,57 @@ with aba2:
                     mapa_edicao[rotulo] = row
 
                 item_para_editar = st.selectbox(
-                    "Selecione o item para editar",
+                    "Selecione o item",
                     [""] + opcoes_edicao,
                 )
 
+                @st.dialog("Confirmar exclusão")
+                def confirmar_exclusao_item(item_id, descricao_item):
+                    st.error("Atenção: esta ação excluirá o item do banco de dados.")
+
+                    st.write("Confira o item antes de confirmar:")
+                    st.write(f"**{descricao_item}**")
+
+                    senha_confirmacao = st.text_input(
+                        "Senha de administrador",
+                        type="password",
+                        key=f"senha_confirmacao_exclusao_{item_id}",
+                    )
+
+                    st.warning(
+                        "Depois de confirmado, o item será removido definitivamente."
+                    )
+
+                    col_confirmar, col_cancelar = st.columns(2)
+
+                    with col_confirmar:
+                        if st.button(
+                            "Confirmar exclusão",
+                            type="primary",
+                            key=f"confirmar_exclusao_{item_id}",
+                        ):
+                            if senha_confirmacao != "cct":
+                                st.error("Senha incorreta. Exclusão cancelada.")
+                            else:
+                                total = delete_inventory_items([int(item_id)])
+
+                                if total > 0:
+                                    st.success("Item excluído com sucesso.")
+                                    st.rerun()
+                                else:
+                                    st.warning("Nenhum item foi excluído.")
+
+                    with col_cancelar:
+                        if st.button(
+                            "Cancelar",
+                            key=f"cancelar_exclusao_{item_id}",
+                        ):
+                            st.rerun()
+
                 if item_para_editar:
                     item = mapa_edicao[item_para_editar]
+
+                    st.markdown("#### Editar item")
 
                     with st.form("form_editar_item"):
                         novo_ano = st.text_input(
@@ -564,7 +816,9 @@ with aba2:
                         nova_caixa = f"{nova_caixa_numero:03d}"
 
                         try:
-                            quantidade_atual = int(item.get("quantidade", 1) or 1)
+                            quantidade_atual = int(
+                                item.get("quantidade", 1) or 1
+                            )
                         except Exception:
                             quantidade_atual = 1
 
@@ -579,7 +833,9 @@ with aba2:
                             value=str(item.get("observacoes", "") or ""),
                         )
 
-                        salvar_edicao = st.form_submit_button("Salvar alterações")
+                        salvar_edicao = st.form_submit_button(
+                            "Salvar alterações"
+                        )
 
                         if salvar_edicao:
                             payload = {
@@ -589,79 +845,37 @@ with aba2:
                                 "observacoes": novas_observacoes,
                             }
 
-                            total = update_inventory_item(int(item["id"]), payload)
+                            total = update_inventory_item(
+                                int(item["id"]),
+                                payload,
+                            )
 
                             if total > 0:
                                 st.success("Item atualizado com sucesso.")
                                 st.rerun()
+
                             else:
                                 st.warning("Nenhuma alteração foi salva.")
 
-                st.markdown("### Exclusão em lote")
+                    st.markdown("#### Excluir item")
 
-                opcoes = []
-                mapa_ids = {}
-
-                for _, row in df_inv.iterrows():
-                    rotulo = (
-                        f"#{row['id']} | "
-                        f"{row.get('tipo_documental', '-') or '-'} | "
-                        f"Caixa {row.get('caixa', '-') or '-'} | "
-                        f"{row.get('datas_limite', '-') or '-'}"
+                    descricao_item = (
+                        f"#{item['id']} | "
+                        f"{item.get('tipo_documental', '-') or '-'} | "
+                        f"Caixa {item.get('caixa', '-') or '-'} | "
+                        f"{item.get('datas_limite', '-') or '-'}"
                     )
 
-                    opcoes.append(rotulo)
-                    mapa_ids[rotulo] = int(row["id"])
-
-                senha_exclusao = st.text_input(
-                    "Senha de administrador para exclusão",
-                    type="password",
-                    key="senha_exclusao_geral",
-                )
-
-                selecionar_todos = st.checkbox(
-                    "Selecionar todos os itens deste setor"
-                )
-
-                selecionados = st.multiselect(
-                    "Itens para excluir",
-                    options=opcoes,
-                    default=opcoes if selecionar_todos else [],
-                )
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    if st.button("Excluir itens selecionados"):
-                        if senha_exclusao != "cct":
-                            st.error("Senha incorreta. Exclusão cancelada.")
-                        else:
-                            ids = [mapa_ids[item] for item in selecionados]
-                            total = delete_inventory_items(ids)
-
-                            if total > 0:
-                                st.success(f"{total} item(ns) excluído(s).")
-                                st.rerun()
-                            else:
-                                st.warning("Nenhum item selecionado.")
-
-                with col2:
-                    confirmacao = st.checkbox(
-                        "Confirmo que desejo excluir todos os itens deste setor"
+                    st.warning(
+                        "A exclusão agora é feita somente item por item."
                     )
 
-                    if st.button("Excluir tudo deste setor"):
-                        if senha_exclusao != "cct":
-                            st.error("Senha incorreta. Exclusão cancelada.")
-                        elif not confirmacao:
-                            st.error("Marque a confirmação.")
-                        else:
-                            total = delete_inventory_items_by_setor(setor_escolhido)
-
-                            if total > 0:
-                                st.success(
-                                    f"Todos os {total} item(ns) do setor foram excluídos."
-                                )
-                                st.rerun()
-                            else:
-                                st.warning("Não havia itens para excluir.")
+                    if st.button(
+                        "Excluir este item",
+                        type="secondary",
+                        key=f"abrir_confirmacao_exclusao_{item['id']}",
+                    ):
+                        confirmar_exclusao_item(
+                            int(item["id"]),
+                            descricao_item,
+                        )
