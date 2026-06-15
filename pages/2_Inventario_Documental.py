@@ -243,7 +243,7 @@ with aba1:
         opcoes_proveniencia = (
             ["Selecione..."]
             + PROVENIENCIAS_PADRAO
-            + ["Outro"]
+            + ["Outro / informar manualmente"]
         )
 
         proveniencia_opcao = col1.selectbox(
@@ -255,7 +255,7 @@ with aba1:
 
         proveniencia_outro = ""
 
-        if proveniencia_opcao == "Outro":
+        if proveniencia_opcao == "Outro / informar manualmente":
             proveniencia_outro = st.text_input(
                 "Informe o nome do setor/proveniência",
                 placeholder="Ex.: Setor de Obras",
@@ -263,7 +263,7 @@ with aba1:
 
         proveniencia = (
             proveniencia_outro.strip()
-            if proveniencia_opcao == "Outro"
+            if proveniencia_opcao == "Outro / informar manualmente"
             else proveniencia_opcao
         )
 
@@ -562,7 +562,11 @@ with aba1:
         "sem afetar os demais setores."
     )
 
-    opcoes_importacao = [""] + PROVENIENCIAS_PADRAO + ["Outro"]
+    opcoes_importacao = (
+        [""]
+        + PROVENIENCIAS_PADRAO
+        + ["Outro / informar manualmente"]
+    )
 
     setor_importacao_opcao = st.selectbox(
         "Setor/proveniência para importação",
@@ -573,16 +577,16 @@ with aba1:
 
     setor_importacao_outro = ""
 
-    if setor_importacao_opcao == "Outro":
+    if setor_importacao_opcao == "Outro / informar manualmente":
         setor_importacao_outro = st.text_input(
-            "Informe o nome do setor/proveniência para importação",
+            "Digite o nome do setor/proveniência para importação",
             placeholder="Ex.: Setor de Obras",
             key="setor_importacao_outro",
         )
 
     setor_importacao = (
         setor_importacao_outro.strip()
-        if setor_importacao_opcao == "Outro"
+        if setor_importacao_opcao == "Outro / informar manualmente"
         else setor_importacao_opcao
     )
 
@@ -669,7 +673,6 @@ with aba1:
 
         except Exception as e:
             st.error(f"Erro ao ler planilha: {e}")
-
 
 with aba2:
     st.subheader("Inventário salvo por setor / proveniência")
