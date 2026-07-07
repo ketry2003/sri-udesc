@@ -197,9 +197,9 @@ with aba1:
     # EQUIVALÊNCIAS HISTÓRICAS
     # ==================================
 
-    if tipo_busca:
+if tipo_busca:
 
-        termo_equivalente = buscar_equivalencia(
+    termo_equivalente = buscar_equivalencia(
         tipo_busca
     )
 
