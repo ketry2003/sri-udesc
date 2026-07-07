@@ -203,39 +203,6 @@ if query:
 
         query = termo_equivalente
 
-# ==================================
-# SALVAR EQUIVALÊNCIA HISTÓRICA
-# ==================================
-
-if (
-    query_original
-    and documento
-    and normalizar_texto(query_original)
-    != normalizar_texto(documento)
-):
-
-    if st.button(
-        "💾 Salvar equivalência histórica",
-        key=f"salvar_eq_{query_original}"
-    ):
-
-        salvar_equivalencia(
-            query_original,
-            documento
-        )
-
-        st.success(
-            f"""
-Equivalência salva com sucesso:
-
-{query_original}
-
-→
-
-{documento}
-"""
-        )
-
 # =========================
 # SUGESTÕES DO VOCABULÁRIO
 # =========================
@@ -249,6 +216,39 @@ if query:
             primeira_linha = sugestoes.iloc[0]
 
             documento = primeira_linha.get("termo_preferido_oficial", "")
+
+            # ==================================
+            # SALVAR EQUIVALÊNCIA HISTÓRICA
+            # ==================================
+
+            if (
+                query_original
+                and documento
+                and normalizar_texto(query_original)
+                != normalizar_texto(documento)
+            ):
+
+                if st.button(
+                    "💾 Salvar equivalência histórica",
+                    key=f"salvar_eq_{query_original}"
+                ):
+
+                    salvar_equivalencia(
+                        query_original,
+                        documento
+                    )
+
+                    st.success(
+                        f"""
+Equivalência salva com sucesso:
+
+{query_original}
+
+→
+
+{documento}
+"""
+                    )
             tipo_doc = primeira_linha.get("tipo_documental", "")
             assunto = primeira_linha.get("assunto_tecnico", "")
             codigo = primeira_linha.get("codigo_classificacao", "")

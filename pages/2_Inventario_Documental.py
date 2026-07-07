@@ -180,26 +180,6 @@ with aba1:
     )
 
     if tipo_busca:
-
-    termo_equivalente = buscar_equivalencia(
-        tipo_busca
-    )
-
-    if termo_equivalente:
-
-        st.info(
-            f"Equivalência histórica encontrada: "
-            f"{termo_equivalente}"
-        )
-
-        tipo_busca = termo_equivalente
-
-    # ==================================
-    # EQUIVALÊNCIAS HISTÓRICAS
-    # ==================================
-
-    if tipo_busca:
-
         termo_equivalente = buscar_equivalencia(
             tipo_busca
         )
@@ -212,6 +192,26 @@ with aba1:
             )
 
             tipo_busca = termo_equivalente
+
+    # ==================================
+    # EQUIVALÊNCIAS HISTÓRICAS
+    # ==================================
+
+    if tipo_busca:
+
+        termo_equivalente = buscar_equivalencia(
+        tipo_busca
+    )
+
+    if termo_equivalente:
+
+        st.info(
+            f"Equivalência histórica encontrada: "
+            f"{termo_equivalente}"
+        )
+
+        tipo_busca = termo_equivalente
+
 
     # ==================================
     # BUSCA NORMAL

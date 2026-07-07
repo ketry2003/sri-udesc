@@ -265,5 +265,3 @@ def buscar_equivalencia_historica(
         return None
 
     return rows[0]["termo_oficial"]
-
-    return len(_response_data(response))
