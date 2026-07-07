@@ -203,6 +203,38 @@ if query:
 
         query = termo_equivalente
 
+# ==================================
+# SALVAR EQUIVALÊNCIA HISTÓRICA
+# ==================================
+
+if (
+    query_original
+    and documento
+    and normalizar_texto(query_original)
+    != normalizar_texto(documento)
+):
+
+    if st.button(
+        "💾 Salvar equivalência histórica",
+        key=f"salvar_eq_{query_original}"
+    ):
+
+        salvar_equivalencia(
+            query_original,
+            documento
+        )
+
+        st.success(
+            f"""
+Equivalência salva com sucesso:
+
+{query_original}
+
+→
+
+{documento}
+"""
+        )
 
 # =========================
 # SUGESTÕES DO VOCABULÁRIO
@@ -261,39 +293,6 @@ Código de classificação: {codigo}
             "'termo de compromisso de estágio', 'relatório final', "
             "'portaria de banca', 'histórico escolar', "
             "'processo de jubilação', 'certificado de monitoria'."
-        )
-
-# ==================================
-# SALVAR EQUIVALÊNCIA HISTÓRICA
-# ==================================
-
-if (
-    query_original
-    and documento
-    and normalizar_texto(query_original)
-    != normalizar_texto(documento)
-):
-
-    if st.button(
-        "💾 Salvar equivalência histórica",
-        key=f"salvar_eq_{query_original}"
-    ):
-
-        salvar_equivalencia(
-            query_original,
-            documento
-        )
-
-        st.success(
-            f"""
-Equivalência salva com sucesso:
-
-{query_original}
-
-→
-
-{documento}
-"""
         )
 
 # =========================

@@ -2,6 +2,7 @@ import streamlit as st
 
 from config import QUICK_FILL_WORKBOOK_NAME
 from services.data_loader import load_ttd, normalize_text
+from services.equivalencias import buscar_equivalencia
 from services.db import (
     insert_inventory_item,
     list_setores_inventory,
@@ -19,12 +20,17 @@ from services.forms import (
 from services.exporters import dataframe_to_excel_bytes
 from services.ui_helpers import dataframe_from_rows
 
-
 st.set_page_config(page_title="Inventário Documental", layout="wide")
 
 st.title("Inventário documental")
 
-df_ttd = load_ttd("todos")
+
+@st.cache_data(show_spinner=False)
+def carregar_ttd():
+    return load_ttd("todos")
+
+
+df_ttd = carregar_ttd()
 
 
 def calcular_ano_eliminacao(
@@ -173,12 +179,61 @@ with aba1:
         placeholder="Ex.: diário de classe, ofício, ata",
     )
 
-    sugestoes = filtrar_ttd(
-        df_ttd,
-        codigo_busca,
-        tipo_busca,
-        natureza_escolhida,
+    if tipo_busca:
+
+    termo_equivalente = buscar_equivalencia(
+        tipo_busca
     )
+
+    if termo_equivalente:
+
+        st.info(
+            f"Equivalência histórica encontrada: "
+            f"{termo_equivalente}"
+        )
+
+        tipo_busca = termo_equivalente
+
+    # ==================================
+    # EQUIVALÊNCIAS HISTÓRICAS
+    # ==================================
+
+    if tipo_busca:
+
+        termo_equivalente = buscar_equivalencia(
+            tipo_busca
+        )
+
+        if termo_equivalente:
+
+            st.info(
+                f"Equivalência histórica encontrada: "
+                f"{termo_equivalente}"
+            )
+
+            tipo_busca = termo_equivalente
+
+    # ==================================
+    # BUSCA NORMAL
+    # ==================================
+
+    if tipo_busca.strip():
+
+        sugestoes = buscar_documentos(
+            df_ttd,
+            tipo_busca,
+            limite=20
+    )
+
+    else:
+
+        sugestoes = filtrar_ttd(
+            df_ttd,
+            codigo_busca,
+            tipo_busca,
+            natureza_escolhida,
+    )
+
 
     registro = None
 
