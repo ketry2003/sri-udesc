@@ -216,4 +216,54 @@ def update_inventory_item(item_id, payload):
         .execute()
     )
 
+def salvar_equivalencia_historica(
+    termo_historico,
+    termo_oficial,
+    observacao=""
+):
+    supabase = get_supabase_client()
+
+    data = {
+        "termo_historico": termo_historico,
+        "termo_oficial": termo_oficial,
+        "observacao": observacao,
+    }
+
+    response = (
+        supabase
+        .table("equivalencias_historicas")
+        .upsert(
+            data,
+            on_conflict="termo_historico"
+        )
+        .execute()
+    )
+
+    return _response_data(response)
+
+
+def buscar_equivalencia_historica(
+    termo_historico
+):
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("equivalencias_historicas")
+        .select("*")
+        .ilike(
+            "termo_historico",
+            termo_historico
+        )
+        .limit(1)
+        .execute()
+    )
+
+    rows = _response_data(response)
+
+    if not rows:
+        return None
+
+    return rows[0]["termo_oficial"]
+
     return len(_response_data(response))
