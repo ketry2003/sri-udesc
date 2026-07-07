@@ -7,6 +7,7 @@ import unicodedata
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
+from services.equivalencias import buscar_equivalencia
 
 
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
@@ -183,6 +184,23 @@ query = st.text_input(
         "termo de compromisso de estágio | relatório final | portaria de banca"
     )
 )
+
+query_original = query
+
+if query:
+
+    termo_equivalente = buscar_equivalencia(query)
+
+    st.write("EQUIVALENTE:", termo_equivalente)
+
+    if termo_equivalente:
+
+        st.success(
+            f"Equivalência histórica encontrada: "
+            f"{termo_equivalente}"
+        )
+
+        query = termo_equivalente
 
 
 # =========================
