@@ -8,6 +8,39 @@ ARQ = (
     / "equivalencias_historicas.xlsx"
 )
 
+def salvar_equivalencia(
+    termo_historico,
+    termo_oficial,
+    observacao=""
+):
+
+    df = carregar_equivalencias()
+
+    nova_linha = pd.DataFrame([
+        {
+            "termo_historico": termo_historico,
+            "termo_oficial": termo_oficial,
+            "validado": "SIM",
+            "observacao": observacao,
+        }
+    ])
+
+    df = pd.concat(
+        [df, nova_linha],
+        ignore_index=True
+    )
+
+    df.drop_duplicates(
+        subset=["termo_historico"],
+        keep="last",
+        inplace=True
+    )
+
+    df.to_excel(
+        ARQ,
+        index=False
+    )
+
 def buscar_equivalencia(termo):
 
     if not ARQ.exists():

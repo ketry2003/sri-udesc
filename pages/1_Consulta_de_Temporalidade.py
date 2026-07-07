@@ -7,7 +7,10 @@ import unicodedata
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
-from services.equivalencias import buscar_equivalencia
+from services.equivalencias import (
+    buscar_equivalencia,
+    salvar_equivalencia,
+)
 
 
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
@@ -191,8 +194,6 @@ if query:
 
     termo_equivalente = buscar_equivalencia(query)
 
-    st.write("EQUIVALENTE:", termo_equivalente)
-
     if termo_equivalente:
 
         st.success(
@@ -262,6 +263,38 @@ Código de classificação: {codigo}
             "'processo de jubilação', 'certificado de monitoria'."
         )
 
+# ==================================
+# SALVAR EQUIVALÊNCIA HISTÓRICA
+# ==================================
+
+if (
+    query_original
+    and documento
+    and normalizar_texto(query_original)
+    != normalizar_texto(documento)
+):
+
+    if st.button(
+        "💾 Salvar equivalência histórica",
+        key=f"salvar_eq_{query_original}"
+    ):
+
+        salvar_equivalencia(
+            query_original,
+            documento
+        )
+
+        st.success(
+            f"""
+Equivalência salva com sucesso:
+
+{query_original}
+
+→
+
+{documento}
+"""
+        )
 
 # =========================
 # FILTROS AVANÇADOS
