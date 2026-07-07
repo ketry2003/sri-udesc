@@ -8,6 +8,25 @@ ARQ = (
     / "equivalencias_historicas.xlsx"
 )
 
+
+def carregar_equivalencias():
+
+    if not ARQ.exists():
+        return pd.DataFrame(
+            columns=[
+                "termo_historico",
+                "termo_oficial",
+                "validado",
+                "observacao",
+            ]
+        )
+
+    return pd.read_excel(
+        ARQ,
+        engine="openpyxl"
+    )
+
+
 def salvar_equivalencia(
     termo_historico,
     termo_oficial,
@@ -40,6 +59,7 @@ def salvar_equivalencia(
         ARQ,
         index=False
     )
+
 
 def buscar_equivalencia(termo):
 
