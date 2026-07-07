@@ -3,6 +3,7 @@ import streamlit as st
 from config import QUICK_FILL_WORKBOOK_NAME
 from services.data_loader import load_ttd, normalize_text
 from services.equivalencias import buscar_equivalencia
+from services.busca_documental import buscar_documentos
 from services.db import (
     insert_inventory_item,
     list_setores_inventory,
