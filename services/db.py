@@ -11,6 +11,7 @@ from supabase import create_client
 
 
 def get_supabase_client():
+
     if st is not None:
         url = st.secrets.get("SUPABASE_URL", "")
         key = st.secrets.get("SUPABASE_KEY", "")
@@ -251,17 +252,31 @@ def buscar_equivalencia_historica(
         supabase
         .table("equivalencias_historicas")
         .select("*")
-        .ilike(
-            "termo_historico",
-            termo_historico
-        )
-        .limit(1)
         .execute()
     )
 
     rows = _response_data(response)
 
-    if not rows:
-        return None
+    print("TOTAL REGISTROS:", len(rows))
+    print("PRIMEIROS:", rows[:5])
 
-    return rows[0]["termo_oficial"]
+    for row in rows:
+        if str(row["termo_historico"]).strip().upper() == str(termo_historico).strip().upper():
+            return row["termo_oficial"]
+
+    return None
+
+import pandas as pd
+
+def carregar_vocabulario(tipo):
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("vocabulario_controlado")
+        .select("*")
+        .eq("tipo_atividade", tipo)
+        .execute()
+    )
+
+    return pd.DataFrame(response.data)
