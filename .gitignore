@@ -1,8 +1,25 @@
 venv/
+.venv/
+
 __pycache__/
 *.pyc
 *.pyo
+
 *.db
 *.sqlite3
+
 saidas/
+
 .streamlit/secrets.toml
+
+# Arquivos locais
+secrets keys.txt
+
+# Excel temporários de auditoria
+data/reference/relatorio_lacunas.xlsx
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db

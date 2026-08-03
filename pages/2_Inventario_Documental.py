@@ -25,6 +25,13 @@ st.set_page_config(page_title="Inventário Documental", layout="wide")
 
 st.title("Inventário documental")
 
+documento_temporalidade = (
+    st.session_state.get(
+        "documento_selecionado",
+        {}
+    )
+)
+
 
 @st.cache_data(show_spinner=False)
 def carregar_ttd():
@@ -177,41 +184,25 @@ with aba1:
 
     tipo_busca = c3.text_input(
         "Buscar pelo tipo documental",
-        placeholder="Ex.: diário de classe, ofício, ata",
-    )
-
-    if tipo_busca:
-        termo_equivalente = buscar_equivalencia(
-            tipo_busca
+        value=documento_temporalidade.get(
+            "documento",
+            ""
         )
-
-        if termo_equivalente:
-
-            st.info(
-                f"Equivalência histórica encontrada: "
-                f"{termo_equivalente}"
-            )
-
-            tipo_busca = termo_equivalente
+    )
 
     # ==================================
     # EQUIVALÊNCIAS HISTÓRICAS
     # ==================================
 
-if tipo_busca:
+    if tipo_busca:
+        termo_equivalente = buscar_equivalencia(tipo_busca)
 
-    termo_equivalente = buscar_equivalencia(
-        tipo_busca
-    )
-
-    if termo_equivalente:
-
-        st.info(
-            f"Equivalência histórica encontrada: "
-            f"{termo_equivalente}"
-        )
-
-        tipo_busca = termo_equivalente
+        if termo_equivalente:
+            st.info(
+                f"Equivalência histórica encontrada: "
+                f"{termo_equivalente}"
+            )
+            tipo_busca = termo_equivalente
 
 
     # ==================================
@@ -909,7 +900,7 @@ with aba2:
                                 payload,
                             )
 
-                            if total > 0:
+                            if total and total > 0:
                                 st.success("Item atualizado com sucesso.")
                                 st.rerun()
 
@@ -917,6 +908,8 @@ with aba2:
                                 st.warning("Nenhuma alteração foi salva.")
 
                     st.markdown("#### Excluir item")
+                    st.write("Retorno:", total)
+                    st.write("Tipo:", type(total))
 
                     descricao_item = (
                         f"#{item['id']} | "

@@ -7,7 +7,6 @@ import unicodedata
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
-from services.db import get_supabase_client
 from services.equivalencias import (
     buscar_equivalencia,
     salvar_equivalencia,
@@ -61,55 +60,31 @@ def normalizar_texto(texto):
 
 
 @st.cache_data
-def carregar_tesauro(tipo, arquivo_modificado):
-    arquivo = caminho_vocabulario()
-
-    if not arquivo.exists():
-        st.error("Arquivo planilha_atualizada.xlsx não encontrado em data/reference.")
-        return pd.DataFrame()
+def carregar_tesauro(tipo, arquivo_modificado=None):
 
     from services.db import carregar_vocabulario
 
     df = carregar_vocabulario(tipo)
-    
+
+    if df.empty:
+        return pd.DataFrame()
+
     df = normalizar_colunas(df)
 
-    coluna_tipo = None
-
-    for possivel in ["tipo", "tipo_atividade", "tipo_de_atividade", "atividade"]:
-        if possivel in df.columns:
-            coluna_tipo = possivel
-            break
-
-    if coluna_tipo:
-        df[coluna_tipo] = (
-            df[coluna_tipo]
-            .astype(str)
-            .str.lower()
-            .str.strip()
-            .str.replace("atividade-", "", regex=False)
-            .str.replace("atividade_", "", regex=False)
-            .str.replace("atividade ", "", regex=False)
-            .str.replace("\xa0", "", regex=False)
-        )
-
-        df = df[df[coluna_tipo] == tipo]
-
     colunas_busca = [
-        "tipo_documental",
-        "termo_preferido_oficial",
-        "termos_populares_sugeridos",
-        "pergunta_guia_usuario",
-        "assunto_tecnico",
-        "funcao",
-        "subfuncao",
+        "termo_encontrado",
+        "termo_padronizado",
+        "area",
+        "subarea",
         "atividade",
+        "assunto",
         "codigo_classificacao",
-        "observacao",
-        "texto_busca_sistema",
     ]
 
-    colunas_existentes = [c for c in colunas_busca if c in df.columns]
+    colunas_existentes = [
+        c for c in colunas_busca
+        if c in df.columns
+    ]
 
     if colunas_existentes:
         df["texto_busca"] = (
@@ -124,14 +99,9 @@ def carregar_tesauro(tipo, arquivo_modificado):
 
     return df
 
+def buscar_tesauro(texto, tipo, limite=10, corte=35):
 
-def buscar_tesauro(texto, tipo, limite=10, corte=55):
-    arquivo = caminho_vocabulario()
-
-    if not arquivo.exists():
-        return pd.DataFrame()
-
-    tesauro = carregar_tesauro(tipo, arquivo.stat().st_mtime)
+    tesauro = carregar_tesauro(tipo)
 
     if tesauro.empty:
         return pd.DataFrame()
@@ -153,7 +123,12 @@ def buscar_tesauro(texto, tipo, limite=10, corte=55):
         .head(limite)
     )
 
+    st.write("DEBUG RESULTADO")
+    st.write(resultado.head())
+    st.write(f"Registros encontrados: {len(resultado)}")
+
     return resultado
+
 
 
 st.title("Consulta de temporalidade")
@@ -219,7 +194,16 @@ if query:
 
             primeira_linha = sugestoes.iloc[0]
 
-            documento = primeira_linha.get("termo_preferido_oficial", "")
+            documento = primeira_linha.get(
+            "termo_padronizado",
+            ""
+            )
+
+    if not documento:
+            documento = primeira_linha.get(
+                "termo_encontrado",
+        ""
+        )
 
             # ==================================
             # SALVAR EQUIVALÊNCIA HISTÓRICA
@@ -253,23 +237,49 @@ Equivalência salva com sucesso:
 {documento}
 """
                     )
-            tipo_doc = primeira_linha.get("tipo_documental", "")
-            assunto = primeira_linha.get("assunto_tecnico", "")
-            codigo = primeira_linha.get("codigo_classificacao", "")
+            tipo_doc = primeira_linha.get(
+                "atividade",
+                ""
+            )
+
+            assunto = primeira_linha.get(
+                "assunto",
+                ""
+            )
+
+            codigo = primeira_linha.get(
+                "codigo_classificacao",
+                ""
+            )
 
             st.success(
                 f"""
-            Documento mais provável encontrado: **{documento}**
+Documento mais provável encontrado: **{documento}**
 
-            Tipo documental: {tipo_doc}  
-            Assunto técnico: {assunto}  
-            Código de classificação: {codigo}
-            """
+    if st.button(
+        "📁 Usar esta classificação no Inventário",
+        key=f"inventario_{codigo}"
+    ):
+        st.session_state.documento_selecionado = {
+            "codigo_classificacao": codigo,
+            "documento": documento,
+            "assunto": assunto,
+            "atividade": tipo_doc,
+        }
+
+        st.success(
+            "Classificação enviada para o Inventário."
+        )
+
+Tipo documental: {tipo_doc}  
+Assunto técnico: {assunto}  
+Código de classificação: {codigo}
+"""
             )
 
             colunas_exibir = [
-                "termo_preferido_oficial",
-                "assunto_tecnico",
+                "termo_padronizado",
+                "assunto",
                 "codigo_classificacao",
             ]
 
@@ -278,8 +288,8 @@ Equivalência salva com sucesso:
             ]
 
             sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
-                "termo_preferido_oficial": "Documento oficial",
-                "assunto_tecnico": "Assunto técnico",
+                "termo_padronizado": "Documento oficial",
+                "assunto": "Assunto",
                 "codigo_classificacao": "Código",
             })
 
@@ -291,61 +301,13 @@ Equivalência salva com sucesso:
 
     else:
         st.warning(
-        "Nenhum termo encontrado no vocabulário controlado. "
-        "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
-        "Exemplos: 'ata de defesa', 'edital de monitoria', "
-        "'termo de compromisso de estágio', 'relatório final', "
-        "'portaria de banca', 'histórico escolar', "
-        "'processo de jubilação', 'certificado de monitoria'."
-    )
-
-    supabase = get_supabase_client()
-
-    if query_original:
-
-        if st.button(
-        "➕ Sugerir inclusão deste termo"
-    ):
-
-            supabase = get_supabase_client()
-
-        existente = (
-            supabase
-            .table("vocabulario_pendente")
-            .select("id")
-            .eq(
-                "documento_faltante",
-                query_original
-            )
-            .execute()
+            "Nenhum termo encontrado no vocabulário controlado. "
+            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
+            "Exemplos: 'ata de defesa', 'edital de monitoria', "
+            "'termo de compromisso de estágio', 'relatório final', "
+            "'portaria de banca', 'histórico escolar', "
+            "'processo de jubilação', 'certificado de monitoria'."
         )
-
-        if existente.data:
-
-            st.warning(
-                "Este termo já está na fila de revisão."
-            )
-
-        else:
-
-            supabase.table(
-                "vocabulario_pendente"
-            ).insert(
-                {
-                    "documento_faltante":
-                        query_original,
-
-                    "score": 0,
-
-                    "revisado": False,
-
-                    "aprovado": False
-                }
-            ).execute()
-
-            st.success(
-                "Termo enviado para auditoria."
-            )
 
 # =========================
 # FILTROS AVANÇADOS
