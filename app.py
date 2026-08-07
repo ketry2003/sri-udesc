@@ -211,103 +211,13 @@ if query:
 # SUGESTÕES DO VOCABULÁRIO
 # =========================
 
-if query:
-    sugestoes = buscar_tesauro(query, tipo)
+supabase = get_supabase_client()
 
-    if not sugestoes.empty:
-        with st.expander("🔎 Sugestões do vocabulário controlado", expanded=True):
+if query_original:
 
-            primeira_linha = sugestoes.iloc[0]
-
-            documento = primeira_linha.get("termo_preferido_oficial", "")
-
-            # ==================================
-            # SALVAR EQUIVALÊNCIA HISTÓRICA
-            # ==================================
-
-            if (
-                query_original
-                and documento
-                and normalizar_texto(query_original)
-                != normalizar_texto(documento)
-            ):
-
-                if st.button(
-                    "💾 Salvar equivalência histórica",
-                    key=f"salvar_eq_{query_original}"
-                ):
-
-                    salvar_equivalencia(
-                        query_original,
-                        documento
-                    )
-
-                    st.success(
-                        f"""
-Equivalência salva com sucesso:
-
-{query_original}
-
-→
-
-{documento}
-"""
-                    )
-            tipo_doc = primeira_linha.get("tipo_documental", "")
-            assunto = primeira_linha.get("assunto_tecnico", "")
-            codigo = primeira_linha.get("codigo_classificacao", "")
-
-            st.success(
-                f"""
-            Documento mais provável encontrado: **{documento}**
-
-            Tipo documental: {tipo_doc}  
-            Assunto técnico: {assunto}  
-            Código de classificação: {codigo}
-            """
-            )
-
-            colunas_exibir = [
-                "termo_preferido_oficial",
-                "assunto_tecnico",
-                "codigo_classificacao",
-            ]
-
-            colunas_existentes = [
-                c for c in colunas_exibir if c in sugestoes.columns
-            ]
-
-            sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
-                "termo_preferido_oficial": "Documento oficial",
-                "assunto_tecnico": "Assunto técnico",
-                "codigo_classificacao": "Código",
-            })
-
-            st.dataframe(
-                sugestoes_exibir,
-                use_container_width=True,
-                hide_index=True
-            )
-
-    else:
-        st.warning(
-        "Nenhum termo encontrado no vocabulário controlado. "
-        "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
-        "Exemplos: 'ata de defesa', 'edital de monitoria', "
-        "'termo de compromisso de estágio', 'relatório final', "
-        "'portaria de banca', 'histórico escolar', "
-        "'processo de jubilação', 'certificado de monitoria'."
-    )
-
-    supabase = get_supabase_client()
-
-    if query_original:
-
-        if st.button(
+    if st.button(
         "➕ Sugerir inclusão deste termo"
     ):
-
-            supabase = get_supabase_client()
 
         existente = (
             supabase
@@ -332,13 +242,9 @@ Equivalência salva com sucesso:
                 "vocabulario_pendente"
             ).insert(
                 {
-                    "documento_faltante":
-                        query_original,
-
+                    "documento_faltante": query_original,
                     "score": 0,
-
                     "revisado": False,
-
                     "aprovado": False
                 }
             ).execute()
@@ -346,6 +252,98 @@ Equivalência salva com sucesso:
             st.success(
                 "Termo enviado para auditoria."
             )
+
+documento = ""
+
+if query:
+    sugestoes = buscar_tesauro(query, tipo)
+
+    if not sugestoes.empty:
+
+        primeira_linha = sugestoes.iloc[0]
+
+        documento = primeira_linha.get(
+            "termo_preferido_oficial",
+            ""
+        )
+
+        # ==================================
+        # SALVAR EQUIVALÊNCIA HISTÓRICA
+        # ==================================
+
+        if (
+            query_original
+            and documento
+            and normalizar_texto(query_original)
+            != normalizar_texto(documento)
+        ):
+
+            if st.button(
+                "💾 Salvar equivalência histórica",
+                key=f"salvar_eq_{query_original}"
+            ):
+
+                salvar_equivalencia(
+                    query_original,
+                    documento
+                )
+
+                st.success(
+                    f"""
+Equivalência salva com sucesso:
+
+{query_original}
+
+→
+
+{documento}
+"""
+                )
+
+        tipo_doc = primeira_linha.get("tipo_documental", "")
+        assunto = primeira_linha.get("assunto_tecnico", "")
+        codigo = primeira_linha.get("codigo_classificacao", "")
+
+        st.success(
+            f"""
+Documento mais provável encontrado: **{documento}**
+
+Tipo documental: {tipo_doc}  
+Assunto técnico: {assunto}  
+Código de classificação: {codigo}
+"""
+        )
+
+        colunas_exibir = [
+            "termo_preferido_oficial",
+            "assunto_tecnico",
+            "codigo_classificacao",
+        ]
+
+        colunas_existentes = [
+            c for c in colunas_exibir if c in sugestoes.columns
+        ]
+
+        sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
+            "termo_preferido_oficial": "Documento oficial",
+            "assunto_tecnico": "Assunto técnico",
+            "codigo_classificacao": "Código",
+        })
+
+        st.dataframe(
+            sugestoes_exibir,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.warning(
+            "Nenhum termo encontrado no vocabulário controlado. "
+            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
+            "Exemplos: 'ata de defesa', 'edital de monitoria', "
+            "'termo de compromisso de estágio', 'relatório final', "
+            "'portaria de banca', 'histórico escolar', "
+            "'processo de jubilação', 'certificado de monitoria'."
+        )
 
 # =========================
 # FILTROS AVANÇADOS

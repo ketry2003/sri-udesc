@@ -3,7 +3,7 @@ import pandas as pd
 
 from services.db import get_supabase_client
 
-st.title("Auditoria do Vocabulário")
+st.title("Vocabulário")
 
 supabase = get_supabase_client()
 

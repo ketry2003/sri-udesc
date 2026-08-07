@@ -826,7 +826,7 @@ with aba2:
                             if senha_confirmacao != "cct":
                                 st.error("Senha incorreta. Exclusão cancelada.")
                             else:
-                                total = delete_inventory_items([int(item_id)])
+                                total = delete_inventory_items([int(item_id)]) or 0
 
                                 if total > 0:
                                     st.success("Item excluído com sucesso.")
@@ -841,6 +841,7 @@ with aba2:
                         ):
                             st.rerun()
 
+                total = None
                 if item_para_editar:
                     item = mapa_edicao[item_para_editar]
 
@@ -908,8 +909,6 @@ with aba2:
                                 st.warning("Nenhuma alteração foi salva.")
 
                     st.markdown("#### Excluir item")
-                    st.write("Retorno:", total)
-                    st.write("Tipo:", type(total))
 
                     descricao_item = (
                         f"#{item['id']} | "

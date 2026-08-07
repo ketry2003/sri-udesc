@@ -186,24 +186,26 @@ if query:
 # SUGESTÕES DO VOCABULÁRIO
 # =========================
 
+documento = ""
+primeira_linha = None
+
 if query:
     sugestoes = buscar_tesauro(query, tipo)
 
     if not sugestoes.empty:
-        with st.expander("🔎 Sugestões do vocabulário controlado", expanded=True):
+
+        with st.expander(
+            "🔎 Sugestões do vocabulário controlado",
+            expanded=True
+        ):
 
             primeira_linha = sugestoes.iloc[0]
 
-            documento = primeira_linha.get(
-            "termo_padronizado",
-            ""
+            documento = (
+                primeira_linha.get("termo_padronizado")
+                or primeira_linha.get("termo_encontrado")
+                or ""
             )
-
-    if not documento:
-            documento = primeira_linha.get(
-                "termo_encontrado",
-        ""
-        )
 
             # ==================================
             # SALVAR EQUIVALÊNCIA HISTÓRICA
@@ -254,28 +256,28 @@ Equivalência salva com sucesso:
 
             st.success(
                 f"""
-Documento mais provável encontrado: **{documento}**
+            Documento mais provável encontrado: **{documento}**
 
-    if st.button(
-        "📁 Usar esta classificação no Inventário",
-        key=f"inventario_{codigo}"
-    ):
-        st.session_state.documento_selecionado = {
-            "codigo_classificacao": codigo,
-            "documento": documento,
-            "assunto": assunto,
-            "atividade": tipo_doc,
-        }
-
-        st.success(
-            "Classificação enviada para o Inventário."
-        )
-
-Tipo documental: {tipo_doc}  
-Assunto técnico: {assunto}  
-Código de classificação: {codigo}
-"""
+            Tipo documental: {tipo_doc}
+            Assunto técnico: {assunto}
+            Código de classificação: {codigo}
+            """
             )
+
+            if st.button(
+                "📁 Usar esta classificação no Inventário",
+                key=f"inventario_{codigo}"
+            ):
+                st.session_state.documento_selecionado = {
+                    "codigo_classificacao": codigo,
+                    "documento": documento,
+                    "assunto": assunto,
+                    "atividade": tipo_doc,
+                }
+
+                st.success(
+                    "Classificação enviada para o Inventário."
+                )
 
             colunas_exibir = [
                 "termo_padronizado",
