@@ -8,6 +8,7 @@ from services.similaridade import (
     encontrar_melhor_termo
 )
 
+
 def buscar_equivalencia(termo):
 
     equivalente = buscar_equivalencia_historica(
@@ -20,6 +21,12 @@ def buscar_equivalencia(termo):
     df_vocab = carregar_vocabulario(
         "Atividade-fim"
     )
+
+    if df_vocab.empty:
+        return None
+
+    if "assunto" not in df_vocab.columns:
+        return None
 
     termos = (
         df_vocab["assunto"]
@@ -38,3 +45,15 @@ def buscar_equivalencia(termo):
         return sugestao["termo"]
 
     return None
+
+
+def salvar_equivalencia(
+    termo_historico,
+    termo_oficial,
+    observacao=""
+):
+    return salvar_equivalencia_historica(
+        termo_historico,
+        termo_oficial,
+        observacao
+    )

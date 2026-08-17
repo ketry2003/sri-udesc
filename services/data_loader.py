@@ -108,7 +108,11 @@ COL_MAP = {
 }
 
 
-def _prepare_dataframe(df: pd.DataFrame, natureza_padrao: str, prioridade: int) -> pd.DataFrame:
+def _prepare_dataframe(
+    df: pd.DataFrame,
+    natureza_padrao: str,
+    prioridade: int,
+) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame()
 

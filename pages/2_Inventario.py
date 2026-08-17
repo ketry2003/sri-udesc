@@ -132,35 +132,13 @@ aba1, aba2 = st.tabs(["Adicionar item", "Inventário salvo"])
 
 with aba1:
     st.caption(
-        "Baixe o formulário oficial do inventário em Excel ou faça o preenchimento "
-        "assistido abaixo. A busca pode ser feita primeiro pelo código de "
-        "classificação e depois pelo tipo documental."
+        "Baixe o formulário oficial do inventário em Excel ou faça o "
+        "preenchimento assistido abaixo. A busca pode ser feita "
+        "primeiro pelo código de classificação e depois pelo tipo "
+        "documental."
     )
-
-    with st.expander("Ajuda de busca avançada", expanded=False):
-        st.markdown(
-            """
-            **Como pesquisar**
-            - Use o **código de classificação** quando souber o código exato ou parte dele.
-            - Use o **tipo documental** para procurar pelo nome do documento.
-            - Você pode combinar os dois campos para refinar o resultado.
-            - A busca aceita trechos do texto, não precisa digitar o nome completo.
-            - A natureza documental pode ser usada como filtro adicional.
-            """
-        )
 
     workbook_bytes = build_quick_fill_workbook(df_ttd)
-
-    st.download_button(
-        "Baixar formulário oficial em Excel (preenchimento rápido)",
-        data=workbook_bytes,
-        file_name=QUICK_FILL_WORKBOOK_NAME,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        help=(
-            "Modelo oficial do inventário documental com preenchimento assistido "
-            "e classificação automática."
-        ),
-    )
 
     st.divider()
     st.subheader("Preenchimento assistido")
@@ -190,42 +168,45 @@ with aba1:
         )
     )
 
-    # ==================================
-    # EQUIVALÊNCIAS HISTÓRICAS
-    # ==================================
+    st.divider()
 
-    if tipo_busca:
-        termo_equivalente = buscar_equivalencia(tipo_busca)
+workbook_bytes = build_quick_fill_workbook(df_ttd)
 
-        if termo_equivalente:
-            st.info(
-                f"Equivalência histórica encontrada: "
-                f"{termo_equivalente}"
-            )
-            tipo_busca = termo_equivalente
+# ==================================
+# EQUIVALÊNCIAS HISTÓRICAS
+# ==================================
+
+if tipo_busca:
+    termo_equivalente = buscar_equivalencia(tipo_busca)
+
+    if termo_equivalente:
+        st.info(
+            f"Equivalência histórica encontrada: "
+            f"{termo_equivalente}"
+        )
+        tipo_busca = termo_equivalente
 
 
-    # ==================================
-    # BUSCA NORMAL
-    # ==================================
+# ==================================
+# BUSCA NORMAL
+# ==================================
 
-    if tipo_busca.strip():
+if tipo_busca.strip():
 
-        sugestoes = buscar_documentos(
-            df_ttd,
-            tipo_busca,
-            limite=20
+    sugestoes = buscar_documentos(
+        df_ttd,
+        tipo_busca,
+        limite=20
     )
 
-    else:
+else:
 
-        sugestoes = filtrar_ttd(
+    sugestoes = filtrar_ttd(
             df_ttd,
             codigo_busca,
             tipo_busca,
             natureza_escolhida,
     )
-
 
     registro = None
 
@@ -297,7 +278,10 @@ with aba1:
             "Proveniência / Setor *",
             opcoes_proveniencia,
             index=0,
-            help="Campo obrigatório. Selecione o setor produtor da documentação.",
+            help=(
+                "Campo obrigatório. Selecione o setor produtor da "
+                "documentação."
+            ),
         )
 
         proveniencia_outro = ""
@@ -626,7 +610,8 @@ with aba1:
 
     if setor_importacao_opcao == "Outro / informar manualmente":
         setor_importacao_outro = st.text_input(
-            "Digite o nome do setor/proveniência para importação",
+            "Digite o nome do setor/proveniência para "
+            "importação",
             placeholder="Ex.: Setor de Obras",
             key="setor_importacao_outro",
         )
@@ -635,7 +620,7 @@ with aba1:
         setor_importacao_outro.strip()
         if setor_importacao_opcao == "Outro / informar manualmente"
         else setor_importacao_opcao
-    )
+    ) if setor_importacao_opcao else ""
 
     arquivo = st.file_uploader(
         "Selecione o arquivo Excel do inventário",
@@ -646,23 +631,31 @@ with aba1:
         try:
             df_importado = parse_inventory_workbook(arquivo, df_ttd)
 
-            st.write(f"{len(df_importado)} item(ns) localizado(s) na planilha.")
+            count = len(df_importado)
+            st.write(f"{count} item(ns) localizado(s) na planilha.")
             st.dataframe(df_importado, use_container_width=True)
 
             if not df_importado.empty:
                 if not setor_importacao.strip():
                     st.warning(
-                        "Selecione ou informe o setor/proveniência antes de importar a planilha."
+                        "Selecione ou informe o setor/proveniência "
+                        "antes de importar a planilha."
                     )
                 else:
                     st.warning(
-                        f"Confirme a importação para substituir apenas o inventário do setor: {setor_importacao}."
+                        f"Confirme a importação para substituir "
+                        f"apenas o inventário do setor: "
+                        f"{setor_importacao}."
                     )
 
-            if st.button("Importar planilha para este setor"):
+            btn_importar = st.button(
+                "Importar planilha para este setor"
+            )
+            if btn_importar:
                 if not setor_importacao.strip():
                     st.error(
-                        "Selecione ou informe o setor/proveniência antes de importar."
+                        "Selecione ou informe o setor/proveniência "
+                        "antes de importar."
                     )
 
                 elif df_importado.empty:
@@ -721,6 +714,37 @@ with aba1:
         except Exception as e:
             st.error(f"Erro ao ler planilha: {e}")
 
+# FINAL DA ABA 1
+
+st.divider()
+
+st.subheader("Download do formulário")
+
+st.download_button(
+        "Baixar formulário oficial em Excel (preenchimento rápido)",
+        data=workbook_bytes,
+        file_name=QUICK_FILL_WORKBOOK_NAME,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        help=(
+            "Modelo oficial do inventário documental com preenchimento assistido "
+            "e classificação automática."
+        ),
+    )
+
+with st.expander("Ajuda de busca avançada", expanded=False):
+                st.markdown(
+                    """
+                    **Como pesquisar**
+                    - Use o **código de classificação** quando souber o código exato
+                    ou parte dele.
+                    - Use o **tipo documental** para procurar pelo nome do documento.
+                    - Você pode combinar os dois campos para refinar o resultado.
+                    - A busca aceita trechos do texto, não precisa digitar o nome
+                    completo.
+                    - A natureza documental pode ser usada como filtro adicional.
+                    """
+                )
+
 with aba2:
     st.subheader("Inventário salvo por setor / proveniência")
 
@@ -777,118 +801,122 @@ with aba2:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
-                st.markdown("### Editar ou excluir item salvo")
+            st.markdown("### Editar ou excluir item salvo")
 
-                opcoes_edicao = []
-                mapa_edicao = {}
+            opcoes_edicao = []
+            mapa_edicao = {}
 
-                for _, row in df_inv.iterrows():
-                    rotulo = (
-                        f"#{row['id']} | "
-                        f"{row.get('tipo_documental', '-') or '-'} | "
-                        f"Caixa {row.get('caixa', '-') or '-'} | "
-                        f"{row.get('datas_limite', '-') or '-'}"
-                    )
+            for _, row in df_inv.iterrows():
+                rotulo = (
+                    f"#{row['id']} | "
+                    f"{row.get('tipo_documental', '-') or '-'} | "
+                    f"Caixa {row.get('caixa', '-') or '-'} | "
+                    f"{row.get('datas_limite', '-') or '-'}"
+                )
 
-                    opcoes_edicao.append(rotulo)
-                    mapa_edicao[rotulo] = row
+                opcoes_edicao.append(rotulo)
+                mapa_edicao[rotulo] = row
 
-                item_para_editar = st.selectbox(
+            item_para_editar = st.selectbox(
                     "Selecione o item",
                     [""] + opcoes_edicao,
                 )
 
-                @st.dialog("Confirmar exclusão")
-                def confirmar_exclusao_item(item_id, descricao_item):
-                    st.error("Atenção: esta ação excluirá o item do banco de dados.")
+            @st.dialog("Confirmar exclusão")
+            def confirmar_exclusao_item(item_id, descricao_item):
+                st.error(
+                    "Atenção: esta ação excluirá o item do "
+                    "banco de dados."
+                )
 
-                    st.write("Confira o item antes de confirmar:")
-                    st.write(f"**{descricao_item}**")
+                st.write("Confira o item antes de confirmar:")
+                st.write(f"**{descricao_item}**")
 
-                    senha_confirmacao = st.text_input(
-                        "Senha de administrador",
-                        type="password",
-                        key=f"senha_confirmacao_exclusao_{item_id}",
-                    )
+                senha_confirmacao = st.text_input(
+                    "Senha de administrador",
+                    type="password",
+                    key=f"senha_confirmacao_exclusao_{item_id}",
+                )
 
-                    st.warning(
-                        "Depois de confirmado, o item será removido definitivamente."
-                    )
+                st.warning(
+                    "Depois de confirmado, o item será removido definitivamente."
+                )
 
-                    col_confirmar, col_cancelar = st.columns(2)
+                col_confirmar, col_cancelar = st.columns(2)
 
-                    with col_confirmar:
-                        if st.button(
-                            "Confirmar exclusão",
-                            type="primary",
-                            key=f"confirmar_exclusao_{item_id}",
-                        ):
-                            if senha_confirmacao != "cct":
-                                st.error("Senha incorreta. Exclusão cancelada.")
+                with col_confirmar:
+                    if st.button(
+                        "Confirmar exclusão",
+                        type="primary",
+                        key=f"confirmar_exclusao_{item_id}",
+                    ):
+                        if senha_confirmacao != "cct":
+                            st.error("Senha incorreta. Exclusão cancelada.")
+                        else:
+                            total = delete_inventory_items([int(item_id)]) or 0
+
+                            if total > 0:
+                                st.success("Item excluído com sucesso.")
+                                st.rerun()
                             else:
-                                total = delete_inventory_items([int(item_id)]) or 0
+                                st.warning("Nenhum item foi excluído.")
 
-                                if total > 0:
-                                    st.success("Item excluído com sucesso.")
-                                    st.rerun()
-                                else:
-                                    st.warning("Nenhum item foi excluído.")
+                with col_cancelar:
+                    if st.button(
+                        "Cancelar",
+                        key=f"cancelar_exclusao_{item_id}",
+                    ):
+                        st.rerun()
 
-                    with col_cancelar:
-                        if st.button(
-                            "Cancelar",
-                            key=f"cancelar_exclusao_{item_id}",
-                        ):
-                            st.rerun()
+            total = None
 
-                total = None
-                if item_para_editar:
-                    item = mapa_edicao[item_para_editar]
+            if item_para_editar:
+                item = mapa_edicao[item_para_editar]
 
-                    st.markdown("#### Editar item")
+                st.markdown("#### Editar item")
 
-                    with st.form("form_editar_item"):
-                        novo_ano = st.text_input(
-                            "Ano de emissão / Datas-limite",
-                            value=str(item.get("datas_limite", "") or ""),
+                with st.form("form_editar_item"):
+                    novo_ano = st.text_input(
+                        "Ano de emissão / Datas-limite",
+                        value=str(item.get("datas_limite", "") or ""),
+                    )
+
+                    try:
+                        caixa_atual = int(item.get("caixa", 1) or 1)
+                    except Exception:
+                        caixa_atual = 1
+
+                    nova_caixa_numero = st.number_input(
+                        "Nº Caixa",
+                        min_value=1,
+                        value=caixa_atual,
+                    )
+
+                    nova_caixa = f"{nova_caixa_numero:03d}"
+
+                    try:
+                        quantidade_atual = int(
+                            item.get("quantidade", 1) or 1
                         )
+                    except Exception:
+                        quantidade_atual = 1
 
-                        try:
-                            caixa_atual = int(item.get("caixa", 1) or 1)
-                        except Exception:
-                            caixa_atual = 1
+                    nova_quantidade = st.number_input(
+                        "Quantidade",
+                        min_value=1,
+                        value=quantidade_atual,
+                    )
 
-                        nova_caixa_numero = st.number_input(
-                            "Nº Caixa",
-                            min_value=1,
-                            value=caixa_atual,
-                        )
+                    novas_observacoes = st.text_area(
+                        "Observações",
+                        value=str(item.get("observacoes", "") or ""),
+                    )
 
-                        nova_caixa = f"{nova_caixa_numero:03d}"
+                    salvar_edicao = st.form_submit_button(
+                        "Salvar alterações"
+                    )
 
-                        try:
-                            quantidade_atual = int(
-                                item.get("quantidade", 1) or 1
-                            )
-                        except Exception:
-                            quantidade_atual = 1
-
-                        nova_quantidade = st.number_input(
-                            "Quantidade",
-                            min_value=1,
-                            value=quantidade_atual,
-                        )
-
-                        novas_observacoes = st.text_area(
-                            "Observações",
-                            value=str(item.get("observacoes", "") or ""),
-                        )
-
-                        salvar_edicao = st.form_submit_button(
-                            "Salvar alterações"
-                        )
-
-                        if salvar_edicao:
+                    if salvar_edicao:
                             payload = {
                                 "datas_limite": novo_ano,
                                 "quantidade": nova_quantidade,
@@ -904,29 +932,28 @@ with aba2:
                             if total and total > 0:
                                 st.success("Item atualizado com sucesso.")
                                 st.rerun()
-
                             else:
                                 st.warning("Nenhuma alteração foi salva.")
 
-                    st.markdown("#### Excluir item")
+                            st.markdown("#### Excluir item")
 
-                    descricao_item = (
-                        f"#{item['id']} | "
-                        f"{item.get('tipo_documental', '-') or '-'} | "
-                        f"Caixa {item.get('caixa', '-') or '-'} | "
-                        f"{item.get('datas_limite', '-') or '-'}"
-                    )
+                            descricao_item = (
+                                f"#{item['id']} | "
+                                f"{item.get('tipo_documental', '-') or '-'} | "
+                                f"Caixa {item.get('caixa', '-') or '-'} | "
+                                f"{item.get('datas_limite', '-') or '-'}"
+                            )
 
-                    st.warning(
-                        "A exclusão agora é feita somente item por item."
-                    )
+                            st.warning(
+                                "A exclusão agora é feita somente item por item."
+                            )
 
-                    if st.button(
-                        "Excluir este item",
-                        type="secondary",
-                        key=f"abrir_confirmacao_exclusao_{item['id']}",
-                    ):
-                        confirmar_exclusao_item(
-                            int(item["id"]),
-                            descricao_item,
-                        )
+                            if st.button(
+                                "Excluir este item",
+                                type="secondary",
+                                key=f"abrir_confirmacao_exclusao_{item['id']}",
+                            ):
+                                confirmar_exclusao_item(
+                                    int(item["id"]),
+                                    descricao_item,
+                                )
