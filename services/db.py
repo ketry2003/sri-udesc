@@ -24,7 +24,10 @@ def get_supabase_client():
             "SUPABASE_URL e SUPABASE_KEY não configurados."
         )
 
-    return create_client(url, key)
+    try:
+        return create_client(url, key)
+    except Exception as exc:
+        raise RuntimeError(f"Falha ao conectar ao Supabase: {exc}") from exc
 
 
 def init_db():
@@ -118,6 +121,9 @@ def list_inventory_items_by_setor(setor):
 
 
 def get_next_caixa_by_setor(setor):
+    if not setor or not str(setor).strip():
+        return "001"
+
     itens = list_inventory_items_by_setor(setor)
 
     numeros = []
@@ -141,20 +147,26 @@ def delete_inventory_item(item_id):
         item_id
     ).execute()
 
-    supabase.table("inventory_items").delete().eq(
-        "id",
-        item_id
-    ).execute()
+    response = (
+        supabase
+        .table("inventory_items")
+        .delete()
+        .eq("id", item_id)
+        .execute()
+    )
+
+    return 1 if response and getattr(response, "data", None) else 0
 
 
 def delete_inventory_items(item_ids):
     if not item_ids:
         return 0
 
+    deletados = 0
     for item_id in item_ids:
-        delete_inventory_item(item_id)
+        deletados += delete_inventory_item(item_id)
 
-    return len(item_ids)
+    return deletados
 
 
 def delete_inventory_items_by_setor(setor):
@@ -217,6 +229,9 @@ def update_inventory_item(item_id, payload):
         .execute()
     )
 
+    rows = response.data if response is not None and getattr(response, "data", None) else []
+    return len(rows)
+
 def salvar_equivalencia_historica(
     termo_historico,
     termo_oficial,
@@ -248,21 +263,24 @@ def buscar_equivalencia_historica(
 ):
     supabase = get_supabase_client()
 
+    termo = str(termo_historico or "").strip()
+    if not termo:
+        return None
+
     response = (
         supabase
         .table("equivalencias_historicas")
         .select("*")
+        .ilike("termo_historico", termo)
+        .limit(1)
         .execute()
     )
 
     rows = _response_data(response)
 
-    print("TOTAL REGISTROS:", len(rows))
-    print("PRIMEIROS:", rows[:5])
-
     for row in rows:
-        if str(row["termo_historico"]).strip().upper() == str(termo_historico).strip().upper():
-            return row["termo_oficial"]
+        if str(row.get("termo_historico", "")).strip().upper() == termo.upper():
+            return row.get("termo_oficial")
 
     return None
 
@@ -279,4 +297,5 @@ def carregar_vocabulario(tipo):
         .execute()
     )
 
-    return pd.DataFrame(response.data)
+    data = response.data if response is not None and getattr(response, "data", None) is not None else []
+    return pd.DataFrame(data)

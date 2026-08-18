@@ -177,11 +177,14 @@ def load_ttd(tipo="todos", path=None):
     if tipo not in {"meio", "fim", "todos"}:
         raise ValueError("Tipo deve ser 'meio', 'fim' ou 'todos'")
 
-    df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
-    df_meio = _prepare_df(df_meio, "Atividade-meio", 2)
+    try:
+        df_meio = pd.read_excel(excel_path, sheet_name="ativ_meio", dtype=str)
+        df_meio = _prepare_df(df_meio, "Atividade-meio", 2)
 
-    df_fim = pd.read_excel(excel_path, sheet_name="ativ_fim", dtype=str)
-    df_fim = _prepare_df(df_fim, "Atividade-fim", 1)
+        df_fim = pd.read_excel(excel_path, sheet_name="ativ_fim", dtype=str)
+        df_fim = _prepare_df(df_fim, "Atividade-fim", 1)
+    except Exception as exc:
+        raise RuntimeError(f"Erro ao ler a planilha TTD: {exc}") from exc
 
     if tipo == "meio":
         return df_meio

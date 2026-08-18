@@ -156,4 +156,14 @@ def buscar_tesauro(
 
     tesauro = tesauro.copy()
 
-    tesauro["score"] = tesauro["texto]
+    tesauro["score"] = tesauro["texto_busca"].apply(
+        lambda texto_base: fuzz.WRatio(termo, texto_base)
+    )
+
+    resultado = (
+        tesauro[tesauro["score"] >= corte]
+        .sort_values("score", ascending=False)
+        .head(limite)
+    )
+
+    return resultado
