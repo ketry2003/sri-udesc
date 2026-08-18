@@ -3,7 +3,6 @@ import streamlit as st
 from config import QUICK_FILL_WORKBOOK_NAME
 from services.data_loader import load_ttd, normalize_text
 from services.equivalencias import buscar_equivalencia
-from services.busca_documental import buscar_documentos
 from services.db import (
     insert_inventory_item,
     list_setores_inventory,
@@ -20,6 +19,7 @@ from services.forms import (
 )
 from services.exporters import dataframe_to_excel_bytes
 from services.ui_helpers import dataframe_from_rows
+from services.tesauro import buscar_tesauro
 
 st.set_page_config(page_title="Inventário Documental", layout="wide")
 
@@ -138,8 +138,6 @@ with aba1:
         "documental."
     )
 
-    workbook_bytes = build_quick_fill_workbook(df_ttd)
-
     st.divider()
     st.subheader("Preenchimento assistido")
 
@@ -161,11 +159,15 @@ with aba1:
     )
 
     tipo_busca = c3.text_input(
-        "Buscar pelo tipo documental",
+        "Digite o nome do documento, processo ou assunto",
         value=documento_temporalidade.get(
-            "documento",
-            ""
-        )
+        "documento",
+        ""
+    ),
+        placeholder=(
+        "Ex.: contrato administrativo, licitação, "
+        "férias, almoxarifado, edital, processo"
+    )
     )
 
     st.divider()
@@ -191,38 +193,54 @@ if tipo_busca:
 # BUSCA NORMAL
 # ==================================
 
+import pandas as pd
+
+sugestoes = pd.DataFrame()
+
 if tipo_busca.strip():
 
-    sugestoes = buscar_documentos(
-        df_ttd,
+    tipo_atividade = (
+        "meio"
+        if natureza_escolhida == "Atividade-meio"
+        else "fim"
+    )
+
+    sugestoes = buscar_tesauro(
         tipo_busca,
+        tipo_atividade,
         limite=20
     )
 
 else:
 
     sugestoes = filtrar_ttd(
-            df_ttd,
-            codigo_busca,
-            tipo_busca,
-            natureza_escolhida,
+        df_ttd,
+        codigo_busca,
+        "",
+        natureza_escolhida,
     )
 
-    registro = None
+registro = None
 
-    if not sugestoes.empty:
-        opcoes = [
-            f"{row.get('codigo_classificacao', '')} | "
-            f"{row.get('item_documental', '')} | "
-            f"{row.get('natureza_documental', '')}"
-            for _, row in sugestoes.iterrows()
+if not sugestoes.empty:
+
+    opcoes = [
+        f"{row.get('codigo_classificacao', '')} | "
+        f"{row.get('item_documental', '')} | "
+        f"{row.get('natureza_documental', '')}"
+        for _, row in sugestoes.iterrows()
+    ]
+
+    selecionado = st.selectbox(
+        "Resultado da TTD",
+        [""] + opcoes
+    )
+
+    if selecionado:
+        registro = sugestoes.iloc[
+            opcoes.index(selecionado)
         ]
-
-        selecionado = st.selectbox("Resultado da TTD", [""] + opcoes)
-
-        if selecionado:
-            registro = sugestoes.iloc[opcoes.index(selecionado)]
-
+        
     if registro is not None:
         st.success("Classificação localizada.")
 

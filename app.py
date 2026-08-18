@@ -306,37 +306,103 @@ Equivalência salva com sucesso:
 
         st.success(
             f"""
-Documento mais provável encontrado: **{documento}**
+        Documento mais provável encontrado: **{documento}**
 
-Tipo documental: {tipo_doc}  
-Assunto técnico: {assunto}  
-Código de classificação: {codigo}
-"""
-        )
+        Tipo documental: {tipo_doc}  
+        Assunto técnico: {assunto}  
+        Código de classificação: {codigo}""")
 
-        colunas_exibir = [
+    st.dataframe(
+        sugestoes[
+            [
+                "termo_preferido_oficial",
+                "assunto_tecnico",
+                "codigo_classificacao",
+            ]
+        ],
+        use_container_width=True,
+    )
+
+    opcoes_inventario = []
+
+    for _, row in sugestoes.iterrows():
+
+        documento_opcao = row.get(
             "termo_preferido_oficial",
-            "assunto_tecnico",
-            "codigo_classificacao",
-        ]
-
-        colunas_existentes = [
-            c for c in colunas_exibir if c in sugestoes.columns
-        ]
-
-        sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
-            "termo_preferido_oficial": "Documento oficial",
-            "assunto_tecnico": "Assunto técnico",
-            "codigo_classificacao": "Código",
-        })
-
-        st.dataframe(
-            sugestoes_exibir,
-            use_container_width=True,
-            hide_index=True
+            ""
         )
-    else:
-        st.warning(
+
+        codigo_opcao = row.get(
+            "codigo_classificacao",
+            ""
+        )
+
+        opcoes_inventario.append(
+            f"{codigo_opcao} | {documento_opcao}"
+        )
+
+    documento_escolhido = st.selectbox(
+        "Selecione o documento para enviar ao Inventário",
+        [""] + opcoes_inventario
+    )
+
+    if documento_escolhido:
+
+        if st.button(
+            "📦 Adicionar ao Inventário"
+        ):
+
+            indice = opcoes_inventario.index(
+                documento_escolhido
+            )
+
+            registro = sugestoes.iloc[indice]
+
+            st.session_state[
+                "documento_selecionado"
+            ] = {
+
+                "documento": registro.get(
+                    "termo_preferido_oficial",
+                    ""
+                ),
+
+                "codigo_classificacao": registro.get(
+                    "codigo_classificacao",
+                    ""
+                ),
+
+                "assunto": registro.get(
+                    "assunto_tecnico",
+                    ""
+                ),
+
+                "tipo_documental": registro.get(
+                    "tipo_documental",
+                    ""
+                ),
+
+                "natureza": (
+                    "Atividade-meio"
+                    if tipo == "meio"
+                    else "Atividade-fim"
+                ),
+            }
+
+            st.success(
+                "Documento enviado para o Inventário."
+            )
+
+else:
+
+    st.warning(
+        "Nenhum termo encontrado no vocabulário controlado. "
+        "Tente pesquisar pelo nome do documento, processo ou peça administrativa."
+    )
+    
+else:
+
+    st.warning(
             "Nenhum termo encontrado no vocabulário controlado. "
             "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
             "Exemplos: 'ata de defesa', 'edital de monitoria', "
