@@ -19,7 +19,7 @@ st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
 
 def caminho_vocabulario():
     return (
-        Path(__file__).resolve().parent
+        Path(__file__).resolve().parent.parent
         / "data"
         / "reference"
         / "planilha_atualizada.xlsx"
@@ -65,16 +65,13 @@ def carregar_tesauro(tipo, arquivo_modificado):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
-        st.error(
-            "Arquivo planilha_atualizada.xlsx não encontrado em "
-            "data/reference."
-        )
+        st.error("Arquivo planilha_atualizada.xlsx não encontrado em data/reference.")
         return pd.DataFrame()
 
     from services.db import carregar_vocabulario
 
     df = carregar_vocabulario(tipo)
-
+    
     df = normalizar_colunas(df)
 
     coluna_tipo = None
@@ -99,14 +96,17 @@ def carregar_tesauro(tipo, arquivo_modificado):
         df = df[df[coluna_tipo] == tipo]
 
     colunas_busca = [
-        "termo_encontrado",
-        "termo_padronizado",
-        "area",
-        "subarea",
+        "tipo_documental",
+        "termo_PADRONIZADO",
+        "termos_populares_sugeridos",
+        "pergunta_guia_usuario",
+        "assunto_tecnico",
+        "funcao",
+        "subfuncao",
         "atividade",
-        "assunto",
         "codigo_classificacao",
         "observacao",
+        "texto_busca_sistema",
     ]
 
     colunas_existentes = [c for c in colunas_busca if c in df.columns]
@@ -177,20 +177,7 @@ e atividades acadêmicas.
 
 st.session_state.tipo = tipo
 
-try:
-    df = load_ttd(tipo)
-except FileNotFoundError:
-    st.error(
-        "Arquivo da TTD não encontrado. Verifique a pasta data/reference."
-    )
-    st.stop()
-except Exception:
-    st.error("Não foi possível carregar a base de dados da TTD.")
-    st.stop()
-
-if df is None or df.empty:
-    st.warning("Não foi possível carregar a base de dados da TTD.")
-    st.stop()
+df = load_ttd(tipo)
 
 st.caption(
     "Pesquise pelo nome do documento, processo, formulário, ata, edital, "
@@ -224,73 +211,83 @@ if query:
 # SUGESTÕES DO VOCABULÁRIO
 # =========================
 
-supabase = None
-
-try:
-    supabase = get_supabase_client()
-except Exception:
-    supabase = None
+supabase = get_supabase_client()
 
 if query_original:
-    if st.button("➕ Sugerir inclusão deste termo"):
-        if supabase is None:
-            st.warning("Não foi possível conectar ao Supabase para registrar o termo.")
-        else:
-            existente = (
-                supabase
-                .table("vocabulario_pendente")
-                .select("id")
-                .eq("documento_faltante", query_original)
-                .execute()
+
+    if st.button(
+        "➕ Sugerir inclusão deste termo"
+    ):
+
+        existente = (
+            supabase
+            .table("vocabulario_pendente")
+            .select("id")
+            .eq(
+                "documento_faltante",
+                query_original
+            )
+            .execute()
+        )
+
+        if existente.data:
+
+            st.warning(
+                "Este termo já está na fila de revisão."
             )
 
-            if existente.data:
-                st.warning("Este termo já está na fila de revisão.")
-            else:
-                supabase.table("vocabulario_pendente").insert(
-                    {
-                        "documento_faltante": query_original,
-                        "score": 0,
-                        "revisado": False,
-                        "aprovado": False,
-                    }
-                ).execute()
+        else:
 
-                st.success("Termo enviado para auditoria.")
+            supabase.table(
+                "vocabulario_pendente"
+            ).insert(
+                {
+                    "documento_faltante": query_original,
+                    "score": 0,
+                    "revisado": False,
+                    "aprovado": False
+                }
+            ).execute()
+
+            st.success(
+                "Termo enviado para auditoria."
+            )
 
 documento = ""
 
 if query:
     sugestoes = buscar_tesauro(query, tipo)
 
+    if not sugestoes.empty:
 
-
-    if sugestoes.empty:
-        st.warning(
-            "Nenhum termo encontrado no vocabulário controlado. "
-            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
-            "Exemplos: 'ata de defesa', 'edital de monitoria', "
-            "'termo de compromisso de estágio', 'relatório final', "
-            "'portaria de banca', 'histórico escolar', "
-            "'processo de jubilação', 'certificado de monitoria'."
-        )
-    else:
         primeira_linha = sugestoes.iloc[0]
-        documento = primeira_linha.get("termo_padronizado", "")
+
+        documento = primeira_linha.get(
+            "termo_padronizado",
+            ""
+        )
 
         # ==================================
         # SALVAR EQUIVALÊNCIA HISTÓRICA
         # ==================================
+
         if (
             query_original
             and documento
-            and normalizar_texto(query_original) != normalizar_texto(documento)
+            and normalizar_texto(query_original)
+            != normalizar_texto(documento)
         ):
+
             if st.button(
                 "💾 Salvar equivalência histórica",
-                key=f"salvar_eq_{query_original}",
+                key=f"salvar_eq_{query_original}"
             ):
-                salvar_equivalencia(query_original, documento)
+
+                salvar_equivalencia(
+                    query_original,
+                    documento
+                )
+
                 st.success(
                     f"""
 Equivalência salva com sucesso:
@@ -304,62 +301,49 @@ Equivalência salva com sucesso:
                 )
 
         tipo_doc = primeira_linha.get("tipo_documental", "")
-        assunto = primeira_linha.get("assunto", "")
+        assunto = primeira_linha.get("assunto_tecnico", "")
         codigo = primeira_linha.get("codigo_classificacao", "")
 
         st.success(
             f"""
 Documento mais provável encontrado: **{documento}**
 
-Tipo documental: {tipo_doc}
-Assunto técnico: {assunto}
+Tipo documental: {tipo_doc}  
+Assunto técnico: {assunto}  
 Código de classificação: {codigo}
 """
         )
 
-        colunas_desejadas = [
+        colunas_exibir = [
             "termo_padronizado",
-            "assunto",
+            "assunto_tecnico",
             "codigo_classificacao",
         ]
 
         colunas_existentes = [
-            c for c in colunas_desejadas
-            if c in sugestoes.columns
+            c for c in colunas_exibir if c in sugestoes.columns
         ]
 
+        sugestoes_exibir = sugestoes[colunas_existentes].rename(columns={
+            "termo_padronizado": "Documento oficial",
+            "assunto_tecnico": "Assunto técnico",
+            "codigo_classificacao": "Código",
+        })
+
         st.dataframe(
-            sugestoes[colunas_existentes],
+            sugestoes_exibir,
             use_container_width=True,
+            hide_index=True
         )
-
-        opcoes_inventario = []
-
-        for _, row in sugestoes.iterrows():
-            documento_opcao = row.get("termo_padronizado", "")
-            codigo_opcao = row.get("codigo_classificacao", "")
-            opcoes_inventario.append(f"{codigo_opcao} | {documento_opcao}")
-
-        documento_escolhido = st.selectbox(
-            "Selecione o documento para enviar ao Inventário",
-            [""] + opcoes_inventario,
-            key="documento_escolhido",
+    else:
+        st.warning(
+            "Nenhum termo encontrado no vocabulário controlado. "
+            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
+            "Exemplos: 'ata de defesa', 'edital de monitoria', "
+            "'termo de compromisso de estágio', 'relatório final', "
+            "'portaria de banca', 'histórico escolar', "
+            "'processo de jubilação', 'certificado de monitoria'."
         )
-
-        if documento_escolhido:
-            if st.button("📦 Adicionar ao Inventário", key="adicionar_ao_inventario"):
-                indice = opcoes_inventario.index(documento_escolhido)
-                registro = sugestoes.iloc[indice]
-
-                st.session_state["documento_selecionado"] = {
-                    "documento": registro.get("termo_padronizado", ""),
-                    "codigo_classificacao": registro.get("codigo_classificacao", ""),
-                    "assunto": registro.get("assunto", ""),
-                    "tipo_documental": registro.get("tipo_documental", ""),
-                    "natureza": "Atividade-meio" if tipo == "meio" else "Atividade-fim",
-                }
-
-                st.success("Documento enviado para o Inventário.")
 
 # =========================
 # FILTROS AVANÇADOS
@@ -539,39 +523,5 @@ else:
 
             status_badge(row.get("destinacao_final", ""))
 
-            if st.button(
-                "📦 Adicionar ao Inventário",
-                key=f"invent_{_}"
-            ):
-
-                st.session_state["documento_selecionado"] = {
-
-                    "documento": row.get(
-                        "item_documental",
-                        ""
-                    ),
-
-                    "codigo_classificacao": row.get(
-                        "codigo_classificacao",
-                        ""
-                    ),
-
-                    "assunto": row.get(
-                        "assunto_tecnico", ""
-                    ),
-
-                    "natureza": (
-                        "Atividade-meio"
-                        if tipo == "meio"
-                        else "Atividade-fim"
-                    ),
-                }
-
-                st.success(
-                    "Documento enviado para o Inventário."
-                )
-
             if row.get("observacao"):
-                st.info(
-                    f"Observação: {row.get('observacao')}"
-                )
+                st.info(f"Observação: {row.get('observacao')}")

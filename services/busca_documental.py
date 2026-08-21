@@ -14,7 +14,8 @@ def buscar_documentos(df, consulta, limite=20):
     for _, row in df.iterrows():
 
         texto = " ".join([
-            str(row.get("termo_preferido_oficial", "")),
+            str(row.get("item_documental", "")),
+            str(row.get("termo_padronizado", "")),
             str(row.get("termos_populares_sugeridos", "")),
             str(row.get("pergunta_guia_usuario", "")),
             str(row.get("assunto_tecnico", "")),

@@ -62,7 +62,7 @@ print(
 
 print("\nEXEMPLOS VOCABULÁRIO:")
 print(
-    voc["termo_preferido_oficial"]
+    voc["termo_padronizado"]
     .dropna()
     .head(10)
     .tolist()
@@ -89,7 +89,7 @@ for valor in ttd["item_documental"].dropna():
 docs_vocabulario = set()
 
 for coluna in [
-    "termo_preferido_oficial",
+    "termo_padronizado",
     "termo_encontrado",
     "termos_populares_sugeridos",
     "assunto_tecnico"
@@ -211,14 +211,14 @@ print(
 print("\n=== EXAME NO VOCABULÁRIO ===")
 
 exame_voc = voc[
-    voc["termo_preferido_oficial"]
+    voc["termo_padronizado"]
     .astype(str)
     .str.contains("exame", case=False, na=False)
 ]
 
 print(
     exame_voc[
-        ["termo_preferido_oficial"]
+        ["termo_padronizado"]
     ]
 )
 

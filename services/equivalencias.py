@@ -1,3 +1,5 @@
+import pandas as pd
+
 from services.db import (
     buscar_equivalencia_historica,
     salvar_equivalencia_historica,
@@ -11,38 +13,52 @@ from services.similaridade import (
 
 def buscar_equivalencia(termo):
 
-    equivalente = buscar_equivalencia_historica(
-        termo
-    )
+    equivalente = buscar_equivalencia_historica(termo)
 
     if equivalente:
-        return equivalente
+        return {
+            "termo": equivalente,
+            "score": 100
+        }
 
-    df_vocab = carregar_vocabulario(
-        "Atividade-fim"
+    df_fim = carregar_vocabulario("Atividade-fim")
+    df_meio = carregar_vocabulario("Atividade-meio")
+
+    df_vocab = pd.concat(
+        [df_fim, df_meio],
+        ignore_index=True
     )
 
     if df_vocab.empty:
         return None
 
-    if "assunto" not in df_vocab.columns:
-        return None
+    colunas = [
+        "assunto",
+        "termo_padronizado",
+        "termo_encontrado",
+        "atividade",
+        "sinonimo"
+    ]
 
-    termos = (
-        df_vocab["assunto"]
-        .dropna()
-        .astype(str)
-        .tolist()
-    )
+    termos = []
+
+    for coluna in colunas:
+        if coluna in df_vocab.columns:
+            termos.extend(
+                df_vocab[coluna]
+                .dropna()
+                .astype(str)
+                .tolist()
+            )
 
     sugestao = encontrar_melhor_termo(
         termo,
         termos,
-        score_minimo=85
+        score_minimo=70
     )
 
     if sugestao:
-        return sugestao["termo"]
+        return sugestao
 
     return None
 

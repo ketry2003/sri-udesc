@@ -103,7 +103,7 @@ def carregar_tesauro(tipo):
     colunas_busca = [
         "item_documental",
         "tipo_documental",
-        "termo_preferido_oficial",
+        "termo_padronizado",
         "termos_populares_sugeridos",
         "pergunta_guia_usuario",
         "assunto_tecnico",

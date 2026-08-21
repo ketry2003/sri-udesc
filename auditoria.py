@@ -15,7 +15,7 @@ print("NOVOS:", len(novos))
 print(
     novos[
         [
-            "termo_preferido_oficial",
+            "termo_padronizado",
             "prazo_corrente",
             "prazo_intermediario",
             "destinacao"

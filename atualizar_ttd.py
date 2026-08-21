@@ -62,7 +62,7 @@ print(f"TTD nova: {len(ttd)}")
 # ==================================
 
 plan["chave"] = (
-    plan["termo_preferido_oficial"]
+    plan["termo_padronizado"]
     .fillna("")
     .apply(normalizar)
 )
@@ -170,7 +170,7 @@ for _, linha in ttd.iterrows():
 
         novo["tipo_atividade"] = "fim"
 
-        novo["termo_preferido_oficial"] = (
+        novo["termo_padronizado"] = (
             linha["item_documental"]
         )
 
