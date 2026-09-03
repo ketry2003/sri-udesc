@@ -18,7 +18,7 @@ def buscar_documentos(df, consulta, limite=20):
             str(row.get("termo_padronizado", "")),
             str(row.get("termos_populares_sugeridos", "")),
             str(row.get("pergunta_guia_usuario", "")),
-            str(row.get("assunto_tecnico", "")),
+            str(row.get("assunto", "")),
             str(row.get("funcao", "")),
             str(row.get("subfuncao", "")),
             str(row.get("atividade", "")),

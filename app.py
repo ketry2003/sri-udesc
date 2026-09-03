@@ -360,6 +360,7 @@ Código de classificação: {codigo}
                 }
 
                 st.success("Documento enviado para o Inventário.")
+                st.write(documento_temporalidade)
 
 # =========================
 # FILTROS AVANÇADOS
@@ -509,10 +510,10 @@ else:
                 f"{row.get('dossie_processo', '') or '-'}"
             )
 
-            if row.get("assunto_tecnico"):
+            if row.get("assunto"):
                 left.write(
                     f"**Assunto técnico:** "
-                    f"{row.get('assunto_tecnico', '') or '-'}"
+                    f"{row.get('assunto', '') or '-'}"
                 )
 
             if row.get("funcao"):
@@ -557,7 +558,7 @@ else:
                     ),
 
                     "assunto": row.get(
-                        "assunto_tecnico", ""
+                        "assunto", ""
                     ),
 
                     "natureza": (

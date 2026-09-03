@@ -134,12 +134,12 @@ for _, linha in ttd.iterrows():
         # Preencher assunto apenas se vazio
 
         if (
-            pd.isna(plan.at[idx, "assunto_tecnico"])
+            pd.isna(plan.at[idx, "assunto"])
             or str(
-                plan.at[idx, "assunto_tecnico"]
+                plan.at[idx, "assunto"]
             ).strip() == ""
         ):
-            plan.at[idx, "assunto_tecnico"] = (
+            plan.at[idx, "assunto"] = (
                 linha["assunto"]
             )
 
@@ -178,7 +178,7 @@ for _, linha in ttd.iterrows():
 
         novo["atividade"] = linha["atividade"]
 
-        novo["assunto_tecnico"] = (
+        novo["assunto"] = (
             linha["assunto"]
         )
 

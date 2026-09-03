@@ -459,10 +459,10 @@ else:
                 f"{row.get('dossie_processo', '') or '-'}"
             )
 
-            if row.get("assunto_tecnico"):
+            if row.get("assunto"):
                 left.write(
                     f"**Assunto técnico:** "
-                    f"{row.get('assunto_tecnico', '') or '-'}"
+                    f"{row.get('assunto', '') or '-'}"
                 )
 
             if row.get("funcao"):

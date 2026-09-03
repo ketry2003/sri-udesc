@@ -106,7 +106,7 @@ def carregar_tesauro(tipo):
         "termo_padronizado",
         "termos_populares_sugeridos",
         "pergunta_guia_usuario",
-        "assunto_tecnico",
+        "assunto",
         "funcao",
         "subfuncao",
         "atividade",

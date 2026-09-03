@@ -5,6 +5,7 @@ import streamlit as st
 from config import QUICK_FILL_WORKBOOK_NAME
 from services.data_loader import load_ttd, normalize_text
 from services.equivalencias import buscar_equivalencia
+from services.busca_documental import buscar_documentos
 from services.db import (
     insert_inventory_item,
     list_setores_inventory,
@@ -25,6 +26,8 @@ from services.tesauro import buscar_tesauro
 
 st.set_page_config(page_title="Inventário Documental", layout="wide")
 
+st.success("USANDO inventario_cctarquivo.py")
+
 st.title("Inventário documental")
 
 st.subheader("Localizar documento")
@@ -42,11 +45,18 @@ resultado_busca = pd.DataFrame()
 
 if busca_livre:
 
-    resultado_busca = buscar_tesauro(
+    resultado_busca = buscar_documentos(
+        carregar_ttd() if "df_ttd" in locals() else load_ttd("todos"),
         busca_livre,
-        tipo_busca,
-        limite=20
+        limite=20,
     )
+
+    if resultado_busca.empty:
+        resultado_busca = buscar_tesauro(
+            busca_livre,
+            tipo_busca,
+            limite=20,
+        )
 
     st.write(
         f"Resultados encontrados: {len(resultado_busca)}"
@@ -60,8 +70,8 @@ if busca_livre:
 
             documento = row.get(
                 "termo_padronizado",
-                ""
-            )
+                row.get("item_documental", ""),
+            ) or row.get("item_documental", "")
 
             codigo = row.get(
                 "codigo_classificacao",
@@ -205,7 +215,10 @@ def valor_registro(registro, campo, padrao=""):
     except AttributeError:
         valor = registro[campo] if campo in registro else padrao
 
-    return valor if valor is not None else padrao
+    if pd.isna(valor):
+        return padrao
+
+    return valor
 
 
 aba1, aba2 = st.tabs(["Adicionar item", "Inventário salvo"])
@@ -306,11 +319,27 @@ if tipo_busca.strip():
          else "fim"
     )
 
-    sugestoes = buscar_tesauro(
+    sugestoes = buscar_documentos(
+        df_ttd,
         tipo_busca,
-        tipo_atividade,
-        limite=20
+        limite=20,
     )
+
+    if natureza_escolhida and not sugestoes.empty:
+        sugestoes = sugestoes[
+            sugestoes["natureza_documental"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            == natureza_escolhida.strip().lower()
+        ]
+
+    if sugestoes.empty:
+        sugestoes = buscar_tesauro(
+            tipo_busca,
+            tipo_atividade,
+            limite=20,
+        )
 
     if (
         documento_temporalidade
@@ -493,11 +522,18 @@ if not sugestoes.empty:
             registro,
             "item_documental",
             "",
+        ) or valor_registro(
+            registro,
+            "termo_padronizado",
+            "",
         )
 
         classe_ttd = valor_registro(
             registro,
-            "item_documental",
+            "item_documental",""
+        ) or valor_registro(
+            registro, 
+            "termo_padronizado",
             "",
         )
 
@@ -517,7 +553,9 @@ if not sugestoes.empty:
             registro,
             "destinacao_final",
             "",
+        ) or valor_registro(registro, "destinacao_final", "",
         )
+
 
         subserie = valor_registro(
             registro,
@@ -711,6 +749,18 @@ if not sugestoes.empty:
                     "observacoes": " | ".join([t for t in texto_obs if t]),
                 }
 
+                payload = {
+                    k: (
+                        "" if pd.isna(v)
+                        else v
+                    )
+                    for k, v in payload.items()
+                }
+
+                st.write("TIPO DOCUMENTAL:", tipo_documental)
+                st.write("CLASSE TTD:", classe_ttd)
+                st.write("DESTINAÇÃO:", destinacao_final)
+
                 try:
                     insert_inventory_item(payload)
                     st.success(
@@ -839,6 +889,14 @@ if not sugestoes.empty:
                                 "quantidade": int(row.get("quantidade", 1) or 1),
                                 "caixa": row.get("caixa", ""),
                                 "observacoes": row.get("observacoes", ""),
+                            }
+
+                            payload = {
+                                k: (
+                                    "" if pd.isna(v)
+                                    else v
+                                )
+                                for k, v in payload.items()
                             }
 
                             insert_inventory_item(payload)
