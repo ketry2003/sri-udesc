@@ -77,6 +77,26 @@ def insert_inventory_item(payload: dict) -> int:
     return int(rows[0]["id"])
 
 
+def find_duplicate_inventory_item(payload: dict):
+    supabase = get_supabase_client()
+
+    query = (
+        supabase
+        .table("inventory_items")
+        .select("*")
+        .eq("setor", payload.get("setor", ""))
+        .eq("tipo_documental", payload.get("tipo_documental", ""))
+        .eq("item_documental", payload.get("item_documental", ""))
+        .eq("codigo_classificacao", payload.get("codigo_classificacao", ""))
+        .eq("datas_limite", payload.get("datas_limite", ""))
+        .limit(1)
+        .execute()
+    )
+
+    rows = _response_data(query)
+    return rows[0] if rows else None
+
+
 def list_inventory_items():
     supabase = get_supabase_client()
 
@@ -215,6 +235,19 @@ def update_inventory_item(item_id, payload):
     supabase = get_supabase_client()
 
     data = {
+        "setor": payload.get("setor", ""),
+        "tipo_documental": payload.get("tipo_documental", ""),
+        "natureza_documental": payload.get("natureza_documental", ""),
+        "grupo": payload.get("grupo", ""),
+        "subgrupo": payload.get("subgrupo", ""),
+        "serie": payload.get("serie", ""),
+        "subserie": payload.get("subserie", ""),
+        "dossie_processo": payload.get("dossie_processo", ""),
+        "item_documental": payload.get("item_documental", ""),
+        "codigo_classificacao": payload.get("codigo_classificacao", ""),
+        "prazo_corrente": payload.get("prazo_corrente", ""),
+        "prazo_intermediario": payload.get("prazo_intermediario", ""),
+        "destinacao_final": payload.get("destinacao_final", ""),
         "datas_limite": payload.get("datas_limite", ""),
         "quantidade": payload.get("quantidade", 1),
         "caixa": payload.get("caixa", ""),

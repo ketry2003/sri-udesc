@@ -33,24 +33,40 @@ with st.expander("Visualizar pendências"):
 
 st.divider()
 
+selecionados = []
+
+aprovar_selecionados = st.button(
+    "Aprovar termos selecionados",
+    type="primary",
+    key="aprovar_termos_selecionados",
+)
+
 for _, row in df.iterrows():
 
     st.subheader(row["documento_faltante"])
 
+    selecionado = st.checkbox(
+        "Selecionar para aprovação em lote",
+        key=f"selecionar_{row['id']}",
+    )
+
+    if selecionado:
+        selecionados.append(row["id"])
+
     st.write(
         f"Score de similaridade: "
-        f"{row.get('score', '-')}"
+        f"{row.get('score') or '-'}"
     )
 
     st.write(
         f"Termo semelhante encontrado: "
-        f"{row.get('termo_semelhante', '-')}"
+        f"{row.get('termo_semelhante') or 'Nenhuma sugestão automática'}"
     )
 
-    tipo_atividade = st.selectbox(
-        "Tipo de atividade",
-        ["fim", "meio"],
-        key=f"tipo_{row['id']}"
+    termo_padronizado = st.text_input(
+        "Termo preferido",
+        value=str(row.get("termo_semelhante", "") or row["documento_faltante"]),
+        key=f"termo_padronizado_{row['id']}",
     )
 
     assunto = st.text_input(
@@ -68,9 +84,13 @@ for _, row in df.iterrows():
 
     with col1:
 
-        if st.button(
+        aprovar_individualmente = st.button(
             f"Aprovar #{row['id']}",
             key=f"aprovar_{row['id']}"
+        )
+
+        if aprovar_individualmente or (
+            aprovar_selecionados and row["id"] in selecionados
         ):
 
             resultado = (
@@ -79,13 +99,14 @@ for _, row in df.iterrows():
                 .insert(
                     {
                         "tipo_atividade":
-                            tipo_atividade,
+                            row.get("tipo_atividade") or "fim",
 
                         "termo_encontrado":
                             row["documento_faltante"],
 
                         "termo_padronizado":
-                            row["documento_faltante"],
+                            termo_padronizado.strip()
+                            or row["documento_faltante"],
 
                         "atividade": "",
 
@@ -112,9 +133,12 @@ for _, row in df.iterrows():
 
             st.success(
                 "Termo aprovado com sucesso."
+                if aprovar_individualmente
+                else "Termo incluído na aprovação em lote."
             )
 
-            st.rerun()
+            if aprovar_individualmente:
+                st.rerun()
 
     with col2:
 
@@ -143,3 +167,10 @@ for _, row in df.iterrows():
             st.rerun()
 
     st.divider()
+
+if aprovar_selecionados:
+    if not selecionados:
+        st.warning("Selecione pelo menos um termo para aprovação em lote.")
+    else:
+        st.success(f"{len(selecionados)} termo(s) aprovado(s) com sucesso.")
+        st.rerun()

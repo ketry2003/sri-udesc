@@ -8,6 +8,7 @@ from services.equivalencias import buscar_equivalencia
 from services.busca_documental import buscar_documentos
 from services.db import (
     insert_inventory_item,
+    find_duplicate_inventory_item,
     list_setores_inventory,
     list_inventory_items_by_setor,
     delete_inventory_items,
@@ -105,8 +106,24 @@ def obter_documento_selecionado():
 
 documento_temporalidade = obter_documento_selecionado()
 
+
+def normalizar_natureza(natureza):
+    valor = normalize_text(natureza).replace("_", "-")
+
+    if valor in {"meio", "atividade-meio"}:
+        return "Atividade-meio"
+
+    if valor in {"fim", "atividade-fim"}:
+        return "Atividade-fim"
+
+    return ""
+
 natureza_pre_preenchida = (
-    documento_temporalidade.get("natureza", "")
+    normalizar_natureza(
+        documento_temporalidade.get("natureza")
+        or documento_temporalidade.get("tipo")
+        or documento_temporalidade.get("atividade", "")
+    )
     if documento_temporalidade
     else ""
 )
@@ -327,11 +344,8 @@ if tipo_busca.strip():
 
     if natureza_escolhida and not sugestoes.empty:
         sugestoes = sugestoes[
-            sugestoes["natureza_documental"]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            == natureza_escolhida.strip().lower()
+            sugestoes["natureza_documental"].map(normalizar_natureza)
+            == normalizar_natureza(natureza_escolhida)
         ]
 
     if sugestoes.empty:
@@ -762,10 +776,22 @@ if not sugestoes.empty:
                 st.write("DESTINAÇÃO:", destinacao_final)
 
                 try:
-                    insert_inventory_item(payload)
-                    st.success(
-                        "✅ Item adicionado ao inventário com preenchimento assistido."
-                    )
+                    item_existente = find_duplicate_inventory_item(payload)
+
+                    if item_existente:
+                        st.warning(
+                            "⚠️ Este documento já está cadastrado no inventário: "
+                            f"caixa {item_existente.get('caixa', '-') or '-'}, "
+                            f"ID #{item_existente.get('id', '-')}. "
+                            "O novo registro não foi salvo para evitar duplicidade."
+                        )
+                    else:
+                        insert_inventory_item(payload)
+                        st.success(
+                            "✅ Item adicionado ao inventário com preenchimento assistido."
+                        )
+                        st.session_state["documento_selecionado"] = {}
+                        st.rerun()
                 except Exception as e:
                     st.error(
                         f"❌ Erro ao adicionar item ao inventário: {str(e)}\n\n"
@@ -899,8 +925,17 @@ if not sugestoes.empty:
                                 for k, v in payload.items()
                             }
 
-                            insert_inventory_item(payload)
-                            total += 1
+                            item_existente = find_duplicate_inventory_item(payload)
+
+                            if item_existente:
+                                erros.append(
+                                    f"Linha {idx + 1}: documento já cadastrado "
+                                    f"na caixa {item_existente.get('caixa', '-') or '-'} "
+                                    f"(ID #{item_existente.get('id', '-')})."
+                                )
+                            else:
+                                insert_inventory_item(payload)
+                                total += 1
                         except Exception as e:
                             erros.append(f"Linha {idx + 1}: {str(e)}")
 
@@ -1119,6 +1154,69 @@ with aba2:
                 st.markdown("#### Editar item")
 
                 with st.form("form_editar_item"):
+                    novo_setor = st.text_input(
+                        "Setor / Proveniência",
+                        value=str(item.get("setor", "") or ""),
+                    )
+
+                    novo_tipo_documental = st.text_input(
+                        "Tipo documental",
+                        value=str(item.get("tipo_documental", "") or ""),
+                    )
+
+                    nova_natureza = st.selectbox(
+                        "Natureza documental",
+                        ["Atividade-fim", "Atividade-meio", "Não classificado"],
+                        index=(
+                            ["Atividade-fim", "Atividade-meio", "Não classificado"]
+                            .index(str(item.get("natureza_documental", "") or ""))
+                            if str(item.get("natureza_documental", "") or "")
+                            in ["Atividade-fim", "Atividade-meio", "Não classificado"]
+                            else 2
+                        ),
+                    )
+
+                    novo_grupo = st.text_input(
+                        "Grupo",
+                        value=str(item.get("grupo", "") or ""),
+                    )
+                    novo_subgrupo = st.text_input(
+                        "Subgrupo",
+                        value=str(item.get("subgrupo", "") or ""),
+                    )
+                    nova_serie = st.text_input(
+                        "Série",
+                        value=str(item.get("serie", "") or ""),
+                    )
+                    nova_subserie = st.text_input(
+                        "Subsérie",
+                        value=str(item.get("subserie", "") or ""),
+                    )
+                    novo_dossie = st.text_input(
+                        "Dossiê / Processo",
+                        value=str(item.get("dossie_processo", "") or ""),
+                    )
+                    novo_item_documental = st.text_input(
+                        "Classe / Item documental",
+                        value=str(item.get("item_documental", "") or ""),
+                    )
+                    novo_codigo = st.text_input(
+                        "Código de classificação",
+                        value=str(item.get("codigo_classificacao", "") or ""),
+                    )
+
+                    novo_prazo_corrente = st.text_input(
+                        "Fase corrente em anos",
+                        value=str(item.get("prazo_corrente", "") or ""),
+                    )
+                    novo_prazo_intermediario = st.text_input(
+                        "Fase intermediária em anos",
+                        value=str(item.get("prazo_intermediario", "") or ""),
+                    )
+                    nova_destinacao = st.text_input(
+                        "Destinação final",
+                        value=str(item.get("destinacao_final", "") or ""),
+                    )
                     novo_ano = st.text_input(
                         "Ano de emissão / Datas-limite",
                         value=str(item.get("datas_limite", "") or ""),
@@ -1161,6 +1259,19 @@ with aba2:
 
                     if salvar_edicao:
                         payload = {
+                            "setor": novo_setor,
+                            "tipo_documental": novo_tipo_documental,
+                            "natureza_documental": nova_natureza,
+                            "grupo": novo_grupo,
+                            "subgrupo": novo_subgrupo,
+                            "serie": nova_serie,
+                            "subserie": nova_subserie,
+                            "dossie_processo": novo_dossie,
+                            "item_documental": novo_item_documental,
+                            "codigo_classificacao": novo_codigo,
+                            "prazo_corrente": novo_prazo_corrente,
+                            "prazo_intermediario": novo_prazo_intermediario,
+                            "destinacao_final": nova_destinacao,
                             "datas_limite": novo_ano,
                             "quantidade": nova_quantidade,
                             "caixa": nova_caixa,
@@ -1178,25 +1289,25 @@ with aba2:
                         else:
                             st.warning("Nenhuma alteração foi salva.")
 
-                    st.markdown("#### Excluir item")
+                st.markdown("#### Excluir item")
 
-                    descricao_item = (
-                        f"#{item['id']} | "
-                        f"{item.get('tipo_documental', '-') or '-'} | "
-                        f"Caixa {item.get('caixa', '-') or '-'} | "
-                        f"{item.get('datas_limite', '-') or '-'}"
+                descricao_item = (
+                    f"#{item['id']} | "
+                    f"{item.get('tipo_documental', '-') or '-'} | "
+                    f"Caixa {item.get('caixa', '-') or '-'} | "
+                    f"{item.get('datas_limite', '-') or '-'}"
+                )
+
+                st.warning(
+                    "A exclusão agora é feita somente item por item."
+                )
+
+                if st.button(
+                    "Excluir este item",
+                    type="secondary",
+                    key=f"abrir_confirmacao_exclusao_{item['id']}",
+                ):
+                    confirmar_exclusao_item(
+                        int(item["id"]),
+                        descricao_item,
                     )
-
-                    st.warning(
-                        "A exclusão agora é feita somente item por item."
-                    )
-
-                    if st.button(
-                        "Excluir este item",
-                        type="secondary",
-                        key=f"abrir_confirmacao_exclusao_{item['id']}",
-                    ):
-                        confirmar_exclusao_item(
-                            int(item["id"]),
-                            descricao_item,
-                        )

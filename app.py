@@ -8,10 +8,12 @@ import unicodedata
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
 from services.db import get_supabase_client
+from services.db import carregar_vocabulario
 from services.equivalencias import (
     buscar_equivalencia,
     salvar_equivalencia,
 )
+from services.similaridade import encontrar_melhor_termo
 
 
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
@@ -247,10 +249,39 @@ if query_original:
             if existente.data:
                 st.warning("Este termo já está na fila de revisão.")
             else:
+                termos_vocabulario = []
+
+                for tipo_vocabulario in ["Atividade-fim", "Atividade-meio"]:
+                    vocabulario = carregar_vocabulario(tipo_vocabulario)
+
+                    for coluna in [
+                        "termo_padronizado",
+                        "termo_encontrado",
+                        "assunto",
+                        "sinonimo",
+                    ]:
+                        if coluna in vocabulario.columns:
+                            termos_vocabulario.extend(
+                                vocabulario[coluna]
+                                .dropna()
+                                .astype(str)
+                                .str.strip()
+                                .tolist()
+                            )
+
+                melhor_termo = encontrar_melhor_termo(
+                    query_original,
+                    list(dict.fromkeys(termos_vocabulario)),
+                    score_minimo=0,
+                )
+
                 supabase.table("vocabulario_pendente").insert(
                     {
                         "documento_faltante": query_original,
-                        "score": 0,
+                        "score": melhor_termo["score"] if melhor_termo else 0,
+                        "termo_semelhante": (
+                            melhor_termo["termo"] if melhor_termo else ""
+                        ),
                         "revisado": False,
                         "aprovado": False,
                     }

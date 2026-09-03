@@ -273,6 +273,7 @@ Equivalência salva com sucesso:
                     "documento": documento,
                     "assunto": assunto,
                     "atividade": tipo_doc,
+                    "natureza": tipo,
                 }
 
                 st.success(
