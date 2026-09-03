@@ -69,6 +69,16 @@ for _, row in df.iterrows():
         key=f"termo_padronizado_{row['id']}",
     )
 
+    sinonimos = st.text_area(
+        "Sinônimos ou termos de busca (um por linha)",
+        value=str(row["documento_faltante"]),
+        key=f"sinonimos_{row['id']}",
+        help=(
+            "Informe outras formas usadas para encontrar este documento. "
+            "Cada linha será cadastrada como um termo de busca."
+        ),
+    )
+
     assunto = st.text_input(
         "Assunto",
         value=row["documento_faltante"],
@@ -93,31 +103,30 @@ for _, row in df.iterrows():
             aprovar_selecionados and row["id"] in selecionados
         ):
 
-            resultado = (
-                supabase
-                .table("vocabulario_controlado")
-                .insert(
-                    {
-                        "tipo_atividade":
-                            row.get("tipo_atividade") or "fim",
-
-                        "termo_encontrado":
-                            row["documento_faltante"],
-
-                        "termo_padronizado":
-                            termo_padronizado.strip()
-                            or row["documento_faltante"],
-
-                        "atividade": "",
-
-                        "assunto":
-                            assunto,
-
-                        "codigo_classificacao": ""
-                    }
-                )
-                .execute()
+            termo_preferido = (
+                termo_padronizado.strip()
+                or row["documento_faltante"]
             )
+            termos_busca = [
+                termo.strip()
+                for termo in sinonimos.splitlines()
+                if termo.strip()
+            ]
+
+            if termo_preferido not in termos_busca:
+                termos_busca.insert(0, termo_preferido)
+
+            for termo_busca in dict.fromkeys(termos_busca):
+                supabase.table("vocabulario_controlado").insert(
+                    {
+                        "tipo_atividade": row.get("tipo_atividade") or "fim",
+                        "termo_encontrado": termo_busca,
+                        "termo_padronizado": termo_preferido,
+                        "atividade": "",
+                        "assunto": assunto,
+                        "codigo_classificacao": "",
+                    }
+                ).execute()
 
             supabase.table(
                 "vocabulario_pendente"
