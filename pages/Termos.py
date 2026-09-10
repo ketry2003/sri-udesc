@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from services.db import get_supabase_client
+from services.db import get_supabase_client, normalizar_tipo_atividade
 
 st.title("Vocabulário")
 
@@ -33,24 +33,50 @@ with st.expander("Visualizar pendências"):
 
 st.divider()
 
+selecionados = []
+
+aprovar_selecionados = st.button(
+    "Aprovar termos selecionados",
+    type="primary",
+    key="aprovar_termos_selecionados",
+)
+
 for _, row in df.iterrows():
 
     st.subheader(row["documento_faltante"])
 
+    selecionado = st.checkbox(
+        "Selecionar para aprovação em lote",
+        key=f"selecionar_{row['id']}",
+    )
+
+    if selecionado:
+        selecionados.append(row["id"])
+
     st.write(
         f"Score de similaridade: "
-        f"{row.get('score', '-')}"
+        f"{row.get('score') or '-'}"
     )
 
     st.write(
         f"Termo semelhante encontrado: "
-        f"{row.get('termo_semelhante', '-')}"
+        f"{row.get('termo_semelhante') or 'Nenhuma sugestão automática'}"
     )
 
-    tipo_atividade = st.selectbox(
-        "Tipo de atividade",
-        ["fim", "meio"],
-        key=f"tipo_{row['id']}"
+    termo_padronizado = st.text_input(
+        "Termo preferido",
+        value=str(row.get("termo_semelhante", "") or row["documento_faltante"]),
+        key=f"termo_padronizado_{row['id']}",
+    )
+
+    sinonimos = st.text_area(
+        "Sinônimos ou termos de busca (um por linha)",
+        value=str(row["documento_faltante"]),
+        key=f"sinonimos_{row['id']}",
+        help=(
+            "Informe outras formas usadas para encontrar este documento. "
+            "Cada linha será cadastrada como um termo de busca."
+        ),
     )
 
     assunto = st.text_input(
@@ -68,35 +94,43 @@ for _, row in df.iterrows():
 
     with col1:
 
-        if st.button(
+        aprovar_individualmente = st.button(
             f"Aprovar #{row['id']}",
             key=f"aprovar_{row['id']}"
+        )
+
+        if aprovar_individualmente or (
+            aprovar_selecionados and row["id"] in selecionados
         ):
 
-            resultado = (
-                supabase
-                .table("vocabulario_controlado")
-                .insert(
-                    {
-                        "tipo_atividade":
-                            tipo_atividade,
-
-                        "termo_encontrado":
-                            row["documento_faltante"],
-
-                        "termo_padronizado":
-                            row["documento_faltante"],
-
-                        "atividade": "",
-
-                        "assunto":
-                            assunto,
-
-                        "codigo_classificacao": ""
-                    }
-                )
-                .execute()
+            termo_preferido = (
+                termo_padronizado.strip()
+                or row["documento_faltante"]
             )
+            termos_busca = [
+                termo.strip()
+                for termo in sinonimos.splitlines()
+                if termo.strip()
+            ]
+
+            if termo_preferido not in termos_busca:
+                termos_busca.insert(0, termo_preferido)
+
+            tipo_atividade = normalizar_tipo_atividade(
+                row.get("tipo_atividade") or "fim"
+            )
+
+            for termo_busca in dict.fromkeys(termos_busca):
+                supabase.table("vocabulario_controlado").insert(
+                    {
+                        "tipo_atividade": tipo_atividade,
+                        "termo_encontrado": termo_busca,
+                        "termo_padronizado": termo_preferido,
+                        "atividade": "",
+                        "assunto": assunto,
+                        "codigo_classificacao": "",
+                    }
+                ).execute()
 
             supabase.table(
                 "vocabulario_pendente"
@@ -112,9 +146,12 @@ for _, row in df.iterrows():
 
             st.success(
                 "Termo aprovado com sucesso."
+                if aprovar_individualmente
+                else "Termo incluído na aprovação em lote."
             )
 
-            st.rerun()
+            if aprovar_individualmente:
+                st.rerun()
 
     with col2:
 
@@ -143,3 +180,10 @@ for _, row in df.iterrows():
             st.rerun()
 
     st.divider()
+
+if aprovar_selecionados:
+    if not selecionados:
+        st.warning("Selecione pelo menos um termo para aprovação em lote.")
+    else:
+        st.success(f"{len(selecionados)} termo(s) aprovado(s) com sucesso.")
+        st.rerun()

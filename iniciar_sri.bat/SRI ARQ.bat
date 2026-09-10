@@ -1,16 +1,16 @@
 @echo off
-cd d %~dp0
+cd /d "%~dp0.."
 
-if not exist venv (
+if not exist "venv\Scripts\python.exe" (
     echo Criando ambiente virtual...
     python -m venv venv
 )
 
-call venvScriptsactivate
+call "venv\Scripts\activate.bat"
 
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 echo Iniciando sistema...
-start httplocalhost8501
+start "" "http://localhost:8501"
 
 python -m streamlit run app.py

@@ -92,7 +92,7 @@ for coluna in [
     "termo_padronizado",
     "termo_encontrado",
     "termos_populares_sugeridos",
-    "assunto_tecnico"
+    "assunto"
 ]:
     if coluna in voc.columns:
 

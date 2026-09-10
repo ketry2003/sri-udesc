@@ -8,10 +8,12 @@ import unicodedata
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
 from services.db import get_supabase_client
+from services.db import carregar_vocabulario
 from services.equivalencias import (
     buscar_equivalencia,
     salvar_equivalencia,
 )
+from services.similaridade import encontrar_melhor_termo
 
 
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
@@ -247,10 +249,39 @@ if query_original:
             if existente.data:
                 st.warning("Este termo já está na fila de revisão.")
             else:
+                termos_vocabulario = []
+
+                for tipo_vocabulario in ["Atividade-fim", "Atividade-meio"]:
+                    vocabulario = carregar_vocabulario(tipo_vocabulario)
+
+                    for coluna in [
+                        "termo_padronizado",
+                        "termo_encontrado",
+                        "assunto",
+                        "sinonimo",
+                    ]:
+                        if coluna in vocabulario.columns:
+                            termos_vocabulario.extend(
+                                vocabulario[coluna]
+                                .dropna()
+                                .astype(str)
+                                .str.strip()
+                                .tolist()
+                            )
+
+                melhor_termo = encontrar_melhor_termo(
+                    query_original,
+                    list(dict.fromkeys(termos_vocabulario)),
+                    score_minimo=0,
+                )
+
                 supabase.table("vocabulario_pendente").insert(
                     {
                         "documento_faltante": query_original,
-                        "score": 0,
+                        "score": melhor_termo["score"] if melhor_termo else 0,
+                        "termo_semelhante": (
+                            melhor_termo["termo"] if melhor_termo else ""
+                        ),
                         "revisado": False,
                         "aprovado": False,
                     }
@@ -352,14 +383,23 @@ Código de classificação: {codigo}
                 registro = sugestoes.iloc[indice]
 
                 st.session_state["documento_selecionado"] = {
-                    "documento": registro.get("termo_padronizado", ""),
+                    "documento": registro.get("termo_padronizado", "") or registro.get("item_documental", ""),
                     "codigo_classificacao": registro.get("codigo_classificacao", ""),
                     "assunto": registro.get("assunto", ""),
-                    "tipo_documental": registro.get("tipo_documental", ""),
+                    "tipo_documental": registro.get("tipo_documental", "") or registro.get("item_documental", ""),
                     "natureza": "Atividade-meio" if tipo == "meio" else "Atividade-fim",
+                    "grupo": registro.get("grupo", ""),
+                    "subgrupo": registro.get("subgrupo", ""),
+                    "serie": registro.get("serie", ""),
+                    "subserie": registro.get("subserie", ""),
+                    "dossie_processo": registro.get("dossie_processo", ""),
+                    "prazo_corrente": registro.get("prazo_corrente", ""),
+                    "prazo_intermediario": registro.get("prazo_intermediario", ""),
+                    "destinacao_final": registro.get("destinacao_final", ""),
                 }
 
                 st.success("Documento enviado para o Inventário.")
+                st.write(documento_temporalidade)
 
 # =========================
 # FILTROS AVANÇADOS
@@ -509,10 +549,10 @@ else:
                 f"{row.get('dossie_processo', '') or '-'}"
             )
 
-            if row.get("assunto_tecnico"):
+            if row.get("assunto"):
                 left.write(
                     f"**Assunto técnico:** "
-                    f"{row.get('assunto_tecnico', '') or '-'}"
+                    f"{row.get('assunto', '') or '-'}"
                 )
 
             if row.get("funcao"):
@@ -545,26 +585,23 @@ else:
             ):
 
                 st.session_state["documento_selecionado"] = {
-
-                    "documento": row.get(
-                        "item_documental",
-                        ""
-                    ),
-
-                    "codigo_classificacao": row.get(
-                        "codigo_classificacao",
-                        ""
-                    ),
-
-                    "assunto": row.get(
-                        "assunto_tecnico", ""
-                    ),
-
+                    "documento": row.get("item_documental", "") or row.get("termo_padronizado", ""),
+                    "codigo_classificacao": row.get("codigo_classificacao", ""),
+                    "assunto": row.get("assunto", ""),
+                    "tipo_documental": row.get("item_documental", "") or row.get("termo_padronizado", ""),
                     "natureza": (
                         "Atividade-meio"
                         if tipo == "meio"
                         else "Atividade-fim"
                     ),
+                    "grupo": row.get("grupo", ""),
+                    "subgrupo": row.get("subgrupo", ""),
+                    "serie": row.get("serie", ""),
+                    "subserie": row.get("subserie", ""),
+                    "dossie_processo": row.get("dossie_processo", ""),
+                    "prazo_corrente": row.get("prazo_corrente", ""),
+                    "prazo_intermediario": row.get("prazo_intermediario", ""),
+                    "destinacao_final": row.get("destinacao_final", ""),
                 }
 
                 st.success(
