@@ -150,9 +150,13 @@ def registrar_emprestimo(payload: dict):
 
     usuario_nome = str(payload.get("usuario_nome", "")).strip()
     usuario_id_udesc = str(payload.get("usuario_id_udesc", "")).strip()
+    setor_usuario = str(payload.get("setor_usuario", "")).strip()
 
     if not usuario_nome:
         raise ValueError("Nome do usuário é obrigatório.")
+
+    if not setor_usuario:
+        raise ValueError("Setor de trabalho do usuário é obrigatório.")
 
     item = None
     if inventory_id is not None:
@@ -206,6 +210,7 @@ def registrar_emprestimo(payload: dict):
         "inventory_id": int(inventory_id) if inventory_id is not None else None,
         "usuario_nome": usuario_nome,
         "usuario_id_udesc": usuario_id_udesc,
+        "setor_usuario": setor_usuario,
         "documento": documento,
         "codigo_classificacao": str(
             payload.get("codigo_classificacao")
