@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 
 try:
     import streamlit as st
@@ -138,6 +139,189 @@ def list_inventory_items_by_setor(setor):
     )
 
     return _response_data(response)
+
+
+def registrar_emprestimo(payload: dict):
+    supabase = get_supabase_client()
+
+    inventory_id = payload.get("inventory_id")
+    if inventory_id is not None and str(inventory_id).strip() == "":
+        inventory_id = None
+
+    usuario_nome = str(payload.get("usuario_nome", "")).strip()
+    usuario_id_udesc = str(payload.get("usuario_id_udesc", "")).strip()
+
+    if not usuario_nome:
+        raise ValueError("Nome do usuário é obrigatório.")
+
+    item = None
+    if inventory_id is not None:
+        item = next(
+            (
+                item
+                for item in list_inventory_items()
+                if int(item.get("id")) == int(inventory_id)
+            ),
+            None,
+        )
+
+        if item is None:
+            raise ValueError("Item do inventário não encontrado.")
+
+        ja_emprestado = (
+            supabase
+            .table("document_loans")
+            .select("id")
+            .eq("inventory_id", int(inventory_id))
+            .eq("status", "Emprestado")
+            .limit(1)
+            .execute()
+        )
+
+        if getattr(ja_emprestado, "data", None):
+            raise RuntimeError(
+                "Este documento já está emprestado e não pode ser emprestado novamente."
+            )
+
+    documento = str(
+        payload.get("documento")
+        or (item.get("item_documental") if item else "")
+        or (item.get("tipo_documental") if item else "")
+        or ""
+    ).strip()
+
+    if not documento:
+        raise ValueError("Informe o documento para registrar o empréstimo.")
+
+    setor = str(
+        payload.get("setor") or (item.get("setor") if item else "") or ""
+    ).strip()
+
+    if not setor:
+        raise ValueError("Setor é obrigatório.")
+
+    agora = datetime.now(timezone.utc).isoformat()
+
+    data = {
+        "inventory_id": int(inventory_id) if inventory_id is not None else None,
+        "usuario_nome": usuario_nome,
+        "usuario_id_udesc": usuario_id_udesc,
+        "documento": documento,
+        "codigo_classificacao": str(
+            payload.get("codigo_classificacao")
+            or (item.get("codigo_classificacao") if item else "")
+            or ""
+        ).strip(),
+        "caixa": str(
+            payload.get("caixa") or (item.get("caixa") if item else "") or ""
+        ).strip(),
+        "setor": setor,
+        "data_emprestimo": payload.get("data_emprestimo") or agora,
+        "data_devolucao": None,
+        "status": "Emprestado",
+        "observacoes": str(payload.get("observacoes", "") or "").strip(),
+        "criado_em": payload.get("criado_em") or agora,
+    }
+
+    response = (
+        supabase
+        .table("document_loans")
+        .insert(data)
+        .execute()
+    )
+
+    rows = _response_data(response)
+
+    if not rows:
+        raise RuntimeError("Erro ao registrar empréstimo no Supabase.")
+
+    return rows[0]
+
+
+def listar_emprestimos():
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("document_loans")
+        .select("*")
+        .order("criado_em", desc=True)
+        .execute()
+    )
+
+    return _response_data(response)
+
+
+def listar_documentos_emprestados():
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("document_loans")
+        .select("*")
+        .eq("status", "Emprestado")
+        .order("data_emprestimo", desc=True)
+        .execute()
+    )
+
+    return _response_data(response)
+
+
+def registrar_devolucao(loan_id, observacoes=""):
+    supabase = get_supabase_client()
+
+    if loan_id is None:
+        raise ValueError("ID do empréstimo é obrigatório.")
+
+    emprestimo = buscar_emprestimo_por_id(loan_id)
+    if not emprestimo:
+        raise ValueError("Empréstimo não encontrado.")
+
+    agora = datetime.now(timezone.utc).isoformat()
+
+    response = (
+        supabase
+        .table("document_loans")
+        .update(
+            {
+                "status": "Devolvido",
+                "data_devolucao": agora,
+                "observacoes": (
+                    str(emprestimo.get("observacoes", "") or "")
+                    + (" | " if observacoes else "")
+                    + str(observacoes or "")
+                ).strip(),
+            }
+        )
+        .eq("id", int(loan_id))
+        .execute()
+    )
+
+    rows = _response_data(response)
+
+    if not rows:
+        raise RuntimeError("Erro ao registrar devolução no Supabase.")
+
+    return rows[0]
+
+
+def buscar_emprestimo_por_id(loan_id):
+    supabase = get_supabase_client()
+
+    if loan_id is None:
+        return None
+
+    response = (
+        supabase
+        .table("document_loans")
+        .select("*")
+        .eq("id", int(loan_id))
+        .limit(1)
+        .execute()
+    )
+
+    rows = _response_data(response)
+    return rows[0] if rows else None
 
 
 def get_next_caixa_by_setor(setor):
@@ -319,14 +503,42 @@ def buscar_equivalencia_historica(
 
 import pandas as pd
 
+
+def normalizar_tipo_atividade(valor):
+    if valor is None:
+        return ""
+
+    valor_texto = str(valor).strip()
+    if not valor_texto:
+        return ""
+
+    valor_normalizado = (
+        valor_texto
+        .lower()
+        .replace("_", " ")
+        .replace("-", " ")
+        .strip()
+    )
+    valor_normalizado = " ".join(valor_normalizado.split())
+
+    if valor_normalizado in {"meio", "atividade meio"}:
+        return "Atividade-meio"
+
+    if valor_normalizado in {"fim", "atividade fim"}:
+        return "Atividade-fim"
+
+    return valor_texto
+
+
 def carregar_vocabulario(tipo):
     supabase = get_supabase_client()
+    tipo_padronizado = normalizar_tipo_atividade(tipo)
 
     response = (
         supabase
         .table("vocabulario_controlado")
         .select("*")
-        .eq("tipo_atividade", tipo)
+        .eq("tipo_atividade", tipo_padronizado)
         .execute()
     )
 

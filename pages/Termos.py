@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from services.db import get_supabase_client
+from services.db import get_supabase_client, normalizar_tipo_atividade
 
 st.title("Vocabulário")
 
@@ -116,10 +116,14 @@ for _, row in df.iterrows():
             if termo_preferido not in termos_busca:
                 termos_busca.insert(0, termo_preferido)
 
+            tipo_atividade = normalizar_tipo_atividade(
+                row.get("tipo_atividade") or "fim"
+            )
+
             for termo_busca in dict.fromkeys(termos_busca):
                 supabase.table("vocabulario_controlado").insert(
                     {
-                        "tipo_atividade": row.get("tipo_atividade") or "fim",
+                        "tipo_atividade": tipo_atividade,
                         "termo_encontrado": termo_busca,
                         "termo_padronizado": termo_preferido,
                         "atividade": "",

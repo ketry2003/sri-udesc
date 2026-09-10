@@ -331,9 +331,9 @@ registro = None
 if tipo_busca.strip():
 
     tipo_atividade = (
-        "meio"
+        "Atividade-meio"
         if natureza_escolhida == "Atividade-meio"
-         else "fim"
+        else "Atividade-fim"
     )
 
     sugestoes = buscar_documentos(

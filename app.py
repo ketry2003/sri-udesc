@@ -383,11 +383,19 @@ Código de classificação: {codigo}
                 registro = sugestoes.iloc[indice]
 
                 st.session_state["documento_selecionado"] = {
-                    "documento": registro.get("termo_padronizado", ""),
+                    "documento": registro.get("termo_padronizado", "") or registro.get("item_documental", ""),
                     "codigo_classificacao": registro.get("codigo_classificacao", ""),
                     "assunto": registro.get("assunto", ""),
-                    "tipo_documental": registro.get("tipo_documental", ""),
+                    "tipo_documental": registro.get("tipo_documental", "") or registro.get("item_documental", ""),
                     "natureza": "Atividade-meio" if tipo == "meio" else "Atividade-fim",
+                    "grupo": registro.get("grupo", ""),
+                    "subgrupo": registro.get("subgrupo", ""),
+                    "serie": registro.get("serie", ""),
+                    "subserie": registro.get("subserie", ""),
+                    "dossie_processo": registro.get("dossie_processo", ""),
+                    "prazo_corrente": registro.get("prazo_corrente", ""),
+                    "prazo_intermediario": registro.get("prazo_intermediario", ""),
+                    "destinacao_final": registro.get("destinacao_final", ""),
                 }
 
                 st.success("Documento enviado para o Inventário.")
@@ -577,26 +585,23 @@ else:
             ):
 
                 st.session_state["documento_selecionado"] = {
-
-                    "documento": row.get(
-                        "item_documental",
-                        ""
-                    ),
-
-                    "codigo_classificacao": row.get(
-                        "codigo_classificacao",
-                        ""
-                    ),
-
-                    "assunto": row.get(
-                        "assunto", ""
-                    ),
-
+                    "documento": row.get("item_documental", "") or row.get("termo_padronizado", ""),
+                    "codigo_classificacao": row.get("codigo_classificacao", ""),
+                    "assunto": row.get("assunto", ""),
+                    "tipo_documental": row.get("item_documental", "") or row.get("termo_padronizado", ""),
                     "natureza": (
                         "Atividade-meio"
                         if tipo == "meio"
                         else "Atividade-fim"
                     ),
+                    "grupo": row.get("grupo", ""),
+                    "subgrupo": row.get("subgrupo", ""),
+                    "serie": row.get("serie", ""),
+                    "subserie": row.get("subserie", ""),
+                    "dossie_processo": row.get("dossie_processo", ""),
+                    "prazo_corrente": row.get("prazo_corrente", ""),
+                    "prazo_intermediario": row.get("prazo_intermediario", ""),
+                    "destinacao_final": row.get("destinacao_final", ""),
                 }
 
                 st.success(

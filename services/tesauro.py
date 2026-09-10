@@ -56,13 +56,33 @@ def normalizar_texto(texto):
     return texto
 
 
+def normalizar_tipo_atividade(valor):
+    if valor is None:
+        return ""
+
+    valor_texto = str(valor).strip().lower().replace("_", " ").replace("-", " ")
+    valor_texto = " ".join(valor_texto.split())
+
+    if valor_texto in {"meio", "atividade meio"}:
+        return "meio"
+
+    if valor_texto in {"fim", "atividade fim"}:
+        return "fim"
+
+    if valor_texto.startswith("atividade "):
+        return valor_texto.replace("atividade ", "")
+
+    return valor_texto
+
+
 def carregar_tesauro(tipo):
     arquivo = caminho_vocabulario()
 
     if not arquivo.exists():
         return pd.DataFrame()
 
-    df = carregar_vocabulario(tipo)
+    tipo_normalizado = normalizar_tipo_atividade(tipo)
+    df = carregar_vocabulario(tipo_normalizado)
 
     if df.empty:
         return df
@@ -94,16 +114,17 @@ def carregar_tesauro(tipo):
             .str.replace("\xa0", "", regex=False)
         )
 
-        if tipo in ["fim", "meio"]:
+        if tipo_normalizado in ["fim", "meio"]:
             df = df[
                 df[coluna_tipo]
-                == tipo
+                == tipo_normalizado
             ]
 
     colunas_busca = [
         "item_documental",
         "tipo_documental",
         "termo_padronizado",
+        "termo_encontrado",
         "termos_populares_sugeridos",
         "pergunta_guia_usuario",
         "assunto",
@@ -142,7 +163,7 @@ def buscar_tesauro(
     texto,
     tipo,
     limite=20,
-    corte=55,
+    corte=70,
 ):
     tesauro = carregar_tesauro(tipo)
 

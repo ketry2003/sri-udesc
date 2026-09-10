@@ -59,12 +59,32 @@ def normalizar_texto(texto):
     return texto
 
 
+def normalizar_tipo_atividade(valor):
+    if valor is None:
+        return ""
+
+    valor_texto = str(valor).strip().lower().replace("_", " ").replace("-", " ")
+    valor_texto = " ".join(valor_texto.split())
+
+    if valor_texto in {"meio", "atividade meio"}:
+        return "meio"
+
+    if valor_texto in {"fim", "atividade fim"}:
+        return "fim"
+
+    if valor_texto.startswith("atividade "):
+        return valor_texto.replace("atividade ", "")
+
+    return valor_texto
+
+
 @st.cache_data
 def carregar_tesauro(tipo, arquivo_modificado=None):
 
     from services.db import carregar_vocabulario
 
-    df = carregar_vocabulario(tipo)
+    tipo_normalizado = normalizar_tipo_atividade(tipo)
+    df = carregar_vocabulario(tipo_normalizado)
 
     if df.empty:
         return pd.DataFrame()
@@ -99,7 +119,7 @@ def carregar_tesauro(tipo, arquivo_modificado=None):
 
     return df
 
-def buscar_tesauro(texto, tipo, limite=10, corte=35):
+def buscar_tesauro(texto, tipo, limite=10, corte=70):
 
     tesauro = carregar_tesauro(tipo)
 
@@ -122,10 +142,6 @@ def buscar_tesauro(texto, tipo, limite=10, corte=35):
         .sort_values("score", ascending=False)
         .head(limite)
     )
-
-    st.write("DEBUG RESULTADO")
-    st.write(resultado.head())
-    st.write(f"Registros encontrados: {len(resultado)}")
 
     return resultado
 
