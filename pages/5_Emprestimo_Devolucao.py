@@ -51,7 +51,12 @@ CREATE INDEX IF NOT EXISTS idx_document_loans_status
 
 def mostrar_erro_tabela(exc):
     mensagem = str(exc)
-    if "document_loans" in mensagem or "PGRST205" in mensagem:
+    tabela_nao_encontrada = (
+        "PGRST205" in mensagem
+        or "Could not find the table 'public.document_loans'" in mensagem
+        or 'relation "document_loans" does not exist' in mensagem
+    )
+    if tabela_nao_encontrada:
         st.error("A tabela de empréstimos ainda não foi criada no Supabase.")
         with st.expander("Abra o SQL para criar a tabela", expanded=True):
             st.code(SQL_TABELA, language="sql")
