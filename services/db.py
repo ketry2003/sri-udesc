@@ -534,6 +534,34 @@ def normalizar_tipo_atividade(valor):
 
     return valor_texto
 
+def search_inventory_global(termo_geral="", termo_detalhado=""):
+    """
+    Realiza busca no inventário:
+    - termo_geral: busca em qualquer campo principal (setor, tipo documental, código, observações).
+    - termo_detalhado: busca focada em campos específicos (observacoes).
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM inventory_items WHERE 1=1"
+    params = []
+    
+    if termo_geral.strip():
+        like_geral = f"%{termo_geral.strip()}%"
+        query += " AND (setor LIKE ? OR tipo_documental LIKE ? OR codigo_classificacao LIKE ? OR observacoes LIKE ?)"
+        params.extend([like_geral, like_geral, like_geral, like_geral])
+        
+    if termo_detalhado.strip():
+        like_detalhado = f"%{termo_detalhado.strip()}%"
+        query += " AND observacoes LIKE ?"
+        params.append(like_detalhado)
+        
+    query += " ORDER BY id DESC"
+    
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
 def carregar_vocabulario(tipo):
     supabase = get_supabase_client()
