@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import streamlit as st
 
@@ -900,89 +899,6 @@ with aba2:
                     [""] + opcoes_edicao,
                 )
 
-            @st.dialog("Confirmar exclusão")
-            def confirmar_exclusao_item(item_id, descricao_item):
-                st.error(
-                    "⚠️ ATENÇÃO: Esta ação é irreversível. O item será excluído "
-                    "permanentemente do banco de dados."
-                )
-
-                st.write("Confira o item a ser excluído:")
-                st.write(f"**{descricao_item}**")
-
-                st.divider()
-
-                # Inicializar contador de tentativas na session
-                if f"tentativas_exclusao_{item_id}" not in st.session_state:
-                    st.session_state[f"tentativas_exclusao_{item_id}"] = 0
-
-                max_tentativas = 3
-                tentativas_restantes = max_tentativas - st.session_state[f"tentativas_exclusao_{item_id}"]
-
-                if tentativas_restantes <= 0:
-                    st.error("🔒 Limite de tentativas excedido. Feche este diálogo e tente novamente.")
-                    st.stop()
-
-                if tentativas_restantes <= 1:
-                    st.warning(f"⚠️ {tentativas_restantes} tentativa restante!")
-
-                senha_confirmacao = st.text_input(
-                    "Informe a senha de administrador para confirmar",
-                    type="password",
-                    key=f"senha_confirmacao_exclusao_{item_id}",
-                )
-
-                st.caption(
-                    "A senha é armazenada na variável de ambiente "
-                    "INVENTARIO_DELETE_PASSWORD (configuração de segurança)."
-                )
-
-                col_confirmar, col_cancelar = st.columns(2)
-
-                with col_confirmar:
-                    if st.button(
-                        "Confirmar exclusão permanente",
-                        type="primary",
-                        key=f"confirmar_exclusao_{item_id}",
-                    ):
-                        senha_esperada = os.getenv("INVENTARIO_DELETE_PASSWORD", "")
-
-                        if not senha_esperada:
-                            st.error(
-                                "🔧 Erro de configuração: senha de administrador não definida. "
-                                "Entre em contato com o administrador do sistema."
-                            )
-                        elif not senha_confirmacao:
-                            st.error("Digite a senha para confirmar.")
-                        elif senha_confirmacao != senha_esperada:
-                            st.session_state[f"tentativas_exclusao_{item_id}"] += 1
-                            tentativas_restantes = max_tentativas - st.session_state[f"tentativas_exclusao_{item_id}"]
-                            st.error(
-                                f"❌ Senha incorreta. "
-                                f"Tentativas restantes: {tentativas_restantes}. "
-                                "Exclusão cancelada."
-                            )
-                        else:
-                            try:
-                                total = delete_inventory_items([int(item_id)]) or 0
-
-                                if total > 0:
-                                    st.success("✅ Item excluído com sucesso do banco de dados.")
-                                    st.session_state[f"tentativas_exclusao_{item_id}"] = 0
-                                    st.rerun()
-                                else:
-                                    st.warning("⚠️ Nenhum item foi excluído (verifique se o ID ainda existe).")
-                            except Exception as e:
-                                st.error(f"❌ Erro ao excluir item: {str(e)}")
-
-                with col_cancelar:
-                    if st.button(
-                        "Cancelar",
-                        key=f"cancelar_exclusao_{item_id}",
-                    ):
-                        st.session_state[f"tentativas_exclusao_{item_id}"] = 0
-                        st.rerun()
-
             total = None
 
             if item_para_editar:
@@ -1128,23 +1044,22 @@ with aba2:
 
                 st.markdown("#### Excluir item")
 
-                descricao_item = (
-                    f"#{item['id']} | "
-                    f"{item.get('tipo_documental', '-') or '-'} | "
-                    f"Caixa {item.get('caixa', '-') or '-'} | "
-                    f"{item.get('datas_limite', '-') or '-'}"
-                )
-
                 st.warning(
-                    "A exclusão agora é feita somente item por item."
+                    "A exclusão é permanente e será executada imediatamente."
                 )
 
                 if st.button(
                     "Excluir este item",
                     type="secondary",
-                    key=f"abrir_confirmacao_exclusao_{item['id']}",
+                    key=f"excluir_item_{item['id']}",
                 ):
-                    confirmar_exclusao_item(
-                        int(item["id"]),
-                        descricao_item,
-                    )
+                    try:
+                        total = delete_inventory_items([int(item["id"])])
+                    except Exception as exc:
+                        st.error(f"Erro ao excluir item: {exc}")
+                    else:
+                        if total:
+                            st.success("Item excluído com sucesso.")
+                            st.rerun()
+                        else:
+                            st.error("O item não foi excluído.")
