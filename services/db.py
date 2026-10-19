@@ -534,34 +534,45 @@ def normalizar_tipo_atividade(valor):
 
     return valor_texto
 
-def search_inventory_global(termo_geral="", termo_detalhado=""):
+def search_inventory_global(termo_geral="", termo_detalhado="", setor="", ano=""):
     """
-    Realiza busca no inventário:
-    - termo_geral: busca em qualquer campo principal (setor, tipo documental, código, observações).
-    - termo_detalhado: busca focada em campos específicos (observacoes).
+    Realiza busca avançada no inventário via Supabase:
+    - termo_geral: busca aproximada em setor, tipo_documental, codigo_classificacao ou observacoes.
+    - termo_detalhado: busca focada no campo observacoes.
+    - setor: filtra estritamente por um setor específico.
+    - ano: filtra pelo ano de emissão / datas_limite.
     """
-    conn = get_connection()
-    cursor = conn.cursor()
+    supabase = get_supabase_client()
     
-    query = "SELECT * FROM inventory_items WHERE 1=1"
-    params = []
+    # Inicia a query na tabela do Supabase
+    query = supabase.table("inventory_items").select("*")
     
-    if termo_geral.strip():
-        like_geral = f"%{termo_geral.strip()}%"
-        query += " AND (setor LIKE ? OR tipo_documental LIKE ? OR codigo_classificacao LIKE ? OR observacoes LIKE ?)"
-        params.extend([like_geral, like_geral, like_geral, like_geral])
+    # 1. Filtro geral (pesquisa de texto em múltiplos campos usando or)
+    if termo_geral and termo_geral.strip():
+        t = f"%{termo_geral.strip()}%"
+        # O Supabase permite filtrar com OR usando a sintaxe ilike combinada
+        query = query.or_(
+            f"setor.ilike.{t},tipo_documental.ilike.{t},codigo_classificacao.ilike.{t},observacoes.ilike.{t}"
+        )
         
-    if termo_detalhado.strip():
-        like_detalhado = f"%{termo_detalhado.strip()}%"
-        query += " AND observacoes LIKE ?"
-        params.append(like_detalhado)
+    # 2. Filtro focado (apenas nas observações)
+    if termo_detalhado and termo_detalhado.strip():
+        td = f"%{termo_detalhado.strip()}%"
+        query = query.ilike("observacoes", td)
+
+    # 3. Filtro exato por Setor / Proveniência
+    if setor and setor.strip():
+        query = query.eq("setor", setor.strip())
+
+    # 4. Filtro por Ano de Emissão (datas_limite)
+    if ano and ano.strip():
+        a = f"%{ano.strip()}%"
+        query = query.ilike("datas_limite", a)
         
-    query += " ORDER BY id DESC"
+    # Ordena do mais recente para o mais antigo e executa
+    response = query.order("id", desc=True).execute()
     
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+    return _response_data(response)
 
 def carregar_vocabulario(tipo):
     supabase = get_supabase_client()

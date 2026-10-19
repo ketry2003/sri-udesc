@@ -303,500 +303,337 @@ with aba1:
 
     st.divider()
 
-workbook_bytes = build_quick_fill_workbook(df_ttd)
+    workbook_bytes = build_quick_fill_workbook(df_ttd)
 
-# ==================================
-# EQUIVALÊNCIAS HISTÓRICAS
-# ==================================
+    # ==================================
+    # EQUIVALÊNCIAS HISTÓRICAS
+    # ==================================
 
-if tipo_busca:
-    termo_equivalente = buscar_equivalencia(tipo_busca)
+    if tipo_busca:
+        termo_equivalente = buscar_equivalencia(tipo_busca)
 
-    if termo_equivalente:
-        st.info(
-            f"Equivalência histórica encontrada: "
-            f"{termo_equivalente}"
+        if termo_equivalente:
+            st.info(
+                f"Equivalência histórica encontrada: "
+                f"{termo_equivalente}"
+            )
+            tipo_busca = termo_equivalente
+
+
+    # ==================================
+    # BUSCA NORMAL
+    # ==================================
+
+    sugestoes = pd.DataFrame()
+    registro = None 
+
+    if tipo_busca.strip():
+        tipo_atividade = (
+            "Atividade-meio"
+            if natureza_escolhida == "Atividade-meio"
+            else "Atividade-fim"
         )
-        tipo_busca = termo_equivalente
 
-
-# ==================================
-# BUSCA NORMAL
-# ==================================
-
-sugestoes = pd.DataFrame()
-
-registro = None 
-
-if tipo_busca.strip():
-
-    tipo_atividade = (
-        "Atividade-meio"
-        if natureza_escolhida == "Atividade-meio"
-        else "Atividade-fim"
-    )
-
-    sugestoes = buscar_documentos(
-        df_ttd,
-        tipo_busca,
-        limite=20,
-    )
-
-    if natureza_escolhida and not sugestoes.empty:
-        sugestoes = sugestoes[
-            sugestoes["natureza_documental"].map(normalizar_natureza)
-            == normalizar_natureza(natureza_escolhida)
-        ]
-
-    if sugestoes.empty:
-        sugestoes = buscar_tesauro(
+        sugestoes = buscar_documentos(
+            df_ttd,
             tipo_busca,
-            tipo_atividade,
             limite=20,
         )
 
-    if (
-        documento_temporalidade
-        and not sugestoes.empty
-    ):
-        registro = sugestoes.iloc[0]
+        if natureza_escolhida and not sugestoes.empty:
+            sugestoes = sugestoes[
+                sugestoes["natureza_documental"].map(normalizar_natureza)
+                == normalizar_natureza(natureza_escolhida)
+            ]
 
-if not sugestoes.empty:
+        if sugestoes.empty:
+            sugestoes = buscar_tesauro(
+                tipo_busca,
+                tipo_atividade,
+                limite=20,
+            )
 
-    opcoes = [
-        f"{row.get('codigo_classificacao', '')} | "
-        f"{row.get('item_documental', '')} | "
-        f"{row.get('natureza_documental', '')}"
-        for _, row in sugestoes.iterrows()
-]
+        if (
+            documento_temporalidade
+            and not sugestoes.empty
+        ):
+            registro = sugestoes.iloc[0]
 
-else:
-
-    sugestoes = filtrar_ttd(
-        df_ttd,
-        codigo_busca,
-        "",
-        natureza_escolhida,
-    )
-
-if not sugestoes.empty:
-
-    opcoes = [
-        f"{row.get('codigo_classificacao', '')} | "
-        f"{row.get('item_documental', '')} | "
-        f"{row.get('natureza_documental', '')}"
-        for _, row in sugestoes.iterrows()
-    ]
-
-    selecionado = st.selectbox(
-        "Resultado da TTD",
-        [""] + opcoes
-    )
-
-    if selecionado:
-        registro = sugestoes.iloc[
-            opcoes.index(selecionado)
+    if not sugestoes.empty:
+        opcoes = [
+            f"{row.get('codigo_classificacao', '')} | "
+            f"{row.get('item_documental', '')} | "
+            f"{row.get('natureza_documental', '')}"
+            for _, row in sugestoes.iterrows()
         ]
-        
+    else:
+        sugestoes = filtrar_ttd(
+            df_ttd,
+            codigo_busca,
+            "",
+            natureza_escolhida,
+        )
+
+    if not sugestoes.empty:
+        opcoes = [
+            f"{row.get('codigo_classificacao', '')} | "
+            f"{row.get('item_documental', '')} | "
+            f"{row.get('natureza_documental', '')}"
+            for _, row in sugestoes.iterrows()
+        ]
+
+        selecionado = st.selectbox(
+            "Resultado da TTD",
+            [""] + opcoes
+        )
+
+        if selecionado:
+            registro = sugestoes.iloc[
+                opcoes.index(selecionado)
+            ]
+            
     if registro is not None:
         st.success("Classificação localizada.")
 
         a, b, c = st.columns(3)
-
-        a.write(
-            f"**Código:** "
-            f"{valor_registro(registro, 'codigo_classificacao', '-') or '-'}"
-        )
-
-        b.write(
-            f"**Tipo documental:** "
-            f"{valor_registro(registro, 'item_documental', '-') or '-'}"
-        )
-
-        c.write(
-            f"**Assunto:** "
-            f"{valor_registro(registro, 'assunto', '-') or '-'}"
-        )
+        a.write(f"**Código:** {valor_registro(registro, 'codigo_classificacao', '-') or '-'}")
+        b.write(f"**Tipo documental:** {valor_registro(registro, 'item_documental', '-') or '-'}")
+        c.write(f"**Assunto:** {valor_registro(registro, 'assunto', '-') or '-'}")
 
         d, e = st.columns(2)
+        d.write(f"**Subsérie:** {valor_registro(registro, 'subserie', '-') or '-'}")
+        e.write(f"**Dossiê/Processo:** {valor_registro(registro, 'dossie_processo', '-') or '-'}")
 
-        d.write(
-            f"**Subsérie:** "
-            f"{valor_registro(registro, 'subserie', '-') or '-'}"
+    # ==================================
+    # CAMPOS DE ENTRADA (SEM ST.FORM)
+    # ==================================
+    st.markdown("### Dados do inventário")
+
+    permitir_sem_classificacao = st.checkbox(
+        "Documento sem classificação definida",
+        help=(
+            "Use quando o documento não se encaixar claramente em nenhuma "
+            "categoria da TTD. O item ficará marcado como A avaliar."
+        ),
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    opcoes_proveniencia = (
+        ["Selecione..."]
+        + PROVENIENCIAS_PADRAO
+        + ["Outro / informar manualmente"]
+    )
+
+    proveniencia_opcao = col1.selectbox(
+        "Proveniência / Setor *",
+        opcoes_proveniencia,
+        index=0,
+        help="Campo obrigatório. Selecione o setor produtor da documentação.",
+    )
+
+    proveniencia_outro = ""
+    if proveniencia_opcao == "Outro / informar manualmente":
+        proveniencia_outro = st.text_input(
+            "Informe o nome do setor/proveniência",
+            placeholder="Ex.: Setor de Obras",
         )
 
-        e.write(
-            f"**Dossiê/Processo:** "
-            f"{valor_registro(registro, 'dossie_processo', '-') or '-'}"
-        )
+    proveniencia = (
+        proveniencia_outro.strip()
+        if proveniencia_opcao == "Outro / informar manualmente"
+        else proveniencia_opcao
+    )
 
-    with st.form("form_inventario_assistido"):
-        st.markdown("### Dados do inventário")
+    ano_emissao = col2.text_input(
+        "Ano de emissão",
+        placeholder="Ex.: 2024",
+    )
 
-        permitir_sem_classificacao = st.checkbox(
-            "Documento sem classificação definida",
-            help=(
-                "Use quando o documento não se encaixar claramente em nenhuma "
-                "categoria da TTD. O item ficará marcado como A avaliar."
-            ),
-        )
+    referencia = col3.text_input(
+        "Referência",
+        placeholder="Ex.: nº processo, turma, matrícula",
+    )
 
-        col1, col2, col3 = st.columns(3)
+    col4, col5, col6 = st.columns(3)
 
-        opcoes_proveniencia = (
-            ["Selecione..."]
-            + PROVENIENCIAS_PADRAO
-            + ["Outro / informar manualmente"]
-        )
+    assunto_digitado = col4.text_input(
+        "Assunto",
+        value=(
+            valor_registro(registro, "assunto", "")
+            if registro is not None
+            else ""
+        ),
+        placeholder="Descreva resumidamente o assunto",
+    )
 
-        proveniencia_opcao = col1.selectbox(
-            "Proveniência / Setor *",
-            opcoes_proveniencia,
-            index=0,
-            help=(
-                "Campo obrigatório. Selecione o setor produtor da "
-                "documentação."
-            ),
-        )
+    caixa_sugerida = ""
+    if proveniencia and proveniencia != "Selecione...":
+        try:
+            caixa_sugerida = get_next_caixa_by_setor(proveniencia)
+        except Exception:
+            caixa_sugerida = ""
 
-        proveniencia_outro = ""
+    try:
+        valor_inicial = int(str(caixa_sugerida).strip())
+    except Exception:
+        valor_inicial = 1
 
-        if proveniencia_opcao == "Outro / informar manualmente":
-            proveniencia_outro = st.text_input(
-                "Informe o nome do setor/proveniência",
-                placeholder="Ex.: Setor de Obras",
+    numero_caixa = col5.number_input(
+        "Nº Caixa",
+        min_value=1,
+        step=1,
+        value=valor_inicial,
+        help="Número da caixa.",
+    )
+
+    caixa_formatada = f"{numero_caixa:03d}"
+
+    quantidade = col6.number_input(
+        "Quantidade",
+        min_value=1,
+        value=1,
+    )
+
+    st.markdown("### Campos preenchidos automaticamente")
+
+    codigo_classificacao = valor_registro(registro, "codigo_classificacao", "")
+    tipo_documental = valor_registro(registro, "item_documental", "") or valor_registro(registro, "termo_padronizado", "")
+    classe_ttd = valor_registro(registro, "item_documental", "") or valor_registro(registro, "termo_padronizado", "")
+    prazo_corrente = valor_registro(registro, "prazo_corrente", 0)
+    prazo_intermediario = valor_registro(registro, "prazo_intermediario", 0)
+    destinacao_final = valor_registro(registro, "destinacao_final", "")
+    subserie = valor_registro(registro, "subserie", "")
+    dossie_processo = valor_registro(registro, "dossie_processo", "")
+
+    total_prazo = calcular_total(prazo_corrente, prazo_intermediario)
+    ano_eliminacao = calcular_ano_eliminacao(ano_emissao, prazo_corrente, prazo_intermediario, destinacao_final)
+    guarda_permanente = "Guarda permanente" if "permanente" in str(destinacao_final).lower() else "-"
+
+    x1, x2, x3 = st.columns(3)
+    x1.text_input("Código segundo o Plano de Classificação", value=str(codigo_classificacao or ""), disabled=True)
+    x2.text_input("Tipo documental localizado", value=str(tipo_documental or ""), disabled=True)
+    x3.text_input("Classe segundo a TTD", value=str(classe_ttd or ""), disabled=True)
+
+    x4, x5 = st.columns(2)
+    x4.text_input("Subsérie", value=str(subserie or ""), disabled=True)
+    x5.text_input("Dossiê/Processo", value=str(dossie_processo or ""), disabled=True)
+
+    y1, y2, y3 = st.columns(3)
+    y1.text_input("Fase Corrente em anos", value=str(prazo_corrente or ""), disabled=True)
+    y2.text_input("Fase Intermediária em anos", value=str(prazo_intermediario or ""), disabled=True)
+    y3.text_input("Total", value=str(total_prazo), disabled=True)
+
+    z1, z2, z3 = st.columns(3)
+    z1.text_input("Destinação", value=str(destinacao_final or ""), disabled=True)
+    z2.text_input("Eliminação no ano de", value=str(ano_eliminacao), disabled=True)
+    z3.text_input("Guarda Permanente", value=str(guarda_permanente), disabled=True)
+
+    observacoes = st.text_area(
+        "Observações",
+        placeholder=(
+            "Use este campo para complementar a proveniência, detalhar "
+            "referência ou informar particularidades."
+        ),
+    )
+
+    # Botão comum (sem form) -> SÓ SALVA QUANDO CLICADO DIRETAMENTE
+    enviado = st.button("Adicionar ao inventário", type="primary")
+
+    if enviado:
+        if proveniencia == "Selecione..." or not proveniencia.strip():
+            st.error("Selecione ou informe a Proveniência / Setor.")
+
+        elif registro is None and not permitir_sem_classificacao:
+            st.error(
+                "Primeiro localize um documento na TTD ou marque a opção "
+                "Documento sem classificação definida."
             )
 
-        proveniencia = (
-            proveniencia_outro.strip()
-            if proveniencia_opcao == "Outro / informar manualmente"
-            else proveniencia_opcao
-        )
-
-        ano_emissao = col2.text_input(
-            "Ano de emissão",
-            placeholder="Ex.: 2024",
-        )
-
-        referencia = col3.text_input(
-            "Referência",
-            placeholder="Ex.: nº processo, turma, matrícula",
-        )
-
-        col4, col5, col6 = st.columns(3)
-
-        assunto_digitado = col4.text_input(
-            "Assunto",
-            value=(
-                valor_registro(registro, "assunto", "")
-                if registro is not None
-                else ""
-            ),
-            placeholder="Descreva resumidamente o assunto",
-        )
-
-        caixa_sugerida = ""
-
-        if proveniencia and proveniencia != "Selecione...":
-            try:
-                caixa_sugerida = get_next_caixa_by_setor(proveniencia)
-            except Exception:
-                caixa_sugerida = ""
-
-        try:
-            valor_inicial = int(str(caixa_sugerida).strip())
-        except Exception:
-            valor_inicial = 1
-
-        numero_caixa = col5.number_input(
-            "Nº Caixa",
-            min_value=1,
-            step=1,
-            value=valor_inicial,
-            help="Número da caixa.",
-        )
-
-        caixa_formatada = f"{numero_caixa:03d}"
-
-        quantidade = col6.number_input(
-            "Quantidade",
-            min_value=1,
-            value=1,
-        )
-
-        st.markdown("### Campos preenchidos automaticamente")
-
-        codigo_classificacao = valor_registro(
-            registro,
-            "codigo_classificacao",
-            "",
-        )
-
-        tipo_documental = valor_registro(
-            registro,
-            "item_documental",
-            "",
-        ) or valor_registro(
-            registro,
-            "termo_padronizado",
-            "",
-        )
-
-        classe_ttd = valor_registro(
-            registro,
-            "item_documental",""
-        ) or valor_registro(
-            registro, 
-            "termo_padronizado",
-            "",
-        )
-
-        prazo_corrente = valor_registro(
-            registro,
-            "prazo_corrente",
-            0,
-        )
-
-        prazo_intermediario = valor_registro(
-            registro,
-            "prazo_intermediario",
-            0,
-        )
-
-        destinacao_final = valor_registro(
-            registro,
-            "destinacao_final",
-            "",
-        ) or valor_registro(registro, "destinacao_final", "",
-        )
-
-
-        subserie = valor_registro(
-            registro,
-            "subserie",
-            "",
-        )
-
-        dossie_processo = valor_registro(
-            registro,
-            "dossie_processo",
-            "",
-        )
-
-        total_prazo = calcular_total(
-            prazo_corrente,
-            prazo_intermediario,
-        )
-
-        ano_eliminacao = calcular_ano_eliminacao(
-            ano_emissao,
-            prazo_corrente,
-            prazo_intermediario,
-            destinacao_final,
-        )
-
-        guarda_permanente = (
-            "Guarda permanente"
-            if "permanente" in str(destinacao_final).lower()
-            else "-"
-        )
-
-        x1, x2, x3 = st.columns(3)
-
-        x1.text_input(
-            "Código segundo o Plano de Classificação",
-            value=str(codigo_classificacao or ""),
-            disabled=True,
-        )
-
-        x2.text_input(
-            "Tipo documental localizado",
-            value=str(tipo_documental or ""),
-            disabled=True,
-        )
-
-        x3.text_input(
-            "Classe segundo a TTD",
-            value=str(classe_ttd or ""),
-            disabled=True,
-        )
-
-        x4, x5 = st.columns(2)
-
-        x4.text_input(
-            "Subsérie",
-            value=str(subserie or ""),
-            disabled=True,
-        )
-
-        x5.text_input(
-            "Dossiê/Processo",
-            value=str(dossie_processo or ""),
-            disabled=True,
-        )
-
-        y1, y2, y3 = st.columns(3)
-
-        y1.text_input(
-            "Fase Corrente em anos",
-            value=str(prazo_corrente or ""),
-            disabled=True,
-        )
-
-        y2.text_input(
-            "Fase Intermediária em anos",
-            value=str(prazo_intermediario or ""),
-            disabled=True,
-        )
-
-        y3.text_input(
-            "Total",
-            value=str(total_prazo),
-            disabled=True,
-        )
-
-        z1, z2, z3 = st.columns(3)
-
-        z1.text_input(
-            "Destinação",
-            value=str(destinacao_final or ""),
-            disabled=True,
-        )
-
-        z2.text_input(
-            "Eliminação no ano de",
-            value=str(ano_eliminacao),
-            disabled=True,
-        )
-
-        z3.text_input(
-            "Guarda Permanente",
-            value=str(guarda_permanente),
-            disabled=True,
-        )
-
-        observacoes = st.text_area(
-            "Observações",
-            placeholder=(
-                "Use este campo para complementar a proveniência, detalhar "
-                "referência ou informar particularidades."
-            ),
-        )
-
-        enviado = st.form_submit_button("Adicionar ao inventário")
-
-        if enviado:
-            if proveniencia == "Selecione..." or not proveniencia.strip():
-                st.error("Selecione ou informe a Proveniência / Setor.")
-
-            elif registro is None and not permitir_sem_classificacao:
-                st.error(
-                    "Primeiro localize um documento na TTD ou marque a opção "
-                    "Documento sem classificação definida."
-                )
-
-            else:
-                if registro is None and permitir_sem_classificacao:
-                    registro = {
-                        "natureza_documental": "Não classificado",
-                        "grupo": "",
-                        "subgrupo": "",
-                        "serie": "",
-                        "subserie": "",
-                        "dossie_processo": "",
-                        "item_documental": (
-                            assunto_digitado
-                            or "Documento sem classificação definida"
-                        ),
-                        "codigo_classificacao": "",
-                        "prazo_corrente": "",
-                        "prazo_intermediario": "",
-                        "destinacao_final": "A avaliar",
-                    }
-
-                    codigo_classificacao = ""
-                    tipo_documental = (
+        else:
+            if registro is None and permitir_sem_classificacao:
+                registro = {
+                    "natureza_documental": "Não classificado",
+                    "grupo": "",
+                    "subgrupo": "",
+                    "serie": "",
+                    "subserie": "",
+                    "dossie_processo": "",
+                    "item_documental": (
                         assunto_digitado
                         or "Documento sem classificação definida"
-                    )
-                    classe_ttd = tipo_documental
-                    prazo_corrente = ""
-                    prazo_intermediario = ""
-                    destinacao_final = "A avaliar"
-
-                texto_obs = []
-
-                if referencia:
-                    texto_obs.append(f"Referência: {referencia}")
-
-                if assunto_digitado:
-                    texto_obs.append(f"Assunto: {assunto_digitado}")
-
-                if observacoes:
-                    texto_obs.append(observacoes)
-
-                payload = {
-                    "setor": proveniencia,
-                    "tipo_documental": tipo_documental,
-                    "natureza_documental": valor_registro(
-                        registro,
-                        "natureza_documental",
-                        "",
                     ),
-                    "grupo": valor_registro(registro, "grupo", ""),
-                    "subgrupo": valor_registro(registro, "subgrupo", ""),
-                    "serie": valor_registro(registro, "serie", ""),
-                    "subserie": valor_registro(registro, "subserie", ""),
-                    "dossie_processo": valor_registro(
-                        registro,
-                        "dossie_processo",
-                        "",
-                    ),
-                    "item_documental": classe_ttd,
-                    "codigo_classificacao": codigo_classificacao,
-                    "prazo_corrente": prazo_corrente,
-                    "prazo_intermediario": prazo_intermediario,
-                    "destinacao_final": destinacao_final,
-                    "datas_limite": str(ano_emissao or ""),
-                    "quantidade": quantidade,
-                    "caixa": caixa_formatada,
-                    "observacoes": " | ".join([t for t in texto_obs if t]),
+                    "codigo_classificacao": "",
+                    "prazo_corrente": "",
+                    "prazo_intermediario": "",
+                    "destinacao_final": "A avaliar",
                 }
 
-                payload = {
-                    k: (
-                        "" if pd.isna(v)
-                        else v
+                codigo_classificacao = ""
+                tipo_documental = assunto_digitado or "Documento sem classificação definida"
+                classe_ttd = tipo_documental
+                prazo_corrente = ""
+                prazo_intermediario = ""
+                destinacao_final = "A avaliar"
+
+            texto_obs = []
+
+            if referencia:
+                texto_obs.append(f"Referência: {referencia}")
+
+            if assunto_digitado:
+                texto_obs.append(f"Assunto: {assunto_digitado}")
+
+            if observacoes:
+                texto_obs.append(observacoes)
+
+            payload = {
+                "setor": proveniencia,
+                "tipo_documental": tipo_documental,
+                "natureza_documental": valor_registro(registro, "natureza_documental", ""),
+                "grupo": valor_registro(registro, "grupo", ""),
+                "subgrupo": valor_registro(registro, "subgrupo", ""),
+                "serie": valor_registro(registro, "serie", ""),
+                "subserie": valor_registro(registro, "subserie", ""),
+                "dossie_processo": valor_registro(registro, "dossie_processo", ""),
+                "item_documental": classe_ttd,
+                "codigo_classificacao": codigo_classificacao,
+                "prazo_corrente": prazo_corrente,
+                "prazo_intermediario": prazo_intermediario,
+                "destinacao_final": destinacao_final,
+                "datas_limite": str(ano_emissao or ""),
+                "quantidade": quantidade,
+                "caixa": caixa_formatada,
+                "observacoes": " | ".join([t for t in texto_obs if t]),
+            }
+
+            payload = {
+                k: ("" if pd.isna(v) else v)
+                for k, v in payload.items()
+            }
+
+            try:
+                item_existente = find_duplicate_inventory_item(payload)
+
+                if item_existente:
+                    st.warning(
+                        "⚠️ Este documento já está cadastrado no inventário: "
+                        f"caixa {item_existente.get('caixa', '-') or '-'}, "
+                        f"ID #{item_existente.get('id', '-')}. "
+                        "O novo registro não foi salvo para evitar duplicidade."
                     )
-                    for k, v in payload.items()
-                }
-
-                st.write("TIPO DOCUMENTAL:", tipo_documental)
-                st.write("CLASSE TTD:", classe_ttd)
-                st.write("DESTINAÇÃO:", destinacao_final)
-
-                try:
-                    item_existente = find_duplicate_inventory_item(payload)
-
-                    if item_existente:
-                        st.warning(
-                            "⚠️ Este documento já está cadastrado no inventário: "
-                            f"caixa {item_existente.get('caixa', '-') or '-'}, "
-                            f"ID #{item_existente.get('id', '-')}. "
-                            "O novo registro não foi salvo para evitar duplicidade."
-                        )
-                    else:
-                        insert_inventory_item(payload)
-                        st.success(
-                            "✅ Item adicionado ao inventário com preenchimento assistido."
-                        )
-                        st.session_state["documento_selecionado"] = {}
-                        st.rerun()
-                except Exception as e:
-                    st.error(
-                        f"❌ Erro ao adicionar item ao inventário: {str(e)}\n\n"
-                        f"Verifique se o banco de dados está acessível e tente novamente."
+                else:
+                    insert_inventory_item(payload)
+                    st.success(
+                        "✅ Item adicionado ao inventário com preenchimento assistido."
                     )
+                    st.session_state["documento_selecionado"] = {}
+                    st.rerun()
+            except Exception as e:
+                st.error(
+                    f"❌ Erro ao adicionar item ao inventário: {str(e)}\n\n"
+                    f"Verifique se o banco de dados está acessível e tente novamente."
+                )
 
     st.divider()
     st.subheader("Importar planilha preenchida")
