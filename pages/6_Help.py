@@ -109,7 +109,7 @@ Intermediário: guarda temporária
 Permanente: guarda definitiva
 
             
-## Desenvolvido por KGFP (CCT/UDESC) 2026.
+## Desenvolvido por Ketry G. Farias dos Passos - Bibliotecária UDESC Joinville (CCT/UDESC) 2026.
 
 Use o menu lateral para navegar entre os módulos do sistema.
 """)

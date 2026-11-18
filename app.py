@@ -1,23 +1,51 @@
 from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 from rapidfuzz import fuzz
 import unicodedata
+from streamlit_option_menu import option_menu  # <-- ADICIONADO AQUI
 
 from services.search import load_ttd, get_filter_options, search_records
 from services.ui_helpers import status_badge
-from services.db import get_supabase_client
-from services.db import carregar_vocabulario
+from services.db import get_supabase_client, carregar_vocabulario
 from services.equivalencias import (
     buscar_equivalencia,
     salvar_equivalencia,
 )
 from services.similaridade import encontrar_melhor_termo
 
-
 st.set_page_config(page_title="Consulta de Temporalidade", layout="wide")
 
+# ==========================================
+# MENU LATERAL PROFISSIONAL
+# ==========================================
+with st.sidebar:
+    st.markdown("### 🏛️ SIGA - UDESC")
+    st.caption("Sistema de Gestão Documental")
+    st.markdown("---")
+    
+    selected = option_menu(
+        menu_title=None,
+        options=["Consulta TTD", "Inventário", "Empréstimos", "Descarte"],
+        icons=["search", "box-seam", "arrow-left-right", "trash3"],
+        menu_icon="cast",
+        default_index=0,
+        styles={
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"color": "#2563EB", "font-size": "16px"}, 
+            "nav-link": {
+                "font-size": "14px",
+                "text-align": "left",
+                "margin": "0px",
+                "--hover-color": "#EFF6FF",
+            },
+            "nav-link-selected": {"background-color": "#2563EB", "color": "white"},
+        }
+    )
+
+# ==========================================
+# FUNÇÕES AUXILIARES
+# ==========================================
 
 def caminho_vocabulario():
     return (
@@ -73,14 +101,10 @@ def carregar_tesauro(tipo, arquivo_modificado):
         )
         return pd.DataFrame()
 
-    from services.db import carregar_vocabulario
-
     df = carregar_vocabulario(tipo)
-
     df = normalizar_colunas(df)
 
     coluna_tipo = None
-
     for possivel in ["tipo", "tipo_atividade", "tipo_de_atividade", "atividade"]:
         if possivel in df.columns:
             coluna_tipo = possivel
@@ -97,7 +121,6 @@ def carregar_tesauro(tipo, arquivo_modificado):
             .str.replace("atividade ", "", regex=False)
             .str.replace("\xa0", "", regex=False)
         )
-
         df = df[df[coluna_tipo] == tipo]
 
     colunas_busca = [
@@ -158,172 +181,165 @@ def buscar_tesauro(texto, tipo, limite=10, corte=55):
     return resultado
 
 
-st.title("Consulta de temporalidade")
+# ==========================================
+# CONTROLE DE MÓDULOS (ABAS)
+# ==========================================
 
-if "tipo" not in st.session_state:
-    st.session_state.tipo = "fim"
+if selected == "Consulta TTD":
+    st.title("🔍 Consulta de Temporalidade")
 
-tipo = st.selectbox(
-    "Selecione o tipo de atividade:",
-    options=["meio", "fim"],
-    index=1,
-    format_func=lambda x: "Atividade-meio" if x == "meio" else "Atividade-fim",
-    help="""
-Atividade-meio: funções administrativas
-(RH, compras, contratos, patrimônio, etc).
+    if "tipo" not in st.session_state:
+        st.session_state.tipo = "fim"
 
-Atividade-fim: funções ligadas ao ensino, pesquisa, extensão
-e atividades acadêmicas.
-"""
-)
-
-st.session_state.tipo = tipo
-
-try:
-    df = load_ttd(tipo)
-except FileNotFoundError:
-    st.error(
-        "Arquivo da TTD não encontrado. Verifique a pasta data/reference."
+    tipo = st.radio(
+        "Selecione o tipo de atividade:",
+        options=["meio", "fim"],
+        index=1,
+        format_func=lambda x: "Atividade-meio (Administrativa)" if x == "meio" else "Atividade-fim (Acadêmica / Ensino, Pesquisa e Extensão)",
+        horizontal=True
     )
-    st.stop()
-except Exception:
-    st.error("Não foi possível carregar a base de dados da TTD.")
-    st.stop()
+    st.session_state.tipo = tipo
 
-if df is None or df.empty:
-    st.warning("Não foi possível carregar a base de dados da TTD.")
-    st.stop()
-
-st.caption(
-    "Pesquise pelo nome do documento, processo, formulário, ata, edital, "
-    "portaria, relatório ou assunto."
-)
-
-query = st.text_input(
-    "Digite o nome do documento, processo ou assunto",
-    placeholder=(
-        "Ex.: edital de monitoria | ata de defesa | "
-        "termo de compromisso de estágio | relatório final | portaria de banca"
-    )
-)
-
-query_original = query
-
-if query:
-
-    termo_equivalente = buscar_equivalencia(query)
-
-    if termo_equivalente:
-
-        st.success(
-            f"Equivalência histórica encontrada: "
-            f"{termo_equivalente}"
+    try:
+        df = load_ttd(tipo)
+    except FileNotFoundError:
+        st.error(
+            "Arquivo da TTD não encontrado. Verifique a pasta data/reference."
         )
+        st.stop()
+    except Exception:
+        st.error("Não foi possível carregar a base de dados da TTD.")
+        st.stop()
 
-        query = termo_equivalente
+    if df is None or df.empty:
+        st.warning("Não foi possível carregar a base de dados da TTD.")
+        st.stop()
 
-# =========================
-# SUGESTÕES DO VOCABULÁRIO
-# =========================
+    st.caption(
+        "Pesquise pelo nome do documento, processo, formulário, ata, edital, "
+        "portaria, relatório ou assunto."
+    )
 
-supabase = None
+    query = st.text_input(
+        "Digite o nome do documento, processo ou assunto",
+        placeholder=(
+            "Ex.: edital de monitoria | ata de defesa | "
+            "termo de compromisso de estágio | relatório final | portaria de banca"
+        )
+    )
 
-try:
-    supabase = get_supabase_client()
-except Exception:
+    query_original = query
+
+    if query:
+        termo_equivalente = buscar_equivalencia(query)
+
+        if termo_equivalente:
+            st.success(
+                f"Equivalência histórica encontrada: "
+                f"{termo_equivalente}"
+            )
+            query = termo_equivalente
+
+    # =========================
+    # SUGESTÕES DO VOCABULÁRIO
+    # =========================
+
     supabase = None
 
-if query_original:
-    if st.button("➕ Sugerir inclusão deste termo"):
-        if supabase is None:
-            st.warning("Não foi possível conectar ao Supabase para registrar o termo.")
-        else:
-            existente = (
-                supabase
-                .table("vocabulario_pendente")
-                .select("id")
-                .eq("documento_faltante", query_original)
-                .execute()
-            )
+    try:
+        supabase = get_supabase_client()
+    except Exception:
+        supabase = None
 
-            if existente.data:
-                st.warning("Este termo já está na fila de revisão.")
+    if query_original:
+        if st.button("➕ Sugerir inclusão deste termo"):
+            if supabase is None:
+                st.warning("Não foi possível conectar ao Supabase para registrar o termo.")
             else:
-                termos_vocabulario = []
-
-                for tipo_vocabulario in ["Atividade-fim", "Atividade-meio"]:
-                    vocabulario = carregar_vocabulario(tipo_vocabulario)
-
-                    for coluna in [
-                        "termo_padronizado",
-                        "termo_encontrado",
-                        "assunto",
-                        "sinonimo",
-                    ]:
-                        if coluna in vocabulario.columns:
-                            termos_vocabulario.extend(
-                                vocabulario[coluna]
-                                .dropna()
-                                .astype(str)
-                                .str.strip()
-                                .tolist()
-                            )
-
-                melhor_termo = encontrar_melhor_termo(
-                    query_original,
-                    list(dict.fromkeys(termos_vocabulario)),
-                    score_minimo=0,
+                existente = (
+                    supabase
+                    .table("vocabulario_pendente")
+                    .select("id")
+                    .eq("documento_faltante", query_original)
+                    .execute()
                 )
 
-                supabase.table("vocabulario_pendente").insert(
-                    {
-                        "documento_faltante": query_original,
-                        "score": melhor_termo["score"] if melhor_termo else 0,
-                        "termo_semelhante": (
-                            melhor_termo["termo"] if melhor_termo else ""
-                        ),
-                        "revisado": False,
-                        "aprovado": False,
-                    }
-                ).execute()
+                if existente.data:
+                    st.warning("Este termo já está na fila de revisão.")
+                else:
+                    termos_vocabulario = []
 
-                st.success("Termo enviado para auditoria.")
+                    for tipo_vocabulario in ["Atividade-fim", "Atividade-meio"]:
+                        vocabulario = carregar_vocabulario(tipo_vocabulario)
 
-documento = ""
+                        for coluna in [
+                            "termo_padronizado",
+                            "termo_encontrado",
+                            "assunto",
+                            "sinonimo",
+                        ]:
+                            if coluna in vocabulario.columns:
+                                termos_vocabulario.extend(
+                                    vocabulario[coluna]
+                                    .dropna()
+                                    .astype(str)
+                                    .str.strip()
+                                    .tolist()
+                                )
 
-if query:
-    sugestoes = buscar_tesauro(query, tipo)
+                    melhor_termo = encontrar_melhor_termo(
+                        query_original,
+                        list(dict.fromkeys(termos_vocabulario)),
+                        score_minimo=0,
+                    )
 
+                    supabase.table("vocabulario_pendente").insert(
+                        {
+                            "documento_faltante": query_original,
+                            "score": melhor_termo["score"] if melhor_termo else 0,
+                            "termo_semelhante": (
+                                melhor_termo["termo"] if melhor_termo else ""
+                            ),
+                            "revisado": False,
+                            "aprovado": False,
+                        }
+                    ).execute()
 
+                    st.success("Termo enviado para auditoria.")
 
-    if sugestoes.empty:
-        st.warning(
-            "Nenhum termo encontrado no vocabulário controlado. "
-            "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
-            "Exemplos: 'ata de defesa', 'edital de monitoria', "
-            "'termo de compromisso de estágio', 'relatório final', "
-            "'portaria de banca', 'histórico escolar', "
-            "'processo de jubilação', 'certificado de monitoria'."
-        )
-    else:
-        primeira_linha = sugestoes.iloc[0]
-        documento = primeira_linha.get("termo_padronizado", "")
+    documento = ""
 
-        # ==================================
-        # SALVAR EQUIVALÊNCIA HISTÓRICA
-        # ==================================
-        if (
-            query_original
-            and documento
-            and normalizar_texto(query_original) != normalizar_texto(documento)
-        ):
-            if st.button(
-                "💾 Salvar equivalência histórica",
-                key=f"salvar_eq_{query_original}",
+    if query:
+        sugestoes = buscar_tesauro(query, tipo)
+
+        if sugestoes.empty:
+            st.warning(
+                "Nenhum termo encontrado no vocabulário controlado. "
+                "Tente pesquisar pelo nome do documento, processo ou peça administrativa. "
+                "Exemplos: 'ata de defesa', 'edital de monitoria', "
+                "'termo de compromisso de estágio', 'relatório final', "
+                "'portaria de banca', 'histórico escolar', "
+                "'processo de jubilação', 'certificado de monitoria'."
+            )
+        else:
+            primeira_linha = sugestoes.iloc[0]
+            documento = primeira_linha.get("termo_padronizado", "")
+
+            # ==================================
+            # SALVAR EQUIVALÊNCIA HISTÓRICA
+            # ==================================
+            if (
+                query_original
+                and documento
+                and normalizar_texto(query_original) != normalizar_texto(documento)
             ):
-                salvar_equivalencia(query_original, documento)
-                st.success(
-                    f"""
+                if st.button(
+                    "💾 Salvar equivalência histórica",
+                    key=f"salvar_eq_{query_original}",
+                ):
+                    salvar_equivalencia(query_original, documento)
+                    st.success(
+                        f"""
 Equivalência salva com sucesso:
 
 {query_original}
@@ -332,283 +348,289 @@ Equivalência salva com sucesso:
 
 {documento}
 """
-                )
+                    )
 
-        tipo_doc = primeira_linha.get("tipo_documental", "")
-        assunto = primeira_linha.get("assunto", "")
-        codigo = primeira_linha.get("codigo_classificacao", "")
+            tipo_doc = primeira_linha.get("tipo_documental", "")
+            assunto = primeira_linha.get("assunto", "")
+            codigo = primeira_linha.get("codigo_classificacao", "")
 
-        st.success(
-            f"""
+            st.success(
+                f"""
 Documento mais provável encontrado: **{documento}**
 
 Tipo documental: {tipo_doc}
 Assunto técnico: {assunto}
 Código de classificação: {codigo}
 """
-        )
-
-        colunas_desejadas = [
-            "termo_padronizado",
-            "assunto",
-            "codigo_classificacao",
-        ]
-
-        colunas_existentes = [
-            c for c in colunas_desejadas
-            if c in sugestoes.columns
-        ]
-
-        st.dataframe(
-            sugestoes[colunas_existentes],
-            use_container_width=True,
-        )
-
-        opcoes_inventario = []
-
-        for _, row in sugestoes.iterrows():
-            documento_opcao = row.get("termo_padronizado", "")
-            codigo_opcao = row.get("codigo_classificacao", "")
-            opcoes_inventario.append(f"{codigo_opcao} | {documento_opcao}")
-
-        documento_escolhido = st.selectbox(
-            "Selecione o documento para enviar ao Inventário",
-            [""] + opcoes_inventario,
-            key="documento_escolhido",
-        )
-
-        if documento_escolhido:
-            if st.button("📦 Adicionar ao Inventário", key="adicionar_ao_inventario"):
-                indice = opcoes_inventario.index(documento_escolhido)
-                registro = sugestoes.iloc[indice]
-
-                st.session_state["documento_selecionado"] = {
-                    "documento": registro.get("termo_padronizado", "") or registro.get("item_documental", ""),
-                    "codigo_classificacao": registro.get("codigo_classificacao", ""),
-                    "assunto": registro.get("assunto", ""),
-                    "tipo_documental": registro.get("tipo_documental", "") or registro.get("item_documental", ""),
-                    "natureza": "Atividade-meio" if tipo == "meio" else "Atividade-fim",
-                    "grupo": registro.get("grupo", ""),
-                    "subgrupo": registro.get("subgrupo", ""),
-                    "serie": registro.get("serie", ""),
-                    "subserie": registro.get("subserie", ""),
-                    "dossie_processo": registro.get("dossie_processo", ""),
-                    "prazo_corrente": registro.get("prazo_corrente", ""),
-                    "prazo_intermediario": registro.get("prazo_intermediario", ""),
-                    "destinacao_final": registro.get("destinacao_final", ""),
-                }
-
-                st.success("Documento enviado para o Inventário.")
-                st.write(documento_temporalidade)
-
-# =========================
-# FILTROS AVANÇADOS
-# =========================
-
-filters = {}
-
-with st.expander("Filtros avançados"):
-    if tipo == "meio":
-        cols = st.columns(3)
-
-        filters["natureza_documental"] = cols[0].selectbox(
-            "Natureza",
-            [""] + get_filter_options(df, "natureza_documental")
-        )
-
-        filters["grupo"] = cols[1].selectbox(
-            "Grupo",
-            [""] + get_filter_options(
-                df,
-                "grupo",
-                {"natureza_documental": filters["natureza_documental"]}
             )
-        )
 
-        filters["subgrupo"] = cols[2].selectbox(
-            "Subgrupo",
-            [""] + get_filter_options(
-                df,
-                "subgrupo",
-                {k: v for k, v in filters.items() if v}
+            colunas_desejadas = [
+                "termo_padronizado",
+                "assunto",
+                "codigo_classificacao",
+            ]
+
+            colunas_existentes = [
+                c for c in colunas_desejadas
+                if c in sugestoes.columns
+            ]
+
+            st.dataframe(
+                sugestoes[colunas_existentes],
+                use_container_width=True,
             )
-        )
 
-        cols2 = st.columns(3)
+            opcoes_inventario = []
 
-        filters["serie"] = cols2[0].selectbox(
-            "Série",
-            [""] + get_filter_options(
-                df,
-                "serie",
-                {k: v for k, v in filters.items() if v}
+            for _, row in sugestoes.iterrows():
+                documento_opcao = row.get("termo_padronizado", "")
+                codigo_opcao = row.get("codigo_classificacao", "")
+                opcoes_inventario.append(f"{codigo_opcao} | {documento_opcao}")
+
+            documento_escolhido = st.selectbox(
+                "Selecione o documento para enviar ao Inventário",
+                [""] + opcoes_inventario,
+                key="documento_escolhido",
             )
-        )
 
-        filters["subserie"] = cols2[1].selectbox(
-            "Subsérie",
-            [""] + get_filter_options(
-                df,
-                "subserie",
-                {k: v for k, v in filters.items() if v}
+            if documento_escolhido:
+                if st.button("📦 Adicionar ao Inventário", key="adicionar_ao_inventario"):
+                    indice = opcoes_inventario.index(documento_escolhido)
+                    registro = sugestoes.iloc[indice]
+
+                    st.session_state["documento_selecionado"] = {
+                        "documento": registro.get("termo_padronizado", "") or registro.get("item_documental", ""),
+                        "codigo_classificacao": registro.get("codigo_classificacao", ""),
+                        "assunto": registro.get("assunto", ""),
+                        "tipo_documental": registro.get("tipo_documental", "") or registro.get("item_documental", ""),
+                        "natureza": "Atividade-meio" if tipo == "meio" else "Atividade-fim",
+                        "grupo": registro.get("grupo", ""),
+                        "subgrupo": registro.get("subgrupo", ""),
+                        "serie": registro.get("serie", ""),
+                        "subserie": registro.get("subserie", ""),
+                        "dossie_processo": registro.get("dossie_processo", ""),
+                        "prazo_corrente": registro.get("prazo_corrente", ""),
+                        "prazo_intermediario": registro.get("prazo_intermediario", ""),
+                        "destinacao_final": registro.get("destinacao_final", ""),
+                    }
+
+                    st.success("Documento enviado para o Inventário.")
+
+    # =========================
+    # FILTROS AVANÇADOS
+    # =========================
+
+    filters = {}
+
+    with st.expander("Filtros avançados"):
+        if tipo == "meio":
+            cols = st.columns(3)
+
+            filters["natureza_documental"] = cols[0].selectbox(
+                "Natureza",
+                [""] + get_filter_options(df, "natureza_documental")
             )
-        )
 
-        filters["dossie_processo"] = cols2[2].selectbox(
-            "Dossiê / Processo",
-            [""] + get_filter_options(
-                df,
-                "dossie_processo",
-                {k: v for k, v in filters.items() if v}
+            filters["grupo"] = cols[1].selectbox(
+                "Grupo",
+                [""] + get_filter_options(
+                    df,
+                    "grupo",
+                    {"natureza_documental": filters["natureza_documental"]}
+                )
             )
-        )
 
+            filters["subgrupo"] = cols[2].selectbox(
+                "Subgrupo",
+                [""] + get_filter_options(
+                    df,
+                    "subgrupo",
+                    {k: v for k, v in filters.items() if v}
+                )
+            )
+
+            cols2 = st.columns(3)
+
+            filters["serie"] = cols2[0].selectbox(
+                "Série",
+                [""] + get_filter_options(
+                    df,
+                    "serie",
+                    {k: v for k, v in filters.items() if v}
+                )
+            )
+
+            filters["subserie"] = cols2[1].selectbox(
+                "Subsérie",
+                [""] + get_filter_options(
+                    df,
+                    "subserie",
+                    {k: v for k, v in filters.items() if v}
+                )
+            )
+
+            filters["dossie_processo"] = cols2[2].selectbox(
+                "Dossiê / Processo",
+                [""] + get_filter_options(
+                    df,
+                    "dossie_processo",
+                    {k: v for k, v in filters.items() if v}
+                )
+            )
+
+        else:
+            st.info(
+                "Filtros técnicos para refinamento da atividade-fim."
+            )
+
+            cols = st.columns(2)
+
+            filters["subserie"] = cols[0].selectbox(
+                "Subsérie",
+                [""] + get_filter_options(df, "subserie")
+            )
+
+            filters["dossie_processo"] = cols[1].selectbox(
+                "Dossiê / Processo",
+                [""] + get_filter_options(
+                    df,
+                    "dossie_processo",
+                    {k: v for k, v in filters.items() if v}
+                )
+            )
+
+    filtros_ativos = {k: v for k, v in filters.items() if v}
+
+    if not query and not filtros_ativos:
+        st.info("Digite um termo ou use os filtros avançados para iniciar a consulta.")
+        st.stop()
+
+    # =========================
+    # RESULTADOS DA TTD
+    # =========================
+
+    results = search_records(
+        df,
+        query=query,
+        filters=filtros_ativos,
+        limit=100
+    )
+
+    st.write(f"{len(results)} resultado(s) exibido(s)")
+
+    if results.empty:
+        st.info("Nenhum resultado encontrado na TTD.")
     else:
-        st.info(
-            "Filtros técnicos para refinamento da atividade-fim."
-        )
+        for idx, row in results.iterrows():
+            with st.container(border=True):
 
-        cols = st.columns(2)
+                left, right = st.columns([4, 1.3])
 
-        filters["subserie"] = cols[0].selectbox(
-            "Subsérie",
-            [""] + get_filter_options(df, "subserie")
-        )
+                left.subheader(row.get("item_documental", "") or "-")
 
-        filters["dossie_processo"] = cols[1].selectbox(
-            "Dossiê / Processo",
-            [""] + get_filter_options(
-                df,
-                "dossie_processo",
-                {k: v for k, v in filters.items() if v}
-            )
-        )
-
-
-filtros_ativos = {k: v for k, v in filters.items() if v}
-
-if not query and not filtros_ativos:
-    st.info("Digite um termo ou use os filtros avançados para iniciar a consulta.")
-    st.stop()
-
-
-# =========================
-# RESULTADOS DA TTD
-# =========================
-
-results = search_records(
-    df,
-    query=query,
-    filters=filtros_ativos,
-    limit=100
-)
-
-st.write(f"{len(results)} resultado(s) exibido(s)")
-
-if results.empty:
-    st.info("Nenhum resultado encontrado na TTD.")
-
-else:
-    for _, row in results.iterrows():
-        with st.container(border=True):
-
-            left, right = st.columns([4, 1.3])
-
-            left.subheader(row.get("item_documental", "") or "-")
-
-            left.write(
-                f"**Código de classificação:** "
-                f"{row.get('codigo_classificacao', '') or '-'}"
-            )
-
-            if tipo == "meio":
                 left.write(
-                    f"**Natureza:** "
-                    f"{row.get('natureza_documental', '') or '-'}"
+                    f"**Código de classificação:** "
+                    f"{row.get('codigo_classificacao', '') or '-'}"
                 )
+
+                if tipo == "meio":
+                    left.write(
+                        f"**Natureza:** "
+                        f"{row.get('natureza_documental', '') or '-'}"
+                    )
+                    left.write(
+                        f"**Grupo:** "
+                        f"{row.get('grupo', '') or '-'}"
+                    )
+                    left.write(
+                        f"**Subgrupo:** "
+                        f"{row.get('subgrupo', '') or '-'}"
+                    )
+                    left.write(
+                        f"**Série:** "
+                        f"{row.get('serie', '') or '-'}"
+                    )
+
                 left.write(
-                    f"**Grupo:** "
-                    f"{row.get('grupo', '') or '-'}"
+                    f"**Subsérie:** "
+                    f"{row.get('subserie', '') or '-'}"
                 )
+
                 left.write(
-                    f"**Subgrupo:** "
-                    f"{row.get('subgrupo', '') or '-'}"
-                )
-                left.write(
-                    f"**Série:** "
-                    f"{row.get('serie', '') or '-'}"
+                    f"**Dossiê / Processo:** "
+                    f"{row.get('dossie_processo', '') or '-'}"
                 )
 
-            left.write(
-                f"**Subsérie:** "
-                f"{row.get('subserie', '') or '-'}"
-            )
+                if row.get("assunto"):
+                    left.write(
+                        f"**Assunto técnico:** "
+                        f"{row.get('assunto', '') or '-'}"
+                    )
 
-            left.write(
-                f"**Dossiê / Processo:** "
-                f"{row.get('dossie_processo', '') or '-'}"
-            )
+                if row.get("funcao"):
+                    left.write(
+                        f"**Função:** "
+                        f"{row.get('funcao', '') or '-'}"
+                    )
 
-            if row.get("assunto"):
-                left.write(
-                    f"**Assunto técnico:** "
-                    f"{row.get('assunto', '') or '-'}"
-                )
+                if row.get("subfuncao"):
+                    left.write(
+                        f"**Subfunção:** "
+                        f"{row.get('subfuncao', '') or '-'}"
+                    )
 
-            if row.get("funcao"):
-                left.write(
-                    f"**Função:** "
-                    f"{row.get('funcao', '') or '-'}"
-                )
+                if row.get("atividade"):
+                    left.write(
+                        f"**Atividade:** "
+                        f"{row.get('atividade', '') or '-'}"
+                    )
 
-            if row.get("subfuncao"):
-                left.write(
-                    f"**Subfunção:** "
-                    f"{row.get('subfuncao', '') or '-'}"
-                )
+                right.write("**Temporalidade**")
+                right.write(f"Corrente: {row.get('prazo_corrente', '') or '-'}")
+                right.write(f"Intermediário: {row.get('prazo_intermediario', '') or '-'}")
 
-            if row.get("atividade"):
-                left.write(
-                    f"**Atividade:** "
-                    f"{row.get('atividade', '') or '-'}"
-                )
+                status_badge(row.get("destinacao_final", ""))
 
-            right.write("**Temporalidade**")
-            right.write(f"Corrente: {row.get('prazo_corrente', '') or '-'}")
-            right.write(f"Intermediário: {row.get('prazo_intermediario', '') or '-'}")
+                if st.button(
+                    "📦 Adicionar ao Inventário",
+                    key=f"invent_{idx}"
+                ):
 
-            status_badge(row.get("destinacao_final", ""))
+                    st.session_state["documento_selecionado"] = {
+                        "documento": row.get("item_documental", "") or row.get("termo_padronizado", ""),
+                        "codigo_classificacao": row.get("codigo_classificacao", ""),
+                        "assunto": row.get("assunto", ""),
+                        "tipo_documental": row.get("item_documental", "") or row.get("termo_padronizado", ""),
+                        "natureza": (
+                            "Atividade-meio"
+                            if tipo == "meio"
+                            else "Atividade-fim"
+                        ),
+                        "grupo": row.get("grupo", ""),
+                        "subgrupo": row.get("subgrupo", ""),
+                        "serie": row.get("serie", ""),
+                        "subserie": row.get("subserie", ""),
+                        "dossie_processo": row.get("dossie_processo", ""),
+                        "prazo_corrente": row.get("prazo_corrente", ""),
+                        "prazo_intermediario": row.get("prazo_intermediario", ""),
+                        "destinacao_final": row.get("destinacao_final", ""),
+                    }
 
-            if st.button(
-                "📦 Adicionar ao Inventário",
-                key=f"invent_{_}"
-            ):
+                    st.success("Documento enviado para o Inventário.")
 
-                st.session_state["documento_selecionado"] = {
-                    "documento": row.get("item_documental", "") or row.get("termo_padronizado", ""),
-                    "codigo_classificacao": row.get("codigo_classificacao", ""),
-                    "assunto": row.get("assunto", ""),
-                    "tipo_documental": row.get("item_documental", "") or row.get("termo_padronizado", ""),
-                    "natureza": (
-                        "Atividade-meio"
-                        if tipo == "meio"
-                        else "Atividade-fim"
-                    ),
-                    "grupo": row.get("grupo", ""),
-                    "subgrupo": row.get("subgrupo", ""),
-                    "serie": row.get("serie", ""),
-                    "subserie": row.get("subserie", ""),
-                    "dossie_processo": row.get("dossie_processo", ""),
-                    "prazo_corrente": row.get("prazo_corrente", ""),
-                    "prazo_intermediario": row.get("prazo_intermediario", ""),
-                    "destinacao_final": row.get("destinacao_final", ""),
-                }
+                if row.get("observacao"):
+                    st.info(
+                        f"Observação: {row.get('observacao')}"
+                    )
 
-                st.success(
-                    "Documento enviado para o Inventário."
-                )
+elif selected == "Inventário":
+    st.title("📦 Inventário e Caixas")
+    st.info("Módulo de gerenciamento de caixas e itens selecionados em desenvolvimento.")
 
-            if row.get("observacao"):
-                st.info(
-                    f"Observação: {row.get('observacao')}"
-                )
+elif selected == "Empréstimos":
+    st.title("🔄 Empréstimo e Devolução")
+    st.info("Controle de circulação de processos e documentos.")
+
+elif selected == "Descarte":
+    st.title("🗑️ Documentação de Descarte")
+    st.info("Geração automática de editais e termos conforme as INs da UDESC.")

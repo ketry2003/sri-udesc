@@ -26,8 +26,6 @@ from services.tesauro import buscar_tesauro
 
 st.set_page_config(page_title="Inventário Documental", layout="wide")
 
-st.success("USANDO inventario_cctarquivo.py")
-
 st.title("Inventário documental")
 
 st.subheader("Localizar documento")
