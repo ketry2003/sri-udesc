@@ -1,0 +1,465 @@
+id,documento_faltante,termo_semelhante,score,revisado,aprovado,criado_em
+1,Exame Final de Curso de Graduação,Exame Final,85.71,true,true,2026-07-31 16:58:45.044332+00
+2,Exame Final de Curso de Graduação,Exame Final,85.71,true,true,2026-07-31 16:58:53.180882+00
+3,Manual do Estágio Curricular Supervisionado,,89.41176470588236,true,true,2026-07-31 17:26:21.441451+00
+4,Folder de Programação do Seminário de Estágio Curricular Supervisionado,,83.82352941176471,true,true,2026-07-31 17:26:21.565255+00
+5,Certificado de Atividades Complementares,,76.92307692307692,true,true,2026-07-31 17:26:21.618777+00
+6,Regulamento do Trabalho de Conclusão de Curso,,86.04651162790698,true,true,2026-07-31 17:26:21.651338+00
+7,Formulário de Avaliação do Trabalho de Conclusão de Curso,,77.86259541984732,true,true,2026-07-31 17:26:21.686939+00
+8,Requerimento para Banca de Acesso Restrito em Cursos de Graduação,,78.99159663865547,true,true,2026-07-31 17:26:21.721423+00
+9,Registro de Frequência de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,84.76821192052981,true,true,2026-07-31 17:26:21.754937+00
+10,Termo de Compromisso de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,80.50314465408806,true,true,2026-07-31 17:26:21.78717+00
+11,Certificado de Monitoria em Curso de Graduação,,80.89887640449437,true,true,2026-07-31 17:26:21.819524+00
+12,Folder de Programação do Encontro de Monitoria de Curso de Graduação,,79.33884297520662,true,true,2026-07-31 17:26:21.851934+00
+13,Certificado de Participação no Encontro de Monitoria do Curso de Graduação,,71.42857142857143,true,true,2026-07-31 17:26:21.886259+00
+14,Termo de Renúncia ao Auxílio-Transporte Estágio Não Obrigatório,,83.46456692913385,true,true,2026-07-31 17:26:21.92028+00
+15,Solicitação de Prorrogação de Estágio Não Obrigatório,,81.4814814814815,true,true,2026-07-31 17:26:21.954691+00
+16,Portaria de Composição de Banca de Concurso Público para Docente,,87.71929824561404,true,true,2026-07-31 17:26:21.988298+00
+17,Portaria de Composição de Banca de Processo Seletivo para Docente,,87.93103448275862,true,true,2026-07-31 17:26:22.02452+00
+18,Caderno de Prova do Concurso Público para Docente,,82.82828282828282,true,true,2026-07-31 17:26:22.106804+00
+19,Caderno de Prova de Processo Seletivo para Docente,,77.22772277227723,true,true,2026-07-31 17:26:22.138295+00
+20,Portaria de Homologação de Candidato Classificado e Aprovado no Vestibular,,88.72180451127821,true,true,2026-07-31 17:26:22.175836+00
+21,Caderno de Prova do Vestibular,,80.55555555555556,true,true,2026-07-31 17:26:22.212692+00
+22,Edital do Programa de Mobilidade Acadêmica,,71.84466019417476,true,true,2026-07-31 17:26:22.244779+00
+23,Requerimento de Quebra de Pré-requisito em Curso de Graduação,,84.55284552845528,true,true,2026-07-31 17:26:22.296552+00
+24,Requerimento de Aproveitamento de Disciplina do Curso de Graduação,,82.92682926829268,true,true,2026-07-31 17:26:22.329921+00
+25,Requerimento de Abono de Falta na Aula e/ou Prova,,94.94949494949495,true,true,2026-07-31 17:26:22.363416+00
+26,Exame Final de Curso de Graduação,,85.71428571428572,true,true,2026-07-31 17:26:22.396602+00
+27,Modelo de Diploma de Curso de Graduação,,85.29411764705883,true,true,2026-07-31 17:26:22.428587+00
+28,Projeto de Criação de Curso de  Pós-Graduação Lato Sensu,,85.71428571428572,true,true,2026-07-31 17:26:22.46023+00
+29,Projeto de Criação de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,true,true,2026-07-31 17:26:22.496268+00
+30,Instrumento de Coleta de Dados do Ensino de Pós-Graduação,,78.18181818181819,true,true,2026-07-31 17:26:22.528827+00
+31,Instrumento de Avaliação da Pós-Graduação pela Coordenação de Aperfeiçoamento de Nível Superior CAPES,,90.64039408866995,true,true,2026-07-31 17:26:22.56034+00
+32,Ato de Criação de Curso de Pós-Graduação Stricto Sensu,,91.74311926605505,true,true,2026-07-31 17:26:22.593501+00
+33,Ato de Autorização de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,true,true,2026-07-31 17:26:22.626172+00
+34,Regimento de Curso de Pós-Graduação,,93.93939393939394,true,true,2026-07-31 17:26:22.673921+00
+35,Ato de Criação de Curso de Pós-Graduação Lato Sensu,,82.75862068965517,true,true,2026-07-31 17:26:22.708633+00
+36,Edital de Matrícula nos Cursos de Pós-Graduação,,77.77777777777779,true,true,2026-07-31 17:26:22.744895+00
+37,Ato de Autorização de Curso de Pós-Graduação Lato Sensu,,80.70175438596492,true,true,2026-07-31 17:26:22.777778+00
+38,Ata de Qualificação no Curso de Pós-Graduação Stricto Sensu,,87.39495798319328,true,true,2026-07-31 17:26:22.81088+00
+39,Formulário de Avaliação da Monografia/Artigo  do Curso de  Pós-Graduação Lato Sensu,,70.83333333333333,true,true,2026-07-31 17:26:22.843945+00
+40,Solicitação de Inclusão/Exclusão de Orientador – Pós-Graduação,,77.77777777777779,true,true,2026-07-31 17:26:22.875883+00
+41,Regulamento da Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,74.78260869565217,true,true,2026-07-31 17:26:22.936418+00
+42,Regulamento da Dissertação de Mestrado,,75.40983606557377,true,true,2026-07-31 17:26:22.968933+00
+43,Regulamento da Tese de Doutorado,,73.01587301587303,true,true,2026-07-31 17:26:23.001781+00
+44,Ata de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,72.86821705426357,true,true,2026-07-31 17:26:23.033924+00
+45,Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,73.21428571428572,true,true,2026-07-31 17:26:23.067568+00
+46,Processo Seletivo para Estágio Pós-Doutoral,,82.05128205128204,true,true,2026-07-31 17:26:23.099261+00
+47,Solicitação de Renovação de Estágio Pós-Doutoral,,84.33734939759037,true,true,2026-07-31 17:26:23.129377+00
+48,Processo sobre Qualificação no Curso de Pós-Graduação,,74.50980392156863,true,true,2026-07-31 17:26:23.161634+00
+49,Solicitação de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,78.70967741935485,true,true,2026-07-31 17:26:23.194123+00
+50,Requerimento para Banca de Acesso Restrito em Cursos de Pós-Graduação,,74.07407407407408,true,true,2026-07-31 17:26:23.229739+00
+51,Declaração de Aptidão à Defesa de Banca de Curso de Pós-Graduação Stricto Sensu,,73.8255033557047,true,true,2026-07-31 17:26:23.263266+00
+52,Termo de Compromisso do Monitor de Pós-Graduação,,80.41237113402062,false,false,2026-07-31 17:26:23.296855+00
+53,Ata de Seleção de Monitores de Pós-Graduação,,78.65168539325843,false,false,2026-07-31 17:26:23.329442+00
+54,Certificado de Monitoria em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:26:23.364844+00
+55,Plano de Atividades do Monitor de Pós-Graduação,,80.0,false,false,2026-07-31 17:26:23.399895+00
+56,Relatório Final de Monitoria de Pós-Graduação,,88.65979381443299,false,false,2026-07-31 17:26:23.761652+00
+57,Lista de Presença de Monitor de Pós-Graduação,,79.12087912087912,false,false,2026-07-31 17:26:23.794043+00
+58,Lista de Bolsista de Monitoria de Pós-Graduação,,79.16666666666666,false,false,2026-07-31 17:26:23.826055+00
+59,Processo sobre Bolsa de Demanda Social,,83.51648351648352,false,false,2026-07-31 17:26:23.856396+00
+60,Edital do Programa de Auxílio à Internacionalização da Pós-Graduação - PROINT,,72.46376811594203,false,false,2026-07-31 17:26:23.889988+00
+61,Processo sobre Programa de Apoio à Pós-Graduação - PROAP,,72.38095238095238,false,false,2026-07-31 17:26:23.922818+00
+62,Processo de Recredenciamento de Docente em Curso de Pós-Graduação,,79.64601769911505,false,false,2026-07-31 17:26:23.954166+00
+63,Certificado de Seleção no Programa Institucional de Capacitação de Docentes e Técnicos Universitários,,85.22727272727273,false,false,2026-07-31 17:26:23.986265+00
+64,Portaria de Homologação de Inscrição no Processo de Seleção em Curso de Pós-Graduação,,88.88888888888889,false,false,2026-07-31 17:26:24.017807+00
+65,Portaria de Banca de Processo de Seleção para Ingresso em Curso de Pós-Graduação,,88.19875776397515,false,false,2026-07-31 17:26:24.048969+00
+66,Certificado de Proficiência em Língua Estrangeira,,67.44186046511628,false,false,2026-07-31 17:26:24.080718+00
+67,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Lato Sensu,,88.75739644970415,false,false,2026-07-31 17:26:24.113656+00
+68,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Stricto Sensu,,89.14285714285714,false,false,2026-07-31 17:26:24.14537+00
+69,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Lato Sensu,,89.14285714285714,false,false,2026-07-31 17:26:24.178165+00
+70,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Stricto Sensu,,89.50276243093923,false,false,2026-07-31 17:26:24.210016+00
+71,Requerimento de Licença Maternidade/Paternidade para discentes de Curso de Pós-Graduação,,83.14606741573034,false,false,2026-07-31 17:26:24.245532+00
+72,Requerimento de Dispensa do Exame de Proficiência em Língua Estrangeira,,64.12213740458014,false,false,2026-07-31 17:26:24.278366+00
+73,Requerimento de Prorrogação de prazo para Exame de Proficiência em Língua Estrangeira,,67.08860759493672,false,false,2026-07-31 17:26:24.31112+00
+74,Edital de Exame de Proficiência em Língua Estrangeira,,60.0,false,false,2026-07-31 17:26:24.341884+00
+75,Requerimento de matrícula fora de prazo,,75.67567567567568,false,false,2026-07-31 17:26:24.373263+00
+76,Requerimento de Aproveitamento de Disciplina em Curso de Pós-Graduação,,83.07692307692307,false,false,2026-07-31 17:26:24.404072+00
+77,Requerimento de Equivalência de Disciplina em Curso de Pós-Graduação,,81.94444444444444,false,false,2026-07-31 17:26:24.435621+00
+78,Requerimento de Aproveitamento de Créditos em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:26:24.469529+00
+79,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Lato Sensu,,85.71428571428572,false,false,2026-07-31 17:26:24.522258+00
+80,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Stricto Sensu,,86.15384615384616,false,false,2026-07-31 17:26:24.557087+00
+81,Solicitação de Concessão por Créditos Especiais,,74.72527472527473,false,false,2026-07-31 17:26:24.589649+00
+82,Solicitação de Estágio de docência orientada em outra Instituição de Ensino,,65.80645161290323,false,false,2026-07-31 17:26:24.623475+00
+83,Solicitação de Dispensa de Estágio de Docência/Docência Orientada,,64.61538461538461,false,false,2026-07-31 17:26:24.656891+00
+84,Solicitação de Ensino a Distância,,70.96774193548387,false,false,2026-07-31 17:26:24.792005+00
+85,Certificado do Curso de Pós-Graduação Lato Sensu,,82.14285714285714,false,false,2026-07-31 17:26:24.824947+00
+86,Diploma do Curso de Pós-Graduação Stricto Sensu,,81.81818181818181,false,false,2026-07-31 17:26:24.856169+00
+87,Livro de Registro de Diploma de Pós-Graduação Stricto Sensu,,85.9504132231405,false,false,2026-07-31 17:26:24.889236+00
+88,Certificado de Conclusão de Estágio Pós-Doutoral,,70.73170731707317,false,false,2026-07-31 17:26:24.920101+00
+89,Declaração de Conclusão de Curso de Pós-Graduação Stricto Sensu,,82.17054263565892,false,false,2026-07-31 17:26:24.950758+00
+90,Plano de Ensino de Curso de Pós-Graduação Lato Sensu,,81.9047619047619,false,false,2026-07-31 17:26:24.981539+00
+91,Plano de Ensino de Curso de  Pós-Graduação Stricto Sensu,,83.47826086956522,false,false,2026-07-31 17:26:25.01579+00
+92,Programa de Ensino de Curso de Pós-Graduação Lato Sensu,,82.88288288288288,false,false,2026-07-31 17:26:25.04515+00
+93,Programa de Ensino de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:26:25.077999+00
+94,Calendário Acadêmico para os Cursos de Pós-Graduação Lato Sensu,,71.07438016528927,false,false,2026-07-31 17:26:25.124297+00
+95,Calendário Acadêmico para os Cursos de Pós-Graduação Stricto Sensu,,74.01574803149606,false,false,2026-07-31 17:26:25.159157+00
+96,Processo de Criação de Disciplina como Tópicos Especiais,,62.99212598425197,false,false,2026-07-31 17:26:25.190666+00
+97,Edital do Programa de Apoio à Pesquisa - PAP,,92.6829268292683,false,false,2026-07-31 17:26:25.222553+00
+98,Edital do Programa de Estímulo à Produtividade em Pesquisa na Pós-Graduação,,87.41721854304636,false,false,2026-07-31 17:26:25.254459+00
+99,Edital sobre desenvolvimento Tecnológico e Inovação,,75.0,false,false,2026-07-31 17:26:25.288335+00
+100,Edital sobre Seminário de Iniciação Científica,,78.94736842105263,false,false,2026-07-31 17:26:25.323328+00
+101,"Acordo de Parceria/Cooperação para Pesquisa, Desenvolvimento e Inovação - PD&I",,57.14285714285714,false,false,2026-07-31 17:26:25.357254+00
+102,Registro de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:26:25.626795+00
+103,Atestado de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:26:25.661194+00
+104,Certificado de Bolsista do Programa de Iniciação Científica,,77.63157894736842,false,false,2026-07-31 17:26:25.693504+00
+105,Processo sobre Captação de Recursos,,74.66666666666666,false,false,2026-07-31 17:26:25.727369+00
+106,Declaração de anuência institucional para submissão de projetos e editais externos,,60.0,false,false,2026-07-31 17:26:25.765585+00
+107,Declaração de apoio institucional para submissão de projetos,,64.81481481481481,false,false,2026-07-31 17:26:25.799467+00
+108,Solicitação de proteção de propriedade intelectual,,65.26315789473685,false,false,2026-07-31 17:26:25.832171+00
+109,Termo de Cessão de direitos de propriedade intelectual,,63.91752577319587,false,false,2026-07-31 17:26:25.864428+00
+110,Ficha de Cadastro de Bolsista - Recursos Externos,,70.83333333333333,false,false,2026-07-31 17:26:25.896854+00
+111,Termo de Compromisso de Bolsista - Recursos Externos,,83.33333333333334,false,false,2026-07-31 17:26:25.930621+00
+112,Registro de frequência de Bolsista - Recursos Externos,,75.0,false,false,2026-07-31 17:26:25.963976+00
+113,Atestado de horas de Bolsista - Recursos Externos,,66.08695652173913,false,false,2026-07-31 17:26:25.994643+00
+114,Certificado de participação em projeto - Recursos Externos,,73.6842105263158,false,false,2026-07-31 17:26:26.025662+00
+115,Solicitação de substituição de bolsista - Recursos Externos,,76.92307692307692,false,false,2026-07-31 17:26:26.059023+00
+116,Termo de Outorga de Apoio Financeiro das Agências de Fomento a Projetos de Pesquisa,,67.58620689655173,false,false,2026-07-31 17:26:26.094727+00
+117,Solicitação de Credenciamento de equipamento multiusuário,,70.58823529411764,false,false,2026-07-31 17:26:26.13072+00
+118,Folder de Programação do Seminário de Iniciação Científica,,76.03305785123968,false,false,2026-07-31 17:26:26.179438+00
+119,Folder de Programação do Seminário de Ética em Pesquisa,,78.84615384615384,false,false,2026-07-31 17:26:26.211797+00
+120,Catálogo de Produção Científica,,59.01639344262295,false,false,2026-07-31 17:26:26.244724+00
+121,Instrumento de Coleta de Dados da Avaliação da Pesquisa,,62.38532110091744,false,false,2026-07-31 17:26:26.277656+00
+122,Certificado de Bolsista do Programa de Apoio à Extensão,,76.38888888888889,false,false,2026-07-31 17:26:26.31017+00
+123,Processo de Habilitação de Unidade Prestadora de Serviço,,66.66666666666667,false,false,2026-07-31 17:26:26.342073+00
+124,Regulamento do Comitê de Articulação das Ações de Inclusão,,64.40677966101696,false,false,2026-07-31 17:26:26.374498+00
+125,Certificado de Bolsista de Apoio Discente,,77.27272727272727,false,false,2026-07-31 17:26:26.409945+00
+126,Relatório Final de Eventos de Extensão,,88.31168831168831,false,false,2026-07-31 17:26:26.443612+00
+127,Relatório Final dos Jogos de Integração,,83.87096774193549,false,false,2026-07-31 17:26:26.48069+00
+128,Regulamento Geral dos Jogos de Integração,,69.47368421052632,false,false,2026-07-31 17:26:26.515647+00
+129,Regulamento Técnico dos Jogos de Integração,,70.10309278350515,false,false,2026-07-31 17:26:26.550077+00
+130,Tutorial de Inscrição nos Jogos de Integração,,85.71428571428572,false,false,2026-07-31 17:26:26.585225+00
+131,Ficha de Inscrição nos Jogos de Integração,,84.84848484848484,false,false,2026-07-31 17:26:26.618524+00
+132,Catálogo de Produção Científica - Extensão,,59.154929577464785,false,false,2026-07-31 17:26:26.650578+00
+133,"Guia para Eventos, Cerimonial e Protocolo da Udesc",,56.470588235294116,false,false,2026-07-31 17:26:26.684863+00
+134,Processo sobre Instrução Normativa sobre Atividade Acadêmica/Administrativa,,88.88888888888889,false,false,2026-07-31 17:26:26.71763+00
+135,Regulamento sobre Atividade Acadêmica/Administrativa,,83.14606741573034,false,false,2026-07-31 17:26:26.749621+00
+136,Certificado de Participação em Cursos e Eventos,,88.09523809523809,false,false,2026-07-31 17:26:26.784137+00
+137,Ofício sobre Atividade Administrativa na Gestão do Ensino Superior,,73.52941176470588,false,false,2026-07-31 17:26:26.814846+00
+138,Processo sobre Prorrogação de Bolsa,,79.54545454545455,false,false,2026-07-31 17:26:26.848948+00
+139,Edital de Atividades Acadêmicas,,76.71232876712328,false,false,2026-07-31 17:26:26.8867+00
+140,Solicitação de Transporte para Viagem de Estudos,,63.1578947368421,false,false,2026-07-31 17:26:26.919146+00
+141,Autorização de Viagem de Acadêmicos Menores de Idade,,68.57142857142857,false,false,2026-07-31 17:26:26.952452+00
+142,Lista de Passageiros em Viagem de Estudos,,60.215053763440864,false,false,2026-07-31 17:26:26.983476+00
+143,Relatório de Visita Técnica em Atividades Acadêmicas,,73.6842105263158,false,false,2026-07-31 17:26:27.015573+00
+144,Atestado/Declaração sobre Atividades Administrativas na Gestão Universitária,,63.41463414634146,false,false,2026-07-31 17:26:27.046962+00
+145,Processo sobre criação de Laboratório,,75.36231884057972,false,false,2026-07-31 17:26:27.07813+00
+146,Processo sobre Acessibilidade Educacional,,73.17073170731707,false,false,2026-07-31 17:26:27.109677+00
+147,Requerimento De Exoneração / Aposentadoria De Servidor Efetivo,,70.0,false,false,2026-07-31 17:26:27.143154+00
+148,"Ato de Exoneração, Aposentadoria e Disposição de Servidor - Check List",,62.5,false,false,2026-07-31 17:26:27.174665+00
+149,Ato de Exoneração de Servidor / Declaração de Regularidade - Área de Recursos Humanos,,61.53846153846154,false,false,2026-07-31 17:26:27.210792+00
+150,Formulário de Solicitação de Dispensa de Professor Substituto,,68.5185185185185,false,false,2026-07-31 17:26:27.242579+00
+151,Ato de Dispensa de Professor Substituto / Declaração de Regularidade - Área de Recursos Humanos,,60.49382716049383,false,false,2026-07-31 17:26:27.275479+00
+152,Manual de Publicação de livros impressos e digitais,,56.91056910569105,false,false,2026-07-31 17:26:27.312432+00
+153,Processo sobre Periódico/Revista,,74.07407407407408,false,false,2026-07-31 17:26:27.345813+00
+154,Processo sobre Livro para Editoração/Publicação,,69.1358024691358,false,false,2026-07-31 17:26:27.376173+00
+155,Manual do Estágio Curricular Supervisionado,,89.41176470588236,false,false,2026-07-31 17:26:51.456553+00
+156,Folder de Programação do Seminário de Estágio Curricular Supervisionado,,83.82352941176471,false,false,2026-07-31 17:26:51.494997+00
+157,Certificado de Atividades Complementares,,76.92307692307692,false,false,2026-07-31 17:26:51.531369+00
+158,Regulamento do Trabalho de Conclusão de Curso,,86.04651162790698,false,false,2026-07-31 17:26:51.561668+00
+159,Formulário de Avaliação do Trabalho de Conclusão de Curso,,77.86259541984732,false,false,2026-07-31 17:26:51.592872+00
+160,Requerimento para Banca de Acesso Restrito em Cursos de Graduação,,78.99159663865547,false,false,2026-07-31 17:26:51.624334+00
+161,Registro de Frequência de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,84.76821192052981,false,false,2026-07-31 17:26:51.65608+00
+162,Termo de Compromisso de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,80.50314465408806,false,false,2026-07-31 17:26:51.68911+00
+163,Certificado de Monitoria em Curso de Graduação,,80.89887640449437,false,false,2026-07-31 17:26:51.721121+00
+164,Folder de Programação do Encontro de Monitoria de Curso de Graduação,,79.33884297520662,false,false,2026-07-31 17:26:51.752758+00
+165,Certificado de Participação no Encontro de Monitoria do Curso de Graduação,,71.42857142857143,false,false,2026-07-31 17:26:51.785423+00
+166,Termo de Renúncia ao Auxílio-Transporte Estágio Não Obrigatório,,83.46456692913385,false,false,2026-07-31 17:26:51.817071+00
+167,Solicitação de Prorrogação de Estágio Não Obrigatório,,81.4814814814815,false,false,2026-07-31 17:26:51.85377+00
+168,Portaria de Composição de Banca de Concurso Público para Docente,,87.71929824561404,false,false,2026-07-31 17:26:51.883701+00
+169,Portaria de Composição de Banca de Processo Seletivo para Docente,,87.93103448275862,false,false,2026-07-31 17:26:51.915933+00
+170,Caderno de Prova do Concurso Público para Docente,,82.82828282828282,false,false,2026-07-31 17:26:51.947341+00
+171,Caderno de Prova de Processo Seletivo para Docente,,77.22772277227723,false,false,2026-07-31 17:26:51.979537+00
+172,Portaria de Homologação de Candidato Classificado e Aprovado no Vestibular,,88.72180451127821,false,false,2026-07-31 17:26:52.012611+00
+173,Caderno de Prova do Vestibular,,80.55555555555556,false,false,2026-07-31 17:26:52.043504+00
+174,Edital do Programa de Mobilidade Acadêmica,,71.84466019417476,false,false,2026-07-31 17:26:52.0745+00
+175,Requerimento de Quebra de Pré-requisito em Curso de Graduação,,84.55284552845528,false,false,2026-07-31 17:26:52.110857+00
+176,Requerimento de Aproveitamento de Disciplina do Curso de Graduação,,82.92682926829268,false,false,2026-07-31 17:26:52.143009+00
+177,Requerimento de Abono de Falta na Aula e/ou Prova,,94.94949494949495,false,false,2026-07-31 17:26:52.173605+00
+178,Exame Final de Curso de Graduação,,85.71428571428572,false,false,2026-07-31 17:26:52.205818+00
+179,Modelo de Diploma de Curso de Graduação,,85.29411764705883,false,false,2026-07-31 17:26:52.235934+00
+180,Projeto de Criação de Curso de  Pós-Graduação Lato Sensu,,85.71428571428572,false,false,2026-07-31 17:26:52.26825+00
+181,Projeto de Criação de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:26:52.298941+00
+182,Instrumento de Coleta de Dados do Ensino de Pós-Graduação,,78.18181818181819,false,false,2026-07-31 17:26:52.331557+00
+183,Instrumento de Avaliação da Pós-Graduação pela Coordenação de Aperfeiçoamento de Nível Superior CAPES,,90.64039408866995,false,false,2026-07-31 17:26:52.364096+00
+184,Ato de Criação de Curso de Pós-Graduação Stricto Sensu,,91.74311926605505,false,false,2026-07-31 17:26:52.396977+00
+185,Ato de Autorização de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:26:52.429754+00
+186,Regimento de Curso de Pós-Graduação,,93.93939393939394,false,false,2026-07-31 17:26:52.462391+00
+187,Ato de Criação de Curso de Pós-Graduação Lato Sensu,,82.75862068965517,false,false,2026-07-31 17:26:52.495462+00
+188,Edital de Matrícula nos Cursos de Pós-Graduação,,77.77777777777779,false,false,2026-07-31 17:26:52.525671+00
+189,Ato de Autorização de Curso de Pós-Graduação Lato Sensu,,80.70175438596492,false,false,2026-07-31 17:26:52.558508+00
+190,Ata de Qualificação no Curso de Pós-Graduação Stricto Sensu,,87.39495798319328,false,false,2026-07-31 17:26:52.589045+00
+191,Formulário de Avaliação da Monografia/Artigo  do Curso de  Pós-Graduação Lato Sensu,,70.83333333333333,false,false,2026-07-31 17:26:52.620031+00
+192,Solicitação de Inclusão/Exclusão de Orientador – Pós-Graduação,,77.77777777777779,false,false,2026-07-31 17:26:52.649385+00
+193,Regulamento da Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,74.78260869565217,false,false,2026-07-31 17:26:52.681598+00
+194,Regulamento da Dissertação de Mestrado,,75.40983606557377,false,false,2026-07-31 17:26:52.712858+00
+195,Regulamento da Tese de Doutorado,,73.01587301587303,false,false,2026-07-31 17:26:52.748271+00
+196,Ata de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,72.86821705426357,false,false,2026-07-31 17:26:52.784425+00
+197,Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,73.21428571428572,false,false,2026-07-31 17:26:52.822777+00
+198,Processo Seletivo para Estágio Pós-Doutoral,,82.05128205128204,false,false,2026-07-31 17:26:52.891458+00
+199,Solicitação de Renovação de Estágio Pós-Doutoral,,84.33734939759037,false,false,2026-07-31 17:26:52.922372+00
+200,Processo sobre Qualificação no Curso de Pós-Graduação,,74.50980392156863,false,false,2026-07-31 17:26:52.953649+00
+201,Solicitação de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,78.70967741935485,false,false,2026-07-31 17:26:52.984378+00
+202,Requerimento para Banca de Acesso Restrito em Cursos de Pós-Graduação,,74.07407407407408,false,false,2026-07-31 17:26:53.015836+00
+203,Declaração de Aptidão à Defesa de Banca de Curso de Pós-Graduação Stricto Sensu,,73.8255033557047,false,false,2026-07-31 17:26:53.047487+00
+204,Termo de Compromisso do Monitor de Pós-Graduação,,80.41237113402062,false,false,2026-07-31 17:26:53.079846+00
+205,Ata de Seleção de Monitores de Pós-Graduação,,78.65168539325843,false,false,2026-07-31 17:26:53.111544+00
+206,Certificado de Monitoria em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:26:53.14274+00
+207,Plano de Atividades do Monitor de Pós-Graduação,,80.0,false,false,2026-07-31 17:26:53.173642+00
+208,Relatório Final de Monitoria de Pós-Graduação,,88.65979381443299,false,false,2026-07-31 17:26:53.204819+00
+209,Lista de Presença de Monitor de Pós-Graduação,,79.12087912087912,false,false,2026-07-31 17:26:53.236468+00
+210,Lista de Bolsista de Monitoria de Pós-Graduação,,79.16666666666666,false,false,2026-07-31 17:26:53.266371+00
+211,Processo sobre Bolsa de Demanda Social,,83.51648351648352,false,false,2026-07-31 17:26:53.299246+00
+212,Edital do Programa de Auxílio à Internacionalização da Pós-Graduação - PROINT,,72.46376811594203,false,false,2026-07-31 17:26:53.331601+00
+213,Processo sobre Programa de Apoio à Pós-Graduação - PROAP,,72.38095238095238,false,false,2026-07-31 17:26:53.363343+00
+214,Processo de Recredenciamento de Docente em Curso de Pós-Graduação,,79.64601769911505,false,false,2026-07-31 17:26:53.39425+00
+215,Certificado de Seleção no Programa Institucional de Capacitação de Docentes e Técnicos Universitários,,85.22727272727273,false,false,2026-07-31 17:26:53.425329+00
+216,Portaria de Homologação de Inscrição no Processo de Seleção em Curso de Pós-Graduação,,88.88888888888889,false,false,2026-07-31 17:26:53.462339+00
+217,Portaria de Banca de Processo de Seleção para Ingresso em Curso de Pós-Graduação,,88.19875776397515,false,false,2026-07-31 17:26:53.493494+00
+218,Certificado de Proficiência em Língua Estrangeira,,67.44186046511628,false,false,2026-07-31 17:26:53.527597+00
+219,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Lato Sensu,,88.75739644970415,false,false,2026-07-31 17:26:53.559145+00
+220,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Stricto Sensu,,89.14285714285714,false,false,2026-07-31 17:26:53.591269+00
+221,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Lato Sensu,,89.14285714285714,false,false,2026-07-31 17:26:53.623828+00
+222,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Stricto Sensu,,89.50276243093923,false,false,2026-07-31 17:26:53.655585+00
+223,Requerimento de Licença Maternidade/Paternidade para discentes de Curso de Pós-Graduação,,83.14606741573034,false,false,2026-07-31 17:26:53.710835+00
+224,Requerimento de Dispensa do Exame de Proficiência em Língua Estrangeira,,64.12213740458014,false,false,2026-07-31 17:26:53.743621+00
+225,Requerimento de Prorrogação de prazo para Exame de Proficiência em Língua Estrangeira,,67.08860759493672,false,false,2026-07-31 17:26:53.775381+00
+226,Edital de Exame de Proficiência em Língua Estrangeira,,60.0,false,false,2026-07-31 17:26:53.809436+00
+227,Requerimento de matrícula fora de prazo,,75.67567567567568,false,false,2026-07-31 17:26:53.843015+00
+228,Requerimento de Aproveitamento de Disciplina em Curso de Pós-Graduação,,83.07692307692307,false,false,2026-07-31 17:26:53.874297+00
+229,Requerimento de Equivalência de Disciplina em Curso de Pós-Graduação,,81.94444444444444,false,false,2026-07-31 17:26:53.926715+00
+230,Requerimento de Aproveitamento de Créditos em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:26:53.958259+00
+231,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Lato Sensu,,85.71428571428572,false,false,2026-07-31 17:26:53.993314+00
+232,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Stricto Sensu,,86.15384615384616,false,false,2026-07-31 17:26:54.047117+00
+233,Solicitação de Concessão por Créditos Especiais,,74.72527472527473,false,false,2026-07-31 17:26:54.079721+00
+234,Solicitação de Estágio de docência orientada em outra Instituição de Ensino,,65.80645161290323,false,false,2026-07-31 17:26:54.112264+00
+235,Solicitação de Dispensa de Estágio de Docência/Docência Orientada,,64.61538461538461,false,false,2026-07-31 17:26:54.145929+00
+236,Solicitação de Ensino a Distância,,70.96774193548387,false,false,2026-07-31 17:26:54.178529+00
+237,Certificado do Curso de Pós-Graduação Lato Sensu,,82.14285714285714,false,false,2026-07-31 17:26:54.212072+00
+238,Diploma do Curso de Pós-Graduação Stricto Sensu,,81.81818181818181,false,false,2026-07-31 17:26:54.247398+00
+239,Livro de Registro de Diploma de Pós-Graduação Stricto Sensu,,85.9504132231405,false,false,2026-07-31 17:26:54.279122+00
+240,Certificado de Conclusão de Estágio Pós-Doutoral,,70.73170731707317,false,false,2026-07-31 17:26:54.312527+00
+241,Declaração de Conclusão de Curso de Pós-Graduação Stricto Sensu,,82.17054263565892,false,false,2026-07-31 17:26:54.346723+00
+242,Plano de Ensino de Curso de Pós-Graduação Lato Sensu,,81.9047619047619,false,false,2026-07-31 17:26:54.382814+00
+243,Plano de Ensino de Curso de  Pós-Graduação Stricto Sensu,,83.47826086956522,false,false,2026-07-31 17:26:54.418249+00
+244,Programa de Ensino de Curso de Pós-Graduação Lato Sensu,,82.88288288288288,false,false,2026-07-31 17:26:54.450584+00
+245,Programa de Ensino de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:26:54.481282+00
+246,Calendário Acadêmico para os Cursos de Pós-Graduação Lato Sensu,,71.07438016528927,false,false,2026-07-31 17:26:54.512977+00
+247,Calendário Acadêmico para os Cursos de Pós-Graduação Stricto Sensu,,74.01574803149606,false,false,2026-07-31 17:26:54.560954+00
+248,Processo de Criação de Disciplina como Tópicos Especiais,,62.99212598425197,false,false,2026-07-31 17:26:54.593852+00
+249,Edital do Programa de Apoio à Pesquisa - PAP,,92.6829268292683,false,false,2026-07-31 17:26:54.625053+00
+250,Edital do Programa de Estímulo à Produtividade em Pesquisa na Pós-Graduação,,87.41721854304636,false,false,2026-07-31 17:26:54.655431+00
+251,Edital sobre desenvolvimento Tecnológico e Inovação,,75.0,false,false,2026-07-31 17:26:54.686352+00
+252,Edital sobre Seminário de Iniciação Científica,,78.94736842105263,false,false,2026-07-31 17:26:54.71924+00
+253,"Acordo de Parceria/Cooperação para Pesquisa, Desenvolvimento e Inovação - PD&I",,57.14285714285714,false,false,2026-07-31 17:26:54.753014+00
+254,Registro de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:26:54.783541+00
+255,Atestado de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:26:54.814965+00
+256,Certificado de Bolsista do Programa de Iniciação Científica,,77.63157894736842,false,false,2026-07-31 17:26:54.847786+00
+257,Processo sobre Captação de Recursos,,74.66666666666666,false,false,2026-07-31 17:26:54.881365+00
+258,Declaração de anuência institucional para submissão de projetos e editais externos,,60.0,false,false,2026-07-31 17:26:54.913481+00
+259,Declaração de apoio institucional para submissão de projetos,,64.81481481481481,false,false,2026-07-31 17:26:54.960509+00
+260,Solicitação de proteção de propriedade intelectual,,65.26315789473685,false,false,2026-07-31 17:26:54.994948+00
+261,Termo de Cessão de direitos de propriedade intelectual,,63.91752577319587,false,false,2026-07-31 17:26:55.030249+00
+262,Ficha de Cadastro de Bolsista - Recursos Externos,,70.83333333333333,false,false,2026-07-31 17:26:55.064268+00
+263,Termo de Compromisso de Bolsista - Recursos Externos,,83.33333333333334,false,false,2026-07-31 17:26:55.096477+00
+264,Registro de frequência de Bolsista - Recursos Externos,,75.0,false,false,2026-07-31 17:26:55.129804+00
+265,Atestado de horas de Bolsista - Recursos Externos,,66.08695652173913,false,false,2026-07-31 17:26:55.162314+00
+266,Certificado de participação em projeto - Recursos Externos,,73.6842105263158,false,false,2026-07-31 17:26:55.193995+00
+267,Solicitação de substituição de bolsista - Recursos Externos,,76.92307692307692,false,false,2026-07-31 17:26:55.224871+00
+268,Termo de Outorga de Apoio Financeiro das Agências de Fomento a Projetos de Pesquisa,,67.58620689655173,false,false,2026-07-31 17:26:55.25637+00
+269,Solicitação de Credenciamento de equipamento multiusuário,,70.58823529411764,false,false,2026-07-31 17:26:55.286907+00
+270,Folder de Programação do Seminário de Iniciação Científica,,76.03305785123968,false,false,2026-07-31 17:26:55.317153+00
+271,Folder de Programação do Seminário de Ética em Pesquisa,,78.84615384615384,false,false,2026-07-31 17:26:55.350099+00
+272,Catálogo de Produção Científica,,59.01639344262295,false,false,2026-07-31 17:26:55.381134+00
+273,Instrumento de Coleta de Dados da Avaliação da Pesquisa,,62.38532110091744,false,false,2026-07-31 17:26:55.41211+00
+274,Certificado de Bolsista do Programa de Apoio à Extensão,,76.38888888888889,false,false,2026-07-31 17:26:55.441949+00
+275,Processo de Habilitação de Unidade Prestadora de Serviço,,66.66666666666667,false,false,2026-07-31 17:26:55.472613+00
+276,Regulamento do Comitê de Articulação das Ações de Inclusão,,64.40677966101696,false,false,2026-07-31 17:26:55.50423+00
+277,Certificado de Bolsista de Apoio Discente,,77.27272727272727,false,false,2026-07-31 17:26:55.536045+00
+278,Relatório Final de Eventos de Extensão,,88.31168831168831,false,false,2026-07-31 17:26:55.567749+00
+279,Relatório Final dos Jogos de Integração,,83.87096774193549,false,false,2026-07-31 17:26:55.599788+00
+280,Regulamento Geral dos Jogos de Integração,,69.47368421052632,false,false,2026-07-31 17:26:55.630601+00
+281,Regulamento Técnico dos Jogos de Integração,,70.10309278350515,false,false,2026-07-31 17:26:55.660922+00
+282,Tutorial de Inscrição nos Jogos de Integração,,85.71428571428572,false,false,2026-07-31 17:26:55.689995+00
+283,Ficha de Inscrição nos Jogos de Integração,,84.84848484848484,false,false,2026-07-31 17:26:55.719485+00
+284,Catálogo de Produção Científica - Extensão,,59.154929577464785,false,false,2026-07-31 17:26:55.750985+00
+285,"Guia para Eventos, Cerimonial e Protocolo da Udesc",,56.470588235294116,false,false,2026-07-31 17:26:55.781514+00
+286,Processo sobre Instrução Normativa sobre Atividade Acadêmica/Administrativa,,88.88888888888889,false,false,2026-07-31 17:26:55.812795+00
+287,Regulamento sobre Atividade Acadêmica/Administrativa,,83.14606741573034,false,false,2026-07-31 17:26:55.843031+00
+288,Certificado de Participação em Cursos e Eventos,,88.09523809523809,false,false,2026-07-31 17:26:55.874639+00
+289,Ofício sobre Atividade Administrativa na Gestão do Ensino Superior,,73.52941176470588,false,false,2026-07-31 17:26:55.905597+00
+290,Processo sobre Prorrogação de Bolsa,,79.54545454545455,false,false,2026-07-31 17:26:55.936878+00
+291,Edital de Atividades Acadêmicas,,76.71232876712328,false,false,2026-07-31 17:26:55.969194+00
+292,Solicitação de Transporte para Viagem de Estudos,,63.1578947368421,false,false,2026-07-31 17:26:56.001202+00
+293,Autorização de Viagem de Acadêmicos Menores de Idade,,68.57142857142857,false,false,2026-07-31 17:26:56.06818+00
+294,Lista de Passageiros em Viagem de Estudos,,60.215053763440864,false,false,2026-07-31 17:26:56.100181+00
+295,Relatório de Visita Técnica em Atividades Acadêmicas,,73.6842105263158,false,false,2026-07-31 17:26:56.132338+00
+296,Atestado/Declaração sobre Atividades Administrativas na Gestão Universitária,,63.41463414634146,false,false,2026-07-31 17:26:56.16495+00
+297,Processo sobre criação de Laboratório,,75.36231884057972,false,false,2026-07-31 17:26:56.198078+00
+298,Processo sobre Acessibilidade Educacional,,73.17073170731707,false,false,2026-07-31 17:26:56.298601+00
+299,Requerimento De Exoneração / Aposentadoria De Servidor Efetivo,,70.0,false,false,2026-07-31 17:26:56.33338+00
+300,"Ato de Exoneração, Aposentadoria e Disposição de Servidor - Check List",,62.5,false,false,2026-07-31 17:26:56.363978+00
+301,Ato de Exoneração de Servidor / Declaração de Regularidade - Área de Recursos Humanos,,61.53846153846154,false,false,2026-07-31 17:26:56.395313+00
+302,Formulário de Solicitação de Dispensa de Professor Substituto,,68.5185185185185,false,false,2026-07-31 17:26:56.428115+00
+303,Ato de Dispensa de Professor Substituto / Declaração de Regularidade - Área de Recursos Humanos,,60.49382716049383,false,false,2026-07-31 17:26:56.462863+00
+304,Manual de Publicação de livros impressos e digitais,,56.91056910569105,false,false,2026-07-31 17:26:56.52751+00
+305,Processo sobre Periódico/Revista,,74.07407407407408,false,false,2026-07-31 17:26:56.573088+00
+306,Processo sobre Livro para Editoração/Publicação,,69.1358024691358,false,false,2026-07-31 17:26:56.604394+00
+307,Manual do Estágio Curricular Supervisionado,,89.41176470588236,false,false,2026-07-31 17:30:33.566995+00
+308,Folder de Programação do Seminário de Estágio Curricular Supervisionado,,83.82352941176471,false,false,2026-07-31 17:30:33.620103+00
+309,Certificado de Atividades Complementares,,76.92307692307692,false,false,2026-07-31 17:30:33.663916+00
+310,Regulamento do Trabalho de Conclusão de Curso,,86.04651162790698,false,false,2026-07-31 17:30:33.708751+00
+311,Formulário de Avaliação do Trabalho de Conclusão de Curso,,77.86259541984732,false,false,2026-07-31 17:30:33.774642+00
+312,Requerimento para Banca de Acesso Restrito em Cursos de Graduação,,78.99159663865547,false,false,2026-07-31 17:30:33.825586+00
+313,Registro de Frequência de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,84.76821192052981,false,false,2026-07-31 17:30:33.873262+00
+314,Termo de Compromisso de Discente Bolsista do Programa de Apoio ao Ensino de Graduação,,80.50314465408806,false,false,2026-07-31 17:30:33.921667+00
+315,Certificado de Monitoria em Curso de Graduação,,80.89887640449437,false,false,2026-07-31 17:30:33.97685+00
+316,Folder de Programação do Encontro de Monitoria de Curso de Graduação,,79.33884297520662,false,false,2026-07-31 17:30:34.023196+00
+317,Certificado de Participação no Encontro de Monitoria do Curso de Graduação,,71.42857142857143,false,false,2026-07-31 17:30:34.056042+00
+318,Termo de Renúncia ao Auxílio-Transporte Estágio Não Obrigatório,,83.46456692913385,false,false,2026-07-31 17:30:34.088725+00
+319,Solicitação de Prorrogação de Estágio Não Obrigatório,,81.4814814814815,false,false,2026-07-31 17:30:34.135508+00
+320,Portaria de Composição de Banca de Concurso Público para Docente,,87.71929824561404,false,false,2026-07-31 17:30:34.181625+00
+321,Portaria de Composição de Banca de Processo Seletivo para Docente,,87.93103448275862,false,false,2026-07-31 17:30:34.228619+00
+322,Caderno de Prova do Concurso Público para Docente,,82.82828282828282,false,false,2026-07-31 17:30:34.273555+00
+323,Caderno de Prova de Processo Seletivo para Docente,,77.22772277227723,false,false,2026-07-31 17:30:34.306712+00
+324,Portaria de Homologação de Candidato Classificado e Aprovado no Vestibular,,88.72180451127821,false,false,2026-07-31 17:30:34.341194+00
+325,Caderno de Prova do Vestibular,,80.55555555555556,false,false,2026-07-31 17:30:34.374643+00
+326,Edital do Programa de Mobilidade Acadêmica,,71.84466019417476,false,false,2026-07-31 17:30:34.407718+00
+327,Requerimento de Quebra de Pré-requisito em Curso de Graduação,,84.55284552845528,false,false,2026-07-31 17:30:34.443668+00
+328,Requerimento de Aproveitamento de Disciplina do Curso de Graduação,,82.92682926829268,false,false,2026-07-31 17:30:34.477346+00
+329,Requerimento de Abono de Falta na Aula e/ou Prova,,94.94949494949495,false,false,2026-07-31 17:30:34.511512+00
+330,Exame Final de Curso de Graduação,,85.71428571428572,false,false,2026-07-31 17:30:34.581247+00
+331,Modelo de Diploma de Curso de Graduação,,85.29411764705883,false,false,2026-07-31 17:30:34.613817+00
+332,Projeto de Criação de Curso de  Pós-Graduação Lato Sensu,,85.71428571428572,false,false,2026-07-31 17:30:34.646532+00
+333,Projeto de Criação de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:30:34.678464+00
+334,Instrumento de Coleta de Dados do Ensino de Pós-Graduação,,78.18181818181819,false,false,2026-07-31 17:30:34.710344+00
+335,Instrumento de Avaliação da Pós-Graduação pela Coordenação de Aperfeiçoamento de Nível Superior CAPES,,90.64039408866995,false,false,2026-07-31 17:30:34.820551+00
+336,Ato de Criação de Curso de Pós-Graduação Stricto Sensu,,91.74311926605505,false,false,2026-07-31 17:30:34.852588+00
+337,Ato de Autorização de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:30:34.888034+00
+338,Regimento de Curso de Pós-Graduação,,93.93939393939394,false,false,2026-07-31 17:30:34.922024+00
+339,Ato de Criação de Curso de Pós-Graduação Lato Sensu,,82.75862068965517,false,false,2026-07-31 17:30:34.954985+00
+340,Edital de Matrícula nos Cursos de Pós-Graduação,,77.77777777777779,false,false,2026-07-31 17:30:34.987145+00
+341,Ato de Autorização de Curso de Pós-Graduação Lato Sensu,,80.70175438596492,false,false,2026-07-31 17:30:35.02073+00
+342,Ata de Qualificação no Curso de Pós-Graduação Stricto Sensu,,87.39495798319328,false,false,2026-07-31 17:30:35.053694+00
+343,Formulário de Avaliação da Monografia/Artigo  do Curso de  Pós-Graduação Lato Sensu,,70.83333333333333,false,false,2026-07-31 17:30:35.087542+00
+344,Solicitação de Inclusão/Exclusão de Orientador – Pós-Graduação,,77.77777777777779,false,false,2026-07-31 17:30:35.121466+00
+345,Regulamento da Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,74.78260869565217,false,false,2026-07-31 17:30:35.15734+00
+346,Regulamento da Dissertação de Mestrado,,75.40983606557377,false,false,2026-07-31 17:30:35.206088+00
+347,Regulamento da Tese de Doutorado,,73.01587301587303,false,false,2026-07-31 17:30:35.241505+00
+348,Ata de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,72.86821705426357,false,false,2026-07-31 17:30:35.288845+00
+349,Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,73.21428571428572,false,false,2026-07-31 17:30:35.324855+00
+350,Processo Seletivo para Estágio Pós-Doutoral,,82.05128205128204,false,false,2026-07-31 17:30:35.375248+00
+351,Solicitação de Renovação de Estágio Pós-Doutoral,,84.33734939759037,false,false,2026-07-31 17:30:35.441141+00
+352,Processo sobre Qualificação no Curso de Pós-Graduação,,74.50980392156863,false,false,2026-07-31 17:30:35.492895+00
+353,Solicitação de Defesa de Monografia/Artigo de Curso de Pós-Graduação Lato Sensu,,78.70967741935485,false,false,2026-07-31 17:30:35.525169+00
+354,Requerimento para Banca de Acesso Restrito em Cursos de Pós-Graduação,,74.07407407407408,false,false,2026-07-31 17:30:35.556606+00
+355,Declaração de Aptidão à Defesa de Banca de Curso de Pós-Graduação Stricto Sensu,,73.8255033557047,false,false,2026-07-31 17:30:35.590398+00
+356,Termo de Compromisso do Monitor de Pós-Graduação,,80.41237113402062,false,false,2026-07-31 17:30:35.624049+00
+357,Ata de Seleção de Monitores de Pós-Graduação,,78.65168539325843,false,false,2026-07-31 17:30:35.655942+00
+358,Certificado de Monitoria em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:30:35.694631+00
+359,Plano de Atividades do Monitor de Pós-Graduação,,80.0,false,false,2026-07-31 17:30:35.730495+00
+360,Relatório Final de Monitoria de Pós-Graduação,,88.65979381443299,false,false,2026-07-31 17:30:35.764084+00
+361,Lista de Presença de Monitor de Pós-Graduação,,79.12087912087912,false,false,2026-07-31 17:30:35.796446+00
+362,Lista de Bolsista de Monitoria de Pós-Graduação,,79.16666666666666,false,false,2026-07-31 17:30:35.828465+00
+363,Processo sobre Bolsa de Demanda Social,,83.51648351648352,false,false,2026-07-31 17:30:35.863558+00
+364,Edital do Programa de Auxílio à Internacionalização da Pós-Graduação - PROINT,,72.46376811594203,false,false,2026-07-31 17:30:35.896988+00
+365,Processo sobre Programa de Apoio à Pós-Graduação - PROAP,,72.38095238095238,false,false,2026-07-31 17:30:35.929872+00
+366,Processo de Recredenciamento de Docente em Curso de Pós-Graduação,,79.64601769911505,false,false,2026-07-31 17:30:35.964597+00
+367,Certificado de Seleção no Programa Institucional de Capacitação de Docentes e Técnicos Universitários,,85.22727272727273,false,false,2026-07-31 17:30:35.997567+00
+368,Portaria de Homologação de Inscrição no Processo de Seleção em Curso de Pós-Graduação,,88.88888888888889,false,false,2026-07-31 17:30:36.032974+00
+369,Portaria de Banca de Processo de Seleção para Ingresso em Curso de Pós-Graduação,,88.19875776397515,false,false,2026-07-31 17:30:36.066163+00
+370,Certificado de Proficiência em Língua Estrangeira,,67.44186046511628,false,false,2026-07-31 17:30:36.11107+00
+371,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Lato Sensu,,88.75739644970415,false,false,2026-07-31 17:30:36.143421+00
+372,Requerimento de Matrícula em Disciplina Isolada em Curso de Pós-Graduação Stricto Sensu,,89.14285714285714,false,false,2026-07-31 17:30:36.176937+00
+373,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Lato Sensu,,89.14285714285714,false,false,2026-07-31 17:30:36.210064+00
+374,Requerimento para Emissão de Atestado de Matrícula em Curso de Pós-Graduação Stricto Sensu,,89.50276243093923,false,false,2026-07-31 17:30:36.243587+00
+375,Requerimento de Licença Maternidade/Paternidade para discentes de Curso de Pós-Graduação,,83.14606741573034,false,false,2026-07-31 17:30:36.278702+00
+376,Requerimento de Dispensa do Exame de Proficiência em Língua Estrangeira,,64.12213740458014,false,false,2026-07-31 17:30:36.315939+00
+377,Requerimento de Prorrogação de prazo para Exame de Proficiência em Língua Estrangeira,,67.08860759493672,false,false,2026-07-31 17:30:36.355518+00
+378,Edital de Exame de Proficiência em Língua Estrangeira,,60.0,false,false,2026-07-31 17:30:36.392306+00
+379,Requerimento de matrícula fora de prazo,,75.67567567567568,false,false,2026-07-31 17:30:36.428562+00
+380,Requerimento de Aproveitamento de Disciplina em Curso de Pós-Graduação,,83.07692307692307,false,false,2026-07-31 17:30:36.477446+00
+381,Requerimento de Equivalência de Disciplina em Curso de Pós-Graduação,,81.94444444444444,false,false,2026-07-31 17:30:36.507957+00
+382,Requerimento de Aproveitamento de Créditos em Cursos de Pós-Graduação,,74.4186046511628,false,false,2026-07-31 17:30:36.554685+00
+383,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Lato Sensu,,85.71428571428572,false,false,2026-07-31 17:30:36.587987+00
+384,Requerimento para Emissão de Certificado/Diploma de Conclusão do Curso de Pós-Graduação Stricto Sensu,,86.15384615384616,false,false,2026-07-31 17:30:36.620952+00
+385,Solicitação de Concessão por Créditos Especiais,,74.72527472527473,true,true,2026-07-31 17:30:36.652371+00
+386,Solicitação de Estágio de docência orientada em outra Instituição de Ensino,,65.80645161290323,false,false,2026-07-31 17:30:36.704093+00
+387,Solicitação de Dispensa de Estágio de Docência/Docência Orientada,,64.61538461538461,false,false,2026-07-31 17:30:36.738232+00
+388,Solicitação de Ensino a Distância,,70.96774193548387,false,false,2026-07-31 17:30:36.770384+00
+389,Certificado do Curso de Pós-Graduação Lato Sensu,,82.14285714285714,false,false,2026-07-31 17:30:36.802708+00
+390,Diploma do Curso de Pós-Graduação Stricto Sensu,,81.81818181818181,false,false,2026-07-31 17:30:36.83585+00
+391,Livro de Registro de Diploma de Pós-Graduação Stricto Sensu,,85.9504132231405,false,false,2026-07-31 17:30:36.868452+00
+392,Certificado de Conclusão de Estágio Pós-Doutoral,,70.73170731707317,false,false,2026-07-31 17:30:36.901615+00
+393,Declaração de Conclusão de Curso de Pós-Graduação Stricto Sensu,,82.17054263565892,false,false,2026-07-31 17:30:36.934474+00
+394,Plano de Ensino de Curso de Pós-Graduação Lato Sensu,,81.9047619047619,false,false,2026-07-31 17:30:36.966692+00
+395,Plano de Ensino de Curso de  Pós-Graduação Stricto Sensu,,83.47826086956522,false,false,2026-07-31 17:30:37.001781+00
+396,Programa de Ensino de Curso de Pós-Graduação Lato Sensu,,82.88288288288288,false,false,2026-07-31 17:30:37.034406+00
+397,Programa de Ensino de Curso de Pós-Graduação Stricto Sensu,,92.3076923076923,false,false,2026-07-31 17:30:37.067404+00
+398,Calendário Acadêmico para os Cursos de Pós-Graduação Lato Sensu,,71.07438016528927,false,false,2026-07-31 17:30:37.101328+00
+399,Calendário Acadêmico para os Cursos de Pós-Graduação Stricto Sensu,,74.01574803149606,false,false,2026-07-31 17:30:37.13376+00
+400,Processo de Criação de Disciplina como Tópicos Especiais,,62.99212598425197,false,false,2026-07-31 17:30:37.167715+00
+401,Edital do Programa de Apoio à Pesquisa - PAP,,92.6829268292683,false,false,2026-07-31 17:30:37.200064+00
+402,Edital do Programa de Estímulo à Produtividade em Pesquisa na Pós-Graduação,,87.41721854304636,false,false,2026-07-31 17:30:37.231561+00
+403,Edital sobre desenvolvimento Tecnológico e Inovação,,75.0,false,false,2026-07-31 17:30:37.264671+00
+404,Edital sobre Seminário de Iniciação Científica,,78.94736842105263,false,false,2026-07-31 17:30:37.299238+00
+405,"Acordo de Parceria/Cooperação para Pesquisa, Desenvolvimento e Inovação - PD&I",,57.14285714285714,false,false,2026-07-31 17:30:37.334152+00
+406,Registro de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:30:37.367+00
+407,Atestado de Frequência de Bolsista/Voluntário do Programa de Iniciação Científica,,92.71523178807946,false,false,2026-07-31 17:30:37.398931+00
+408,Certificado de Bolsista do Programa de Iniciação Científica,,77.63157894736842,false,false,2026-07-31 17:30:37.431419+00
+409,Processo sobre Captação de Recursos,,74.66666666666666,false,false,2026-07-31 17:30:37.462896+00
+410,Declaração de anuência institucional para submissão de projetos e editais externos,,60.0,false,false,2026-07-31 17:30:37.496907+00
+411,Declaração de apoio institucional para submissão de projetos,,64.81481481481481,false,false,2026-07-31 17:30:37.529863+00
+412,Solicitação de proteção de propriedade intelectual,,65.26315789473685,false,false,2026-07-31 17:30:37.562894+00
+413,Termo de Cessão de direitos de propriedade intelectual,,63.91752577319587,false,false,2026-07-31 17:30:37.596554+00
+414,Ficha de Cadastro de Bolsista - Recursos Externos,,70.83333333333333,false,false,2026-07-31 17:30:37.629413+00
+415,Termo de Compromisso de Bolsista - Recursos Externos,,83.33333333333334,false,false,2026-07-31 17:30:37.661089+00
+416,Registro de frequência de Bolsista - Recursos Externos,,75.0,false,false,2026-07-31 17:30:37.693992+00
+417,Atestado de horas de Bolsista - Recursos Externos,,66.08695652173913,false,false,2026-07-31 17:30:37.727577+00
+418,Certificado de participação em projeto - Recursos Externos,,73.6842105263158,false,false,2026-07-31 17:30:37.760738+00
+419,Solicitação de substituição de bolsista - Recursos Externos,,76.92307692307692,false,false,2026-07-31 17:30:37.794414+00
+420,Termo de Outorga de Apoio Financeiro das Agências de Fomento a Projetos de Pesquisa,,67.58620689655173,false,false,2026-07-31 17:30:37.82531+00
+421,Solicitação de Credenciamento de equipamento multiusuário,,70.58823529411764,false,false,2026-07-31 17:30:37.858486+00
+422,Folder de Programação do Seminário de Iniciação Científica,,76.03305785123968,false,false,2026-07-31 17:30:37.891618+00
+423,Folder de Programação do Seminário de Ética em Pesquisa,,78.84615384615384,false,false,2026-07-31 17:30:37.923527+00
+424,Catálogo de Produção Científica,,59.01639344262295,false,false,2026-07-31 17:30:37.955887+00
+425,Instrumento de Coleta de Dados da Avaliação da Pesquisa,,62.38532110091744,false,false,2026-07-31 17:30:37.988805+00
+426,Certificado de Bolsista do Programa de Apoio à Extensão,,76.38888888888889,false,false,2026-07-31 17:30:38.020753+00
+427,Processo de Habilitação de Unidade Prestadora de Serviço,,66.66666666666667,false,false,2026-07-31 17:30:38.05399+00
+428,Regulamento do Comitê de Articulação das Ações de Inclusão,,64.40677966101696,false,false,2026-07-31 17:30:38.087553+00
+429,Certificado de Bolsista de Apoio Discente,,77.27272727272727,false,false,2026-07-31 17:30:38.120362+00
+430,Relatório Final de Eventos de Extensão,,88.31168831168831,false,false,2026-07-31 17:30:38.156737+00
+431,Relatório Final dos Jogos de Integração,,83.87096774193549,false,false,2026-07-31 17:30:38.191355+00
+432,Regulamento Geral dos Jogos de Integração,,69.47368421052632,false,false,2026-07-31 17:30:38.224528+00
+433,Regulamento Técnico dos Jogos de Integração,,70.10309278350515,false,false,2026-07-31 17:30:38.258337+00
+434,Tutorial de Inscrição nos Jogos de Integração,,85.71428571428572,false,false,2026-07-31 17:30:38.292734+00
+435,Ficha de Inscrição nos Jogos de Integração,,84.84848484848484,false,false,2026-07-31 17:30:38.32857+00
+436,Catálogo de Produção Científica - Extensão,,59.154929577464785,false,false,2026-07-31 17:30:38.360689+00
+437,"Guia para Eventos, Cerimonial e Protocolo da Udesc",,56.470588235294116,false,false,2026-07-31 17:30:38.393924+00
+438,Processo sobre Instrução Normativa sobre Atividade Acadêmica/Administrativa,,88.88888888888889,false,false,2026-07-31 17:30:38.426378+00
+439,Regulamento sobre Atividade Acadêmica/Administrativa,,83.14606741573034,false,false,2026-07-31 17:30:38.459245+00
+440,Certificado de Participação em Cursos e Eventos,,88.09523809523809,true,true,2026-07-31 17:30:38.492446+00
+441,Ofício sobre Atividade Administrativa na Gestão do Ensino Superior,,73.52941176470588,false,false,2026-07-31 17:30:38.525625+00
+442,Processo sobre Prorrogação de Bolsa,,79.54545454545455,false,false,2026-07-31 17:30:38.567626+00
+443,Edital de Atividades Acadêmicas,,76.71232876712328,false,false,2026-07-31 17:30:38.600363+00
+444,Solicitação de Transporte para Viagem de Estudos,,63.1578947368421,false,false,2026-07-31 17:30:38.6357+00
+445,Autorização de Viagem de Acadêmicos Menores de Idade,,68.57142857142857,false,false,2026-07-31 17:30:38.673474+00
+446,Lista de Passageiros em Viagem de Estudos,,60.215053763440864,false,false,2026-07-31 17:30:38.71207+00
+447,Relatório de Visita Técnica em Atividades Acadêmicas,,73.6842105263158,true,true,2026-07-31 17:30:38.745146+00
+448,Atestado/Declaração sobre Atividades Administrativas na Gestão Universitária,,63.41463414634146,true,true,2026-07-31 17:30:38.778026+00
+449,Processo sobre criação de Laboratório,,75.36231884057972,false,false,2026-07-31 17:30:38.814585+00
+450,Processo sobre Acessibilidade Educacional,,73.17073170731707,false,false,2026-07-31 17:30:38.862786+00
+451,Requerimento De Exoneração / Aposentadoria De Servidor Efetivo,,70.0,false,false,2026-07-31 17:30:38.896353+00
+452,"Ato de Exoneração, Aposentadoria e Disposição de Servidor - Check List",,62.5,false,false,2026-07-31 17:30:38.930423+00
+453,Ato de Exoneração de Servidor / Declaração de Regularidade - Área de Recursos Humanos,,61.53846153846154,false,false,2026-07-31 17:30:38.963016+00
+454,Formulário de Solicitação de Dispensa de Professor Substituto,,68.5185185185185,false,false,2026-07-31 17:30:38.995432+00
+455,Ato de Dispensa de Professor Substituto / Declaração de Regularidade - Área de Recursos Humanos,,60.49382716049383,false,false,2026-07-31 17:30:39.028149+00
+456,Manual de Publicação de livros impressos e digitais,,56.91056910569105,false,false,2026-07-31 17:30:39.062289+00
+457,Processo sobre Periódico/Revista,,74.07407407407408,false,false,2026-07-31 17:30:39.095797+00
+458,Processo sobre Livro para Editoração/Publicação,,69.1358024691358,false,false,2026-07-31 17:30:39.159428+00
+459,Ficha de Frequência de Monitoria,,0,true,true,2026-07-31 17:34:30.546479+00
+460,PTI,,0,true,true,2026-07-31 17:35:29.513482+00
+461,ata de defesa,,0,false,false,2026-08-03 16:13:30.822638+00
+462,Planilha de avaliação de comissão departamental/interdepartamental,,0,true,true,2026-08-11 19:50:49.069289+00
+463,Ofícios administrativos,,0,true,true,2026-08-20 18:01:27.829992+00
+464,comunicação interna,,0,false,false,2026-10-16 19:24:47.790215+00

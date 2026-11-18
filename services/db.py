@@ -32,13 +32,12 @@ def get_supabase_client():
 
 
 def init_db():
-    if st is not None:
-        st.sidebar.success("Banco ativo: Supabase API")
+    # Inicialização do banco (se houver configurações necessárias)
+    pass
 
 
 def _response_data(response):
     return response.data or []
-
 
 def insert_inventory_item(payload: dict) -> int:
     supabase = get_supabase_client()
